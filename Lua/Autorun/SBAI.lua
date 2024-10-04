@@ -2,7 +2,6 @@ SBAI = {}
 
 SBAI.Path = ...
 
--- Deconstruct only within the sub
-Hook.Patch("PrintDeconstructor", "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor", function(instance, ptable)
-    if ptable.ReturnValue and not ptable.ReturnValue.Item.InPlayerSubmarine then return nil end
-end, Hook.HookMethodType.After)
+if (Game.IsMultiplayer and SERVER) or not Game.IsMultiplayer then
+    dofile(SBAI.Path.."/Lua/SBAI/Server/AiObjective.Lua")
+end
