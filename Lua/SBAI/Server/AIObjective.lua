@@ -21,7 +21,8 @@ Hook.Patch("SBAI.FindDeconstructor", "Barotrauma.AIObjectiveDeconstructItem", "F
             end
             ::continue::
         end
-
+        
+        -- regenerate the deconstructor list the old way if failed
         if closestDeconstructor == nil and attempt == 1 then SBAI.GenerateDeconstructorList() end
     end
 
