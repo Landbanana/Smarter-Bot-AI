@@ -11,7 +11,6 @@ Hook.Patch("SBAI.FindDeconstructor", "Barotrauma.AIObjectiveDeconstructItem", "F
         for i, potentialDeconstructor in ipairs(SBAI.DeconstructorList) do
             local distFactor
             if potentialDeconstructor == nil then goto continue end
-            if potentialDeconstructor.InputContainer == nil then goto continue end
             if not potentialDeconstructor.InputContainer.Inventory.CanBePut(instance.Item) then goto continue end
             if not potentialDeconstructor.Item.HasAccess(instance.character) then goto continue end
             distFactor = AIObjective.GetDistanceFactor(instance.Item.WorldPosition, potentialDeconstructor.Item.WorldPosition, 0.2)
