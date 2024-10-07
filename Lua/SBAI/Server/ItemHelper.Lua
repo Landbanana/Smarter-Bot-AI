@@ -1,11 +1,18 @@
 SBAI.DeconstructorList = {}
+SBAI.PetList = {}
 
--- reset SBAI.DeconstructorList at the start of every round, just in case
-Hook.Add("roundStart", "SBAI.EmptyDeconstructorList", function()
-    SBAI.DeconstructorList = {}
-end)
+-- Create a list of pets to help with AIObjectiveCleanupItems
+function SBAI.GeneratePetList()
+	SBAI.PetList = {}
+    for i, character in ipairs(Character.CharacterList) do
+        if character.IsPet then
+			print(character.Name)
+			table.insert(SBAI.PetList, character)
+		end
+    end
+end
 
--- same as vanilla AIObjectiveDeconstructItem.FindDeconstructor, but prevents outside deconstructors from being used if the sub has a deconstructor
+-- Same as vanilla AIObjectiveDeconstructItem.FindDeconstructor, but prevents outside deconstructors from being used if the sub has a deconstructor
 function SBAI.GenerateDeconstructorList()
     -- vanilla part
     local playerSubmarineHasDeconstructor = false
@@ -31,3 +38,14 @@ function SBAI.GenerateDeconstructorList()
 
     SBAI.DeconstructorList = tempDeconstructorList
 end
+
+-- Reset SBAI.DeconstructorList
+Hook.Add("roundStart", "SBAI.ResetDeconstructorListRoundStart", function()
+    SBAI.DeconstructorList = {}
+end)
+
+-- Generate list of pets at round start
+Hook.Add("roundStart", "SBAI.GeneratePetListRoundStart", SBAI.GeneratePetList)
+
+-- Generate list of pets after script load
+Hook.Add("loaded", "SBAI.GeneratePetListLoaded", SBAI.GeneratePetList)
