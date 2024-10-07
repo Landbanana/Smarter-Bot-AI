@@ -27,4 +27,9 @@ Hook.Patch("SBAI.FindDeconstructor", "Barotrauma.AIObjectiveDeconstructItem", "F
     end
 
     return closestDeconstructor
-end, Hook.HookMethodType.Before)
+end, Hook['HookMethodType'].Before)
+
+-- Prevent attacking any handcuffed people, regardless of being knocked down
+Hook.Patch("SBAI.PreventAttackingHandcuffed", "Barotrauma.AIObjectiveFightIntruders", "IsValidTarget", function(instance, ptable)
+    return ptable.ReturnValue and not ptable["target"].IsHandcuffed
+end, Hook['HookMethodType'].After)
