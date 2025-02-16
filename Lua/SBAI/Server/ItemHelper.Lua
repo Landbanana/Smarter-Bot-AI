@@ -1,16 +1,16 @@
 SBAI.DeconstructorList = {}
-SBAI.PetList = {}
+-- SBAI.PetList = {}
 
 -- Create a list of pets to help with AIObjectiveCleanupItems
-function SBAI.GeneratePetList()
-	SBAI.PetList = {}
-    for i, character in ipairs(Character.CharacterList) do
-        if character.IsPet then
-			print(character.Name)
-			table.insert(SBAI.PetList, character)
-		end
-    end
-end
+-- function SBAI.GeneratePetList()
+-- 	SBAI.PetList = {}
+--     for i, character in ipairs(Character.CharacterList) do
+--         if character.IsPet then
+-- 			print(character.Name)
+-- 			table.insert(SBAI.PetList, character)
+-- 		end
+--     end
+-- end
 
 -- Same as vanilla AIObjectiveDeconstructItem.FindDeconstructor, but prevents outside deconstructors from being used if the sub has a deconstructor
 function SBAI.GenerateDeconstructorList()
@@ -44,8 +44,8 @@ Hook.Add("roundStart", "SBAI.ResetDeconstructorListRoundStart", function()
     SBAI.DeconstructorList = {}
 end)
 
--- Generate list of pets at round start
-Hook.Add("roundStart", "SBAI.GeneratePetListRoundStart", SBAI.GeneratePetList)
+-- -- Generate list of pets at round start
+-- Hook.Add("roundStart", "SBAI.GeneratePetListRoundStart", SBAI.GeneratePetList)
 
--- Generate list of pets after script load
-Hook.Add("loaded", "SBAI.GeneratePetListLoaded", SBAI.GeneratePetList)
+-- -- Generate list of pets after script load
+-- Hook.Add("loaded", "SBAI.GeneratePetListLoaded", SBAI.GeneratePetList)
