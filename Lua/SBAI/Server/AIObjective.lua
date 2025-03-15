@@ -37,15 +37,3 @@ end, Hook['HookMethodType'].After)
 Hook.Patch("SBAI.PreventAttackingHandcuffedCombat", "Barotrauma.AIObjectiveCombat", "GetPriority", function(instance, ptable)
     if instance.Enemy.IsHandcuffed then return 0 end
 end, Hook['HookMethodType'].Before)
-
--- -- Cleanup Items: Don't pick up pet food that is within a certain distance of a pet
--- Hook.Patch("SBAI.DontStarvePets", "Barotrauma.AIObjectiveCleanupItems", "IsValidTarget",
---     {"Barotrauma.Item", "Barotrauma.Character", "System.Boolean", "System.Boolean", "System.Boolean", "System.Boolean"}, function(instance, ptable)
---     if ptable.ReturnValue == true and string.find(ptable["item"].tags, "petfood%w") then
---         local petIsNearby = false
---         for pet in SBAI.PetList do
---             petIsNearby = petIsNearby or (AIObjective.GetDistanceFactor(pet.WorldPosition, ptable["item"].WorldPosition, 0, 3, 200) ~= 0)
---         end
---         return not petIsNearby
---     end
--- end, Hook['HookMethodType'].After)
