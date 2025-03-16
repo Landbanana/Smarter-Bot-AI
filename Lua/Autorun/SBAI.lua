@@ -1,4 +1,4 @@
-if (Game.IsMultiplayer and SERVER) or not Game.IsMultiplayer then
+if SERVER or Game.IsSingleplayer then
     SBAI = {}
     SBAI.Path = ...
     dofile(SBAI.Path.."/Lua/SBAI/Server/ItemHelper.Lua")
