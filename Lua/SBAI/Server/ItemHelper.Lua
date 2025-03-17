@@ -1,32 +1,30 @@
-SBAI.DeconstructorList = {}
+table.insert(SBAI.Namespace, "ItemHelper")
 
-function SBAI.GenerateDeconstructorList()
-    -- vanilla part
-    local playerSubmarineHasDeconstructor = false
-    local tempDeconstructorList = {}
+local itemGroups_mt = {__index = function(t, k)
+    t[k] = Util.GetItemGroup("SBAI."..k)
+    return t[k]
+end}
 
-    for i, otherItem in ipairs(Item.RepairableItems) do
-        local potentialDeconstructor = otherItem.GetComponentString("Deconstructor")
-        if potentialDeconstructor == nil then goto continue end
-        if potentialDeconstructor.InputContainer == nil then goto continue end
-        playerSubmarineHasDeconstructor = playerSubmarineHasDeconstructor or potentialDeconstructor.Item.InPlayerSubmarine
-        table.insert(tempDeconstructorList, potentialDeconstructor)
-        ::continue::
-    end
-
-    -- InPlayerSubmarine check
-    if playerSubmarineHasDeconstructor then
-        for i, potentialDeconstructorItem in ipairs(tempDeconstructorList) do
-            if not potentialDeconstructorItem.Item.InPlayerSubmarine then
-                tempDeconstructorList[i] = nil
-            end
-        end
-    end
-
-    SBAI.DeconstructorList = tempDeconstructorList
+local function Reset()
+    -- needed since Util.itemGroups is reset at roundEnd
+    SBAI.itemGroups = {} --[[@type table<string, Barotrauma.Item[]>]]
+    setmetatable(SBAI.itemGroups, itemGroups_mt)
 end
 
--- Reset SBAI.DeconstructorList
-Hook.Add("roundStart", "SBAI.ResetDeconstructorListRoundStart", function()
-    SBAI.DeconstructorList = {}
+Hook.Add("roundEnd", SBAI.GetNamespace()..".Reset", Reset)
+Reset()
+
+---@type fun(groupName:string, func:fun(item:Barotrauma.Item):boolean)
+local function RegisterItemGroup(groupName, func)
+    Util.RegisterItemGroup(SBAI.GetNamespace().."."..groupName, func)
+end
+
+RegisterItemGroup("allDeconstructors", function(item)
+    if  item.GetComponentString("Deconstructor") ~= nil then
+        return true
+    else
+        return false
+    end
 end)
+
+table.remove(SBAI.Namespace)
