@@ -101,25 +101,6 @@ function(instance, ptable)
     end
 end, Hook["HookMethodType"].After)
 
-LuaUserData.RegisterType("System.Collections.Immutable.ImmutableArray")
-LuaUserData.RegisterType("System.Collections.Immutable.ImmutableArray`1")
-LuaUserData.RegisterType("System.Collections.Immutable.ImmutableArray`1+Builder")
-
-local ImmutableArray_Identifier_SBAICharged = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableArray").CreateBuilder(Identifier)
-ImmutableArray_Identifier_SBAICharged.add(Identifier("SBAICharged"))
-ImmutableArray_Identifier_SBAICharged = ImmutableArray_Identifier_SBAICharged.ToImmutable()
-
-LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableArray")
-LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableArray`1")
-LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableArray`1+Builder")
-
-Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItems", ".ctor",
-function(_, ptable)
-    if ptable["option"] == Identifier("batterycells") then
-        ptable["containerTags"] = ImmutableArray_Identifier_SBAICharged
-    end
-end, Hook["HookMethodType"].Before)
-
 ---@type fun(item:Barotrauma.Item):boolean
 local function ItemMatchesTargetCondition(item)
     return item.Container ~= nil and item.Container.HasTag(Identifier("SBAICharged")) and item.ConditionPercentage >= SBAI.minimumCharge or item.IsFullCondition
@@ -271,7 +252,7 @@ end
 
 Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItem", "IsValidContainable",
 function(instance, ptable)
-    if instance.TargetContainerTags == ImmutableArray_Identifier_SBAICharged then
+    if instance.TargetContainerTags[0] == Identifier("batterycellrecharger") then
         
         ptable.PreventExecution = true
 
@@ -296,7 +277,7 @@ end
 
 Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItem", "Act",
 function(instance, ptable)
-    if instance.TargetContainerTags == ImmutableArray_Identifier_SBAICharged then
+    if instance.TargetContainerTags[0] == Identifier("batterycellrecharger") then
         local item = instance.targetItem --[[@type Barotrauma.Item]]
 
         ptable.PreventExecution = true
