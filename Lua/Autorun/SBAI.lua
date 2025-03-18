@@ -4,6 +4,9 @@ if SERVER or Game.IsSingleplayer then
     SBAI.Namespace = {"SBAI"}
     function SBAI.GetNamespace() return table.concat(SBAI.Namespace, ".") end
 
+    dofile(SBAI.Path.."/Lua/SBAI/Util.Lua")
     dofile(SBAI.Path.."/Lua/SBAI/Server/ItemHelper.Lua")
     dofile(SBAI.Path.."/Lua/SBAI/Server/AiObjective.Lua")
+
+    SBAI.Util = nil
 end
