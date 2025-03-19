@@ -52,11 +52,11 @@ function(instance, ptable)
     ptable.PreventExecution = true
 
     if SBAI.playerSubmarineHasDeconstructor == nil then
-        local i, deconstructorItem = next(SBAI.itemGroups["allDeconstructors"], nil)
+        local i, deconstructorItem = next(SBAI.itemGroup["allDeconstructors"], nil)
 
         while i and not SBAI.playerSubmarineHasDeconstructor do
             SBAI.playerSubmarineHasDeconstructor = deconstructorItem.InPlayerSubmarine
-            i, deconstructorItem = next(SBAI.itemGroups["allDeconstructors"], i)
+            i, deconstructorItem = next(SBAI.itemGroup["allDeconstructors"], i)
         end
     end
 
@@ -187,7 +187,7 @@ local function GetTargetBatteries(character, item)
     local targetItem = nil --[[@type Barotrauma.Item]]
     local targetContainer = nil --[[@type Barotrauma.Items.Components.ItemContainer]]
 
-    for _, v in ipairs(SBAI.itemGroups["allChargers"]) do
+    for _, v in ipairs(SBAI.itemGroup["allChargers"]) do
         if AIObjectiveLoadItems_Static.IsValidTarget(v, character) then table.insert(batterycellrechargers, v) end
     end
 
@@ -267,7 +267,7 @@ end
 
 ---@type fun(objective:Barotrauma.AIObjectiveLoadItem):Barotrauma.Item
 local function AIObjectiveLoadItem_FindItem(objective)
-    for _, v in ipairs(SBAI.itemGroups["allBatteries"]) do
+    for _, v in ipairs(SBAI.itemGroup["allBatteries"]) do
         if v ~= nil and AIObjectiveLoadItem_IsValidContainable(objective, v) then
             return v
         end

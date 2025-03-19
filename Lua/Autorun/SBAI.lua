@@ -5,6 +5,6 @@ if SERVER or Game.IsSingleplayer then
     function SBAI.GetNamespace() return table.concat(SBAI.Namespace, ".") end
 
     dofile(SBAI.Path.."/Lua/SBAI/Util.Lua")
-    dofile(SBAI.Path.."/Lua/SBAI/Server/ItemHelper.Lua")
+    dofile(SBAI.Path.."/Lua/SBAI/Server/ItemGroup.Lua")
     dofile(SBAI.Path.."/Lua/SBAI/Server/AiObjective.Lua")
 end

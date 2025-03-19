@@ -1,16 +1,16 @@
-table.insert(SBAI.Namespace, "ItemHelper")
+table.insert(SBAI.Namespace, "ItemGroup")
 
-local itemGroups_mt = {__index = function(t, k)
+local itemGroup_mt = {__index = function(t, k)
     t[k] = Util.GetItemGroup("SBAI."..k)
     return t[k]
 end}
 
 local function Reset()
-    -- needed since Util.itemGroups is reset at roundEnd
-    SBAI.itemGroups = {} --[[@type table<string, Barotrauma.Item[]>]]
-    setmetatable(SBAI.itemGroups, itemGroups_mt)
+    SBAI.itemGroup = {} --[[@type table<string, Barotrauma.Item[]>]]
+    setmetatable(SBAI.itemGroup, itemGroup_mt)
 end
 
+-- needed since Util.itemGroup is reset at roundEnd
 Hook.Add("roundEnd", SBAI.GetNamespace()..".Reset", Reset)
 Reset()
 
