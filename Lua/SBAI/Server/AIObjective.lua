@@ -60,10 +60,10 @@ function(instance, ptable)
         end
     end
 
-    for _, deconstructorItem in ipairs(SBAI.GetUsableDeconstructors()) do
+    for _, deconstructorItem in ipairs(SBAI.itemGroup["allDeconstructors"]) do
         if deconstructorItem == nil then goto continue end
         if SBAI.playerSubmarineHasDeconstructor and not deconstructorItem.InPlayerSubmarine then goto continue end
-        deconstructor = deconstructorItem.GetComponentString("Deconstructor") --[[@type Barotrauma.Items.Components.Deconstructor]]
+        deconstructor = deconstructorItem.GetComponent(Components.Deconstructor) --[[@type Barotrauma.Items.Components.Deconstructor]]
         if not deconstructor.InputContainer.Inventory.CanBePut(instance.Item) then goto continue end
         if not deconstructorItem.HasAccess(instance.character) then goto continue end
 
