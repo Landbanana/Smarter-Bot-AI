@@ -92,25 +92,16 @@ end, Hook['HookMethodType'].Before)
 SBAI.minimumCharge = 90.0 --[[@type System.Single]]
 
 -- Charge batteries
-Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.Items.Components.ItemContainer", ".ctor",
-function(instance, ptable)
-    for s in instance.slotRestrictions do
-        if s.MatchesItem(Identifier("mobilebattery")) and s.MaxStackSize == 1 then
-            ptable["item"].AddTag("SBAICharged")
-        end
-    end
-end, Hook["HookMethodType"].After)
-
 ---@type fun(item:Barotrauma.Item):boolean
 local function ItemMatchesTargetCondition(item)
-    return item.Container ~= nil and item.Container.HasTag(Identifier("SBAICharged")) and item.ConditionPercentage >= SBAI.minimumCharge or item.IsFullCondition
+    return item.Container ~= nil and SBAI.Util.IsCharged(item.Container) and item.ConditionPercentage >= SBAI.minimumCharge or item.IsFullCondition
 end
 
 Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItems", "ItemMatchesTargetCondition",
 function(_, ptable)
-    if ptable["item"].HasTag("SBAICharged") then
+    if ptable["item"].HasTag(Identifier("mobilebattery")) then
         ptable.PreventExecution = true
-
+        
         return ItemMatchesTargetCondition(ptable["item"])
     end
 end, Hook["HookMethodType"].Before)
@@ -160,6 +151,7 @@ local function AIObjective_TryAddSubObjective(instance, objective, constructor, 
         return false
     else
         objective[1] = constructor()
+
         if SBAI.Util.ListContains(instance.subObjectives, objective[1]) then return false end
         if instance.AllowMultipleInstances then
             objective[1].SourceObjective = this
@@ -190,8 +182,8 @@ local function GetTargetBatteries(character, item)
     for _, v in ipairs(SBAI.itemGroup["allChargers"]) do
         if AIObjectiveLoadItems_Static.IsValidTarget(v, character) then table.insert(batterycellrechargers, v) end
     end
-
-    if item.Container == nil or not item.Container.HasTag(Identifier("SBAICharged")) then
+    
+    if item.Container == nil or not SBAI.Util.IsCharged(item.Container) then
         local firstTry = false --[[@type boolean]]
 
         repeat
@@ -252,8 +244,7 @@ end
 
 Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItem", "IsValidContainable",
 function(instance, ptable)
-    if instance.TargetContainerTags[0] == Identifier("batterycellrecharger") then
-        
+    if instance.TargetContainerTags[1] == Identifier("batterycellrecharger") then
         ptable.PreventExecution = true
 
         return AIObjectiveLoadItem_IsValidContainable(instance, ptable["item"])
@@ -277,7 +268,7 @@ end
 
 Hook.Patch(SBAI.GetNamespace()..".RechargeBatteryCells", "Barotrauma.AIObjectiveLoadItem", "Act",
 function(instance, ptable)
-    if instance.TargetContainerTags[0] == Identifier("batterycellrecharger") then
+    if instance.TargetContainerTags[1] == Identifier("batterycellrecharger") then
         local item = instance.targetItem --[[@type Barotrauma.Item]]
 
         ptable.PreventExecution = true
