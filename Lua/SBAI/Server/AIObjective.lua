@@ -369,7 +369,6 @@ end
 
 Hook.Patch(Namespace.."RechargeBatteryCells", "Barotrauma.AIObjectiveContainItem", "Act",
 function(instance, ptable)
-    print(instance.SourceObjective.SourceObjective.SourceObjective)
     for refillerTagString, generalItemTagString in pairs(AIObjectiveLoadItemsRefillerToGeneralItemTag) do
         if  instance.TargetSlot == nil and
             instance.SourceObjective ~= nil and
