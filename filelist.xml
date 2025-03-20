@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Smarter Bot AI" modversion="1.1.1" corepackage="False" steamworkshopid="3343911734" gameversion="1.7.7.0">
-  <Other file="%ModDir%/Lua/Autorun/SBAI.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Util.lua" />
+  <Other file="%ModDir%/Lua/Autorun/Init.lua" />
+  <Other file="%ModDir%/Lua/SBAI.lua" />
+  <Other file="%ModDir%/Lua/SBAI/SBAIUtils.lua" />]
   <Other file="%ModDir%/Lua/SBAI/Server/AIObjective.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/ItemGroup.lua" />
 </contentpackage>
