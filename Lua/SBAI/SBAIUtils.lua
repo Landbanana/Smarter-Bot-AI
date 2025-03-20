@@ -20,6 +20,16 @@ function SBAIUtils.ListContains(list, obj)
     return false
 end
 
+---@type fun(list:table<integer, any>, obj:any):boolean
+function SBAIUtils.ITableContains(table, obj)
+    for _, v in ipairs(table) do
+        if v == obj then
+            return true
+        end
+    end
+    return false
+end
+
 local ItemContainer_Descriptor = LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer")
 LuaUserData.MakeFieldAccessible(ItemContainer_Descriptor, "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
