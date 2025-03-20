@@ -22,6 +22,7 @@ LuaUserData.MakePropertyAccessible(AIObjectiveLoadItem_Descriptor, "ValidContain
 LuaUserData.MakePropertyAccessible(AIObjectiveLoadItem_Descriptor, "TargetContainerTags")
 LuaUserData.MakePropertyAccessible(AIObjectiveLoadItem_Descriptor, "Container")
 LuaUserData.MakePropertyAccessible(AIObjectiveLoadItem_Descriptor, "ItemContainer")
+LuaUserData.MakeFieldAccessible(AIObjectiveLoadItem_Descriptor, "abandonGetItemDialogueIdentifier")
 LuaUserData.MakeFieldAccessible(AIObjectiveLoadItem_Descriptor, "decontainObjective")
 LuaUserData.MakeFieldAccessible(AIObjectiveLoadItem_Descriptor, "targetItem")
 LuaUserData.MakeFieldAccessible(AIObjectiveLoadItem_Descriptor, "itemIndex")
@@ -318,11 +319,12 @@ function(instance, ptable)
                     ---@type fun():AIObjectiveDecontainItem
                     local function constructor()
                         local objective = AIObjectiveDecontainItem(instance.character, targetItem, instance.objectiveManager, nil, targetContainer, instance.PriorityModifier)
-                        --objective.AbandonGetItemDialogueCondition = function() return instance.IsValidContainable(instance.targetItem) end
-                        --objective.AbandonGetItemDialogueIdentifier = instance.abandonGetItemDialogueIdentifier
+                        
+                        -- objective.AbandonGetItemDialogueCondition = function() return instance.IsValidContainable(targetItem) end
+                        objective.AbandonGetItemDialogueIdentifier = instance.abandonGetItemDialogueIdentifier
                         objective.Equip = true
                         objective.RemoveExistingWhenNecessary = true
-                        --RemoveExistingPredicate = function(item) return true end
+                        -- if targetItem ~= item then objective.RemoveExistingPredicate = function(oldItem) return oldItem == item end end
                         objective.RemoveExistingMax = 1
                         return objective
                     end
