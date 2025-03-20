@@ -31,7 +31,7 @@ function SBAIUtils.IsSpecifiedContainer(container, item)
     if itemContainer == nil then return false end
 
     for s in itemContainer.slotRestrictions do
-        if s.MatchesItem(item) and s.MaxStackSize == 1 then
+        if s.ContainableItems ~= nil and s.MatchesItem(item) and s.MaxStackSize == 1 then
             return true
         end
     end

@@ -91,7 +91,11 @@ end, Hook["HookMethodType"].Before)
 -- Load Items
 -- Recharge Batteries: Replace batteries in "charged" tools (flashlight, handheld sonar, etc.) with full batteries from charging docks
 
-local AIObjectiveLoadItem_RefillerToItemTag = {} --[[@type table<string, string>]]
+local AIObjectiveLoadItemsRefillerToGeneralItemTag = {}
+AIObjectiveLoadItemsRefillerToGeneralItemTag["batterycellrecharger"] = "mobilebattery"
+AIObjectiveLoadItemsRefillerToGeneralItemTag["oxygentankrefiller"] = "oxygensource"
+
+local AIObjectiveLoadItem_RefillerToItemTag = {}
 AIObjectiveLoadItem_RefillerToItemTag["batterycellrecharger"] = "mobilebattery"
 AIObjectiveLoadItem_RefillerToItemTag["oxygentankrefiller"] = "refillableoxygensource"
 
@@ -225,7 +229,7 @@ local function AIObjectiveLoadItem_GetTargets(character, item, refillerTagString
         end
     else
         local closestFullItem = nil --[[@type Barotrauma.Item|nil]]
-        
+
         for _, refiller in ipairs(refillers) do
             local inventory = refiller.OwnInventory --[[@type Barotrauma.ItemInventory]]
             local fullItem = nil --[[@type Barotrauma.Item|nil]]
@@ -340,11 +344,40 @@ function(instance, ptable)
                         end
                         return onAbandon
                     end
-                    local decontainObjective = {instance.decontainObjective}
-                    AIObjective_TryAddSubObjective(instance, decontainObjective, constructor, onCompletedGenerator, onAbandonGenerator)
-                    instance.decontainObjective = decontainObjective[1]
+                    local decontainObjectiveRef = {instance.decontainObjective}
+                    
+                    AIObjective_TryAddSubObjective(instance, decontainObjectiveRef, constructor, onCompletedGenerator, onAbandonGenerator)
+                    instance.decontainObjective = decontainObjectiveRef[1]
                 end
             end
+        end
+    end
+end, Hook["HookMethodType"].Before)
+
+---@type fun(itemContainer:Barotrauma.Items.Components.ItemContainer, generalItemTag:Barotrauma.Identifier):integer
+local function AIObjectiveContainItem_GetTargetSlot(itemContainer, generalItemTag)
+    local index = 0
+
+    for s in itemContainer.slotRestrictions do
+        if s.ContainableItems ~= nil and s.MatchesItem(generalItemTag) and s.MaxStackSize == 1 then
+            return index
+        end
+        index = index + 1
+    end
+    return -1
+end
+
+Hook.Patch(Namespace.."RechargeBatteryCells", "Barotrauma.AIObjectiveContainItem", "Act",
+function(instance, ptable)
+    print(instance.SourceObjective.SourceObjective.SourceObjective)
+    for refillerTagString, generalItemTagString in pairs(AIObjectiveLoadItemsRefillerToGeneralItemTag) do
+        if  instance.TargetSlot == nil and
+            instance.SourceObjective ~= nil and
+            instance.SourceObjective.SourceObjective ~= nil and
+            LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, "Barotrauma.AIObjectiveLoadItem") and
+            instance.SourceObjective.SourceObjective.TargetContainerTags[1] == Identifier(refillerTagString) then
+                local index = AIObjectiveContainItem_GetTargetSlot(instance.container, Identifier(generalItemTagString))
+                if index > -1 then instance.TargetSlot = index end
         end
     end
 end, Hook["HookMethodType"].Before)
