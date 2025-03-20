@@ -211,7 +211,9 @@ local function AIObjectiveLoadItem_GetTargets(character, item, refillerTagString
             firstTry = not firstTry
 
             for _, refiller in ipairs(refillers) do
-                if firstTry and refiller.OwnInventory.IsFull() then goto continue1 end
+                local powerContainer = refiller.GetComponent(Components.PowerContainer)
+
+                if firstTry and refiller.OwnInventory.IsFull() or (powerContainer ~= nil and powerContainer.Charge <= 0.0) then goto continue1 end
                 
                 distFactor = AIObjective.GetDistanceFactor(item.WorldPosition, refiller.WorldPosition, 0.2)
                 if distFactor > bestDistFactor then
@@ -307,7 +309,7 @@ function(instance, ptable)
                 instance.objectiveManager.GetObjective(AIObjectiveIdle).wander(ptable["deltaTime"])
             else
                 local targetItem, targetContainer = AIObjectiveLoadItem_GetTargets(instance.character, item, refillerTagString)
-                if instance.decontainObjective == nil and targetItem == nil and targetContainer == nil then
+                if instance.decontainObjective == nil and (targetItem == nil or targetContainer == nil) then
                     instance.IgnoreTargetItem()
                     instance.Reset()
                     return
