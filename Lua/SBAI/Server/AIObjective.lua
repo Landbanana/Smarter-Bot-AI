@@ -310,11 +310,13 @@ function(instance, ptable)
                 instance.objectiveManager.GetObjective(AIObjectiveIdle).wander(ptable["deltaTime"])
             else
                 local targetItem, targetContainer = AIObjectiveLoadItem_GetTargets(instance.character, item, refillerTagString)
+
                 if instance.decontainObjective == nil and (targetItem == nil or targetContainer == nil) then
                     instance.IgnoreTargetItem()
                     instance.Reset()
                     return
                 end
+                
                 if targetItem ~= nil and targetContainer ~= nil then
                     ---@type fun():AIObjectiveDecontainItem
                     local function constructor()
