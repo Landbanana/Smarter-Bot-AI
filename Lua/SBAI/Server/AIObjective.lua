@@ -1,6 +1,6 @@
-local SBAI = require "SBAI"
-local SBAIUtils = require "SBAI.SBAIUtils"
-local ItemGroup = require "SBAI.Server.ItemGroup"
+local SBAI = require("SBAI")
+local SBAIUtils = require("SBAI.SBAIUtils")
+local ItemGroup = require("SBAI.Server.ItemGroup")
 
 local Namespace = SBAI.Namespace.."AIObjective."
 
@@ -316,7 +316,7 @@ function(instance, ptable)
                     instance.Reset()
                     return
                 end
-                
+
                 if targetItem ~= nil and targetContainer ~= nil then
                     ---@type fun():AIObjectiveDecontainItem
                     local function constructor()

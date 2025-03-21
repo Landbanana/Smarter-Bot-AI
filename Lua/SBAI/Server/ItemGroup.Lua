@@ -1,5 +1,5 @@
-local SBAI = require "SBAI"
-local SBAIUtils = require "SBAI.SBAIUtils"
+local SBAI = require("SBAI")
+local SBAIUtils = require("SBAI.SBAIUtils")
 
 local Namespace = SBAI.Namespace.."ItemGroup."
 local ItemGroup = {}
