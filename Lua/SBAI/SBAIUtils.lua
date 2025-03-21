@@ -1,7 +1,14 @@
+local SBAI = require("SBAI")
+local config = require("SBAI.config")
+
+require("SBAI.Server.Items.Components.ItemContainer")
+
 local SBAIUtils = {}
 
-local readOnlyTable__newindex = function(_, _, _) error("attempted to modify a read-only table", 2) end
----@type fun(t:table):table
+local readOnlyTable__newindex = function(_, _, _) error("attempt to modify a read-only table", 2) end
+---@generic T: table
+---@param t T
+---@return T
 function SBAIUtils.MakeReadOnlyTable(t)
     local proxy = {} --[[@type table]]
     local mt = {__index=t, __newindex=readOnlyTable__newindex}
@@ -30,9 +37,11 @@ function SBAIUtils.ITableContains(table, obj)
     return false
 end
 
-local ItemContainer_Descriptor = LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer")
-LuaUserData.MakeFieldAccessible(ItemContainer_Descriptor, "slotRestrictions")
-LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+---@type fun(section:string, prevSection:string?):(string?, any?)
+function SBAIUtils.CheckOptionGetNamespace(section, prevNamespace)
+    if config.data[section].enabled then return (prevNamespace or SBAI.Namespace)..section, config.data[section] end
+    return nil, nil
+end
 
 ---@type fun(item: Barotrauma.Item, item: Barotrauma.Item): boolean
 function SBAIUtils.IsSpecifiedContainer(container, item)
@@ -48,5 +57,4 @@ function SBAIUtils.IsSpecifiedContainer(container, item)
     return false
 end
 
-SBAIUtils = SBAIUtils.MakeReadOnlyTable(SBAIUtils)
-return SBAIUtils
+return SBAIUtils.MakeReadOnlyTable(SBAIUtils)

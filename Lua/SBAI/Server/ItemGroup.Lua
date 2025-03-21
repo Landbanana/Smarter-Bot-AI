@@ -12,6 +12,7 @@ function ItemGroup.Register(tagString)
 end
 
 local ItemGroup_List_mt = {__index = function(t, k)
+    if k == nil then error("attempt to index a nil value", 2) end
     t[k] = Util.GetItemGroup(Namespace..k)
     return t[k]
 end}
@@ -23,5 +24,4 @@ Hook.Add("roundEnd", Namespace.."Reset", function() -- needed since Util.itemGro
     setmetatable(ItemGroup_Original.List, ItemGroup_List_mt)
 end)
 
-ItemGroup = SBAIUtils.MakeReadOnlyTable(ItemGroup)
-return ItemGroup
+return SBAIUtils.MakeReadOnlyTable(ItemGroup)

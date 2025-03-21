@@ -3,6 +3,14 @@
   <Other file="%ModDir%/Lua/Autorun/Init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/SBAIUtils.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/AIObjective.lua" />
+  <Other file="%ModDir%/Lua/SBAI/config.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/ItemGroup.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveCombat.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveContainItem.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveDeconstructItem.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveFightIntruders.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveLoadItem.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveLoadItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Items/Components/ItemContainer.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Items/ItemInventory.lua" />
 </contentpackage>
