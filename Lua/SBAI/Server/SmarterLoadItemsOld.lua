@@ -120,7 +120,7 @@ local function FindItem(objective, itemTag)
     return nil
 end
 
----@param namespace string
+---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
     local prevNamespace = namespace
