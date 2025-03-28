@@ -10,7 +10,7 @@ return function(namespace, options)
     ---@return integer
     function(instance, _)
         if instance.Enemy.IsHandcuffed then return 0 end
-    end, Hook["HookMethodType"].Before)
+    end, Hook.HookMethodType.Before)
 
     -- Fight Intruders: Prevent attacking any handcuffed people, regardless of being knocked down
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveFightIntruders", "IsValidTarget", {"Barotrauma.Character"},
@@ -19,5 +19,5 @@ return function(namespace, options)
     ---@return boolean
     function(_, ptable)
         return ptable.ReturnValue and not ptable["target"].IsHandcuffed
-    end, Hook["HookMethodType"].After)
+    end, Hook.HookMethodType.After)
 end

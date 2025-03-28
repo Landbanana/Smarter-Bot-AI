@@ -27,7 +27,7 @@ return function(namespace, options)
         end
         
         return playerSubmarineHasNoDeconstructor
-    end, Hook["HookMethodType"].Before)
+    end, Hook.HookMethodType.Before)
 
     -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
     -- function(instance, ptable)
@@ -62,5 +62,5 @@ return function(namespace, options)
     --         ::continue::
     --     end
     --     return closestDeconstructor
-    -- end, Hook["HookMethodType"].Before)
+    -- end, Hook.HookMethodType.Before)
 end

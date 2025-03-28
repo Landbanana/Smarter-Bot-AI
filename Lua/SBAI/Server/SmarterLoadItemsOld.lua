@@ -150,7 +150,7 @@ return function(namespace, options)
                     item.ConditionPercentage >= minimumCondition or
                     item.IsFullCondition
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
         ::continue::
     end
 
@@ -204,7 +204,7 @@ return function(namespace, options)
                 end
                 return true
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
 
         SBAI.Hook.Patch(namespace, "Barotrauma.AIObjectiveLoadItem", "Act",
         function(instance, ptable)
@@ -269,7 +269,7 @@ return function(namespace, options)
                     end
                 end
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
         ::continue::
     end
 
@@ -293,7 +293,7 @@ return function(namespace, options)
                         local index = ItemContainerExtra.GetGeneralItemTagSlot(instance.container, generalItemTag)
                         if index > -1 then instance.TargetSlot = index end
                 end
-            end, Hook["HookMethodType"].Before)
+            end, Hook.HookMethodType.Before)
         ::continue::
     end
 end

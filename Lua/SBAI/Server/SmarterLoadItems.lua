@@ -99,7 +99,7 @@ return function(namespace, options)
 
                 return SBAI.util.MatchItem(instance.character, ptable["item"], nil, nil, GenerateItemPredicate(instance, minimumCondition))
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
 
         SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "Act",
         ---@param instance Barotrauma.AIObjective
@@ -187,7 +187,7 @@ return function(namespace, options)
                     end
                 end
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
 
         SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveContainItem", "Act",
         ---@param instance Barotrauma.AIObjectiveContainItem
@@ -207,7 +207,7 @@ return function(namespace, options)
                     instance.AllowToFindDivingGear = false
                 end
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
 
         namespace = -namespace
         ::continue::

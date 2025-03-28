@@ -232,7 +232,7 @@ return function(namespace, options)
                     instanceData.timer = instanceData.timer - ptable["deltaTime"]
                 end
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
 
         SBAI.Hook.Patch((namespace + objectiveType)(), "Barotrauma.AIObjectiveContainItem", "Act",
         ---@param instance Barotrauma.AIObjectiveContainItem
@@ -258,7 +258,7 @@ return function(namespace, options)
                     end
                 end
             end
-        end, Hook["HookMethodType"].Before)
+        end, Hook.HookMethodType.Before)
         ::continue::
     end
 

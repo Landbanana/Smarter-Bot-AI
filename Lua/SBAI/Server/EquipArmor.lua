@@ -87,7 +87,7 @@ return function(namespace, options)
         else
             instanceData.timer = instanceData.timer - ptable["deltaTime"]
         end
-    end, Hook["HookMethodType"].Before)
+    end, Hook.HookMethodType.Before)
 
     -- hopefully prevent any memory leaks
     Hook.Add("roundEnd", namespace(),
