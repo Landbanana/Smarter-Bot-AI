@@ -1,1 +1,0 @@
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")

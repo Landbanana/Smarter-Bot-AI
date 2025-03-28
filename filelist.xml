@@ -1,16 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Smarter Bot AI" modversion="1.1.7" corepackage="False" steamworkshopid="3343911734" gameversion="1.7.7.0">
-  <Other file="%ModDir%/Lua/Autorun/Init.lua" />
+  <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
-  <Other file="%ModDir%/Lua/SBAI/SBAIUtils.lua" />
+  <Other file="%ModDir%/Lua/SBAI/util.lua" />
   <Other file="%ModDir%/Lua/SBAI/config.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/ItemGroup.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveCombat.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveContainItem.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveDeconstructItem.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveFightIntruders.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveLoadItem.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Characters/AI/Objective/AIObjectiveLoadItems.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Items/Components/ItemContainer.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Items/ItemInventory.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/EquipArmor.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/PreventAttackingHandcuffed.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/ReplenishInventory.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/SmarterLoadItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/UseShipDeconstructorIfAvailable.lua" />
 </contentpackage>
