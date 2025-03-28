@@ -1,5 +1,7 @@
 local SBAI = {
-    path=...,
+    Name="Smarter Bot AI",
+    Version="1.1.7",
+    Path=...,
     Config=require("SBAI.config"),
     util=require("SBAI.util")
 }
@@ -59,6 +61,8 @@ local Namespace_mt = {
     end
 }
 
+SBAI.namespace=setmetatable({i=0, base="SBAI", stack={}}, Namespace_mt) --[[@type Namespace]]
+
 ---@alias ModuleFuncs {Activate:fun(namespace:Namespace, options:table), Cleanup:fun()?}
 
 SBAI.Hook = setmetatable({
@@ -87,7 +91,6 @@ SBAI.Hook = setmetatable({
 
 SBAI.LuaUserData = setmetatable({}, {__index=LuaUserData})
 SBAI.itemGroup={} --[[@type table<string,Barotrauma.Item[]>]]
-SBAI.namespace=setmetatable({i=0, base="SBAI", stack={}}, Namespace_mt) --[[@type Namespace]]
 
 local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
