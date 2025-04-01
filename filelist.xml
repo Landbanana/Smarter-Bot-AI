@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Smarter Bot AI" modversion="1.2.0" corepackage="False" steamworkshopid="3343911734" gameversion="1.7.7.0">
   <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
@@ -14,5 +14,6 @@
   <Other file="%ModDir%/Lua/SBAI/Server/UseShipDeconstructorIfAvailable.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/networking.lua" />
   <UIStyle file="%ModDir%/Xml/UI/SettingsMenu.xml" />
+  <Text file="%ModDir%/Xml/Text/English/Tooltips.xml" />
   <Other file="%ModDir%/Images/BigBrain.png" />
 </contentpackage>
