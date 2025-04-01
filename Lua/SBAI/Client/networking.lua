@@ -1,5 +1,5 @@
 local SBAI = require("SBAI")
-local Network = require("SBAI.Shared.networking")
+local Network = setmetatable({}, {__index=require("SBAI.Shared.networking")})
 
 function Network.SendConfig()
     local message = Networking.Start(Network.NETWORK_MSG.ConfigUpdate)

@@ -1,6 +1,6 @@
 local SBAI = require("SBAI")
 local Config = require("SBAI.config")
-local Network = require("SBAI.Shared.networking")
+local Network = setmetatable({}, {__index=require("SBAI.Shared.networking")})
 
 ---@param client Barotrauma.Networking.Client
 function Network.SendConfig(client)

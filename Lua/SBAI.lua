@@ -183,7 +183,7 @@ setmetatable(SBAI.itemGroup, {
 -- needed since SBAI.itemGroup is reset at roundEnd
 Hook.Add("roundEnd", SBAI.namespace.base..".itemGroup.Reset",
 function()
-    util.ClearTable(SBAI.itemGroup)
+    SBAI.util.ClearTable(SBAI.itemGroup)
 end)
 
 return SBAI

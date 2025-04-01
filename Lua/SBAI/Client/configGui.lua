@@ -449,7 +449,6 @@ local function MakeSBAIMenu(parent)
     local framePadding = Point(2*D_PADDING, 2*D_PADDING)
 
     mainFrame = AddFrame(parent, Vector2(D_WIDTH, D_HEIGHT), GUI.Anchor.Center, "ItemUI")
-    mainFrame.Enabled = false
     
     UpdateClickableSizes(mainFrame)
     
@@ -546,7 +545,12 @@ local function MakeSBAIMenu(parent)
     --     true
     -- )
 
-    mainFrame.Enabled = true
+    if Game.IsMultiplayer and not Game.Client.HasPermission(ClientPermissions.ManageSettings) then
+        mainFrame.Enabled = false
+		for comp in mainFrame.GetAllChildren() do
+			comp.enabled = false
+		end
+	end
 end
 
 ---@param parent Barotrauma.GUIComponent

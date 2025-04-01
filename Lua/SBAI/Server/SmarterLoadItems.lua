@@ -77,7 +77,7 @@ return function(namespace, options)
         end
     end
 
-    for _, loadType in pairs({"BatteryCells", "OxygenTanks"}) do
+    for loadType in {"BatteryCells", "OxygenTanks"} do
         local section = options[loadType]
         local targetItemTag, targetContainableItemTag, refillerTag, minimumCondition
         
@@ -132,7 +132,7 @@ return function(namespace, options)
                         end
                     else
                         targetItem = item
-                        for _, hasEmptySlots in pairs({true, false}) do
+                        for hasEmptySlots in {true, false} do
                             targetContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], targetContainableItemTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
                             if targetContainer then break end
                         end

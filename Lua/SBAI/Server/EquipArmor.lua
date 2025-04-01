@@ -18,7 +18,6 @@ local allInstanceData = setmetatable({}, {
             local function removeInstanceFunction()
                 t[k] = nil
             end
-
             k.Deselected.add(removeInstanceFunction)
         end
         rawset(t, k, v)
@@ -96,5 +95,5 @@ return function(namespace, options)
     end)
 end,
 function()
-    allInstanceData = nil
+    SBAI.util.ClearTable(allInstanceData)
 end
