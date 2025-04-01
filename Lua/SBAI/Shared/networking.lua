@@ -4,8 +4,8 @@ local Network = {}
 
 ---@enum NetworkMsg
 Network.NETWORK_MSG = {
-    ConfigUpdate=SBAI.namespace..".ConfigUpdate",
-    ConfigRequest=SBAI.namespace..".ConfigRequest"
+    ConfigUpdate=SBAI.namespace()..".ConfigUpdate",
+    ConfigRequest=SBAI.namespace()..".ConfigRequest"
 }
 
 ---@return string
