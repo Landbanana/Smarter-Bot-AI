@@ -12,8 +12,6 @@ function Network.RequestConfig()
     Networking.Send(Networking.Start(Network.NETWORK_MSG.ConfigRequest))
 end
 
-local tempParent
-
 Networking.Receive(Network.NETWORK_MSG.ConfigUpdate,
 ---@param message Barotrauma.Networking.IReadMessage
 function(message)
