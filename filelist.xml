@@ -5,9 +5,12 @@
   <Other file="%ModDir%/Lua/SBAI/util.lua" />
   <Other file="%ModDir%/Lua/SBAI/config.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/EquipArmor.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/PreventAttackingHandcuffed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/ReplenishInventory.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/SmarterLoadItems.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/UseShipDeconstructorIfAvailable.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Shared/networking.lua" />
 </contentpackage>

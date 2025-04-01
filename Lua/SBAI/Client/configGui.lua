@@ -1,4 +1,5 @@
 local SBAI = require("SBAI")
+SBAI.Network = require("SBAI.Client.networking")
 SBAI.GUI = {}
 
 local ForceUpperCase = SBAI.LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
@@ -405,7 +406,11 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
-        return LoadConfigSectionsToGUI(sectionList)
+        if Game.IsMultiplayer then
+            SBAI.Network.RequestConfig()
+        end
+
+        LoadConfigSectionsToGUI(sectionList)
     end)
     button.ToolTip = "Reload the saved config to GUI"
     return button
@@ -417,7 +422,8 @@ end
 local function AddSaveButton(parent, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
     function()
-        return SBAI.Config.Save()
+        SBAI.Config.Save()
+        SBAI.Control.Reactivate()
     end)
     
     button.ToolTip = "Save and apply config changes"
@@ -443,7 +449,7 @@ local function AddCloseButton(parent, anchor)
 end
 
 ---@param parent Barotrauma.GUIComponent
-function MakeSBAIMenu(parent)
+local function MakeSBAIMenu(parent)
     local framePadding = Point(2*D_PADDING, 2*D_PADDING)
 
     mainFrame = AddFrame(parent, Vector2(D_WIDTH, D_HEIGHT), GUI.Anchor.Center, "ItemUI")
