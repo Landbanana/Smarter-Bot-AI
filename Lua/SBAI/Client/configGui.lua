@@ -514,8 +514,6 @@ local function MakeSBAIMenu(parent)
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
 
-    
-
     --combinedSettingsGroupH.AbsoluteSpacing = D_PADDING
 
     -- local sectionOptionDrag = GUI.DragHandle(
