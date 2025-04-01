@@ -95,7 +95,7 @@ SBAI.itemGroup={} --[[@type table<string,Barotrauma.Item[]>]]
 local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
 
-    for _, v in ipairs(SBAI.Config.defaults.CONFIG) do
+    for _, v in ipairs(SBAI.Config.defaults()) do
         local Activate, Cleanup = require("SBAI.Server."..v.name)
         
         modules[v.name] = {Activate=Activate, Cleanup=Cleanup}

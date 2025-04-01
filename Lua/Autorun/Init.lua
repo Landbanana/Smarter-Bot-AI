@@ -5,5 +5,7 @@ if SERVER or Game.IsSingleplayer then
 end
 
 if CLIENT or Game.IsSingleplayer then
-    require("SBAI.Client.configGui")
+    Activate = require("SBAI.Client.configGui")
+
+    Activate(SBAI.namespace, SBAI.Config.data)
 end
