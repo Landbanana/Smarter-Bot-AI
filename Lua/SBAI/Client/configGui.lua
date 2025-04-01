@@ -203,23 +203,23 @@ end
 local function AddTitleText(parent, text, font, noUnderline, ignoreColors)
     local canvas = GUI.Frame(GUI.RectTransform(parent.Rect.Size, GUI.Canvas.Instance))
     local textBlock = AddTextBlock(canvas, Vector2(1, 0), nil, text, nil, font, GUI.Alignment.CenterX, false, ignoreColors)
-    local ySize = textBlock.Rect.Size.Y
+    local ySize = textBlock.Rect.Height
     local line = nil
     
     textBlock.Color = Color.Transparent
     
     if not noUnderline then
         line = AddFrame(canvas, Vector2(1, 0), nil, "HorizontalLine", ignoreColors)
-        ySize = ySize + line.Rect.Size.Y
+        ySize = ySize + line.Rect.Height
     end
     
-    local spacer = AddInvisibleFrame(canvas, Point(parent.Rect.Size.X, D_PADDING))
+    local spacer = AddInvisibleFrame(canvas, Point(parent.Rect.Width, D_PADDING))
 
-    ySize = ySize + spacer.Rect.Size.Y
+    ySize = ySize + spacer.Rect.Height
 
     local titleGroup = AddLayoutGroup(parent, Vector2(1, 0))
 
-    titleGroup.RectTransform.Resize(Point(parent.Rect.Size.X, ySize), false)
+    titleGroup.RectTransform.Resize(Point(parent.Rect.Width, ySize), false)
     textBlock.RectTransform.Parent = titleGroup.RectTransform
     if line then line.RectTransform.Parent = titleGroup.RectTransform end
     spacer.RectTransform.Parent = titleGroup.RectTransform
@@ -233,7 +233,7 @@ local clickableSizePoint --[[@type number?]]
 
 ---@param frame Barotrauma.GUIFrame
 local function UpdateClickableSizes(frame)
-    clickableSize = math.clamp(D_ICON_VH/D_HEIGHT*frame.Rect.Size.Y, 16, 60)
+    clickableSize = math.clamp(D_ICON_VH/D_HEIGHT*frame.Rect.Height, 16, 60)
     clickableSizePoint = Point(clickableSize, clickableSize)
 end
 
@@ -254,7 +254,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName, sectionIndex)
     optionsFrame.ClearChildren()
     
     local namespace = SBAI.namespace
-    local xMax = optionsFrame.Rect.Size.X
+    local xMax = optionsFrame.Rect.Width
     local xSpacing = 0 --[[@type number?]]
     local currentOptionCut --[[@type Barotrauma.GUIScissorComponent?]]
     -- local currentOption --[[@type string]]
@@ -387,7 +387,7 @@ local function LoadConfigSectionsToGUI(sectionList)
 
     sectionList.ClearChildren()
     for sectionName, sectionData in pairs(SBAI.Config.data) do
-        local sectionBlock = AddTextBlock(sectionList.Content, Point(sectionList.Content.Rect.Size.X, clickableSize), GUI.Anchor.TopLeft, sectionName, nil, "SubHeading", GUI.Alignment.Left, false)
+        local sectionBlock = AddTextBlock(sectionList.Content, Point(sectionList.Content.Rect.Width, clickableSize), GUI.Anchor.TopLeft, sectionName, nil, "SubHeading", GUI.Alignment.Left, false)
         
         sectionBlock.Color = Color.Transparent
         sectionBlock.AutoScaleHorizontal = true
@@ -455,22 +455,22 @@ local function MakeSBAIMenu(parent)
     local mainInnerGroup = AddLayoutGroup(mainFrame, mainFrame.Rect.Size - Point(32, 45), GUI.Anchor.Center)
     mainInnerGroup.RectTransform.Translate(Point(-1, 5))
 
-    local topFrame = AddFrame(mainInnerGroup, Point(mainInnerGroup.Rect.Size.X, clickableSize + framePadding.Y), nil, "UpgradeUIFrame", true)
-    local topMiddleCut = CutComponent(topFrame, Point(2*clickableSize + 2*D_PADDING, topFrame.Rect.Size.Y), GUI.Anchor.TopCenter)
+    local topFrame = AddFrame(mainInnerGroup, Point(mainInnerGroup.Rect.Width, clickableSize + framePadding.Y), nil, "UpgradeUIFrame", true)
+    local topMiddleCut = CutComponent(topFrame, Point(2*clickableSize + 2*D_PADDING, topFrame.Rect.Height), GUI.Anchor.TopCenter)
 
-    local combinedSettingsFrame = AddFrame(mainInnerGroup, Point(mainInnerGroup.Rect.Size.X, mainInnerGroup.Rect.Size.Y - topFrame.Rect.Size.Y))
+    local combinedSettingsFrame = AddFrame(mainInnerGroup, Point(mainInnerGroup.Rect.Width, mainInnerGroup.Rect.Height - topFrame.Rect.Height))
 
-    local sectionsScissor = CutComponent(combinedSettingsFrame, Point(combinedSettingsFrame.Rect.Size.X*0.3 - 1.5*D_PADDING, combinedSettingsFrame.Rect.Size.Y - 2*D_PADDING))
-    local optionsScissor = CutComponent(combinedSettingsFrame, Point(combinedSettingsFrame.Rect.Size.X*0.7 - 1.5*D_PADDING, combinedSettingsFrame.Rect.Size.Y - 2*D_PADDING), GUI.Anchor.TopRight)
+    local sectionsScissor = CutComponent(combinedSettingsFrame, Point(combinedSettingsFrame.Rect.Width*0.3 - 1.5*D_PADDING, combinedSettingsFrame.Rect.Height - 2*D_PADDING))
+    local optionsScissor = CutComponent(combinedSettingsFrame, Point(combinedSettingsFrame.Rect.Width*0.7 - 1.5*D_PADDING, combinedSettingsFrame.Rect.Height - 2*D_PADDING), GUI.Anchor.TopRight)
 
     sectionsScissor.RectTransform.AbsoluteOffset = Point(D_PADDING, D_PADDING)
     optionsScissor.RectTransform.AbsoluteOffset = Point(D_PADDING, D_PADDING)
 
     local sectionsTitle = AddTitleText(sectionsScissor.Content, "Section", "LargeFont")
     local optionsTitle = AddTitleText(optionsScissor.Content, "Options", "LargeFont")
-    local titleYSize = optionsTitle.Rect.Size.Y
+    local titleYSize = optionsTitle.Rect.Height
     
-    local sectionList = AddListBox(sectionsScissor.Content, Point(sectionsScissor.Content.Rect.Size.X, 8*clickableSize))
+    local sectionList = AddListBox(sectionsScissor.Content, Point(sectionsScissor.Content.Rect.Width, 8*clickableSize))
     local optionList = AddListBox(optionsScissor.Content, optionsScissor.Content.Rect.Size - Point(0, titleYSize))
 
     sectionList.ResizeContentToMakeSpaceForScrollBar = false
@@ -497,6 +497,25 @@ local function MakeSBAIMenu(parent)
         return true
     end
 
+    local bottomRightCut = CutComponent(sectionsScissor.Content, Point(sectionsScissor.Rect.Width, sectionsScissor.Rect.Height - sectionList.Rect.Height - sectionsTitle.Rect.Height - D_PADDING), GUI.Anchor.BottomCenter)
+
+    local bigBrain = GUI.Image(
+        GUI.RectTransform(
+            Point(bottomRightCut.Content.Rect.Width, bottomRightCut.Content.Rect.Height),
+            bottomRightCut.Content.RectTransform,
+            GUI.Anchor.BottomCenter
+        ),
+        "BigBrain"
+    )
+    bigBrain.ToolTip = "big brain"
+
+    local availableTextWidth = bottomRightCut.Rect.Width/2 - 4*D_PADDING
+
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
+
+    
+
     --combinedSettingsGroupH.AbsoluteSpacing = D_PADDING
 
     -- local sectionOptionDrag = GUI.DragHandle(
@@ -506,32 +525,6 @@ local function MakeSBAIMenu(parent)
     --     ),
     --     sectionFrame.RectTransform
     -- )
-
-    
-    
-    
-
-    -- local test = XDocument.Load("Content/Orders.xml").Element("Orders").Elements("Order")
-    -- local sprite = nil
-    -- for s in test do
-    --     if s.Attribute("identifier").Value == "deconstructitems" then
-    --         local xElementSprite = s.Element("Sprite")
-    --         local textureFile = xElementSprite.Attribute("texture").value
-    --         local texture = Sprite.LoadTexture(textureFile, true)
-
-    --         --local deconSprite = Sprite(texture, )
-            
-    --         local sourcerect = {}
-
-    --         for str in string.gmatch(xElementSprite.Attribute("sourcerect").Value, "([^,]+)") do
-    --             table.insert(sourcerect, Int32(str))
-    --         end
-            
-    --         local rectangle = Rectangle(sourcerect[1], sourcerect[2], sourcerect[3], sourcerect[4])
-    --         sprite = Sprite(texture, rectangle)
-    --         break
-    --     end
-    -- end
 
     -- print(sprite)    
 
