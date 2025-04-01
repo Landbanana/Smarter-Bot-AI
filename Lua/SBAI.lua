@@ -84,6 +84,11 @@ SBAI.Hook = setmetatable({
     ---@param patch fun(instance:any, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
     ---@param hookType Barotrauma.LuaCsHook.HookMethodType
     Patch=function(identifier, className, methodName, parameterTypes, patch, hookType)
+        if not hookType then
+            hookType = patch
+            patch = parameterTypes
+            parameterTypes = nil
+        end
         SBAI.Hook.list.patch[{identifier=identifier, className=className, methodName=methodName, parameterTypes=parameterTypes, hookType=hookType}] = true
         Hook.Patch(identifier, className, methodName, parameterTypes, patch, hookType)
     end
@@ -124,11 +129,11 @@ end
 function SBAI.Control.Deactivate(modules)
     if modules == nil then modules = GetModules() end
 
-    for k, _ in pairs(SBAI.hooks.add) do
+    for k, _ in pairs(SBAI.Hook.list.add) do
         Hook.Remove(k.name, k.identifier)
     end
     
-    for k, _ in pairs(SBAI.hooks.patch) do
+    for k, _ in pairs(SBAI.Hook.list.patch) do
         Hook.RemovePatch(k.identifier, k.className, k.methodName, k.parameterTypes, k.hookType)
     end
 

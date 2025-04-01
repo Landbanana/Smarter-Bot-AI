@@ -53,7 +53,7 @@ end
 return function(namespace, options)
     local timeBetween = options["timeBetween"] --[[@type number]]
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
-
+    
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveIdle", "Act",
     ---@param instance Barotrauma.AIObjectiveIdle
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
