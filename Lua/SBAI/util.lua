@@ -334,6 +334,72 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
+local descriptor = Descriptors["Barotrauma.ItemPrefab"]
+LuaUserData.MakeFieldAccessible(descriptor, "tags")
+
+---@type Barotrauma.ItemPrefab
+local prefabTemp = ItemPrefab.Prefabs["opdeco_officechair"]
+
+-- descriptor = LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
+
+-- LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
+
+
+
+
+local temp = function()
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet")
+    
+    local builder = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableHashSet")
+    builder.CreateBuilder(Identifier).ToImmutable().ToBuilder().Add(Identifier("chair"))            -- needed or Moonsharp forgets
+    
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
+
+    ---@param obj any
+    ---@return any
+    function util.CreateImmutableHashSetBuilder(obj)
+        return builder.CreateBuilder(obj)
+    end
+    return nil
+end
+temp = temp()
+
+---@param prefab Barotrauma.ItemPrefab
+---@param ... Barotrauma.Identifier-arr
+function util.AddTagsToPrefab(prefab, ...)
+    local builder = util.CreateImmutableHashSetBuilder(Identifier)
+    local newTags = table.pack(...)
+
+    for i=1,newTags.n do
+        builder.Add(newTags[i])
+    end
+
+    for tag in prefab.tags do
+        builder.Add(tag)
+    end
+    prefab.tags = builder.ToImmutable()
+end
+
+---@param prefab Barotrauma.ItemPrefab
+---@param ... Barotrauma.Identifier-arr
+function util.RemoveTagsFromPrefab(prefab, ...)
+    local builder = util.CreateImmutableHashSetBuilder(Identifier)
+    local badTags = table.pack(...)
+
+    for tag in prefab.tags do
+        for i=1,badTags.n do
+            if tag == badTags[i] then goto continue end
+        end
+        builder.Add(tag)
+        ::continue::
+    end
+    prefab.tags = builder.ToImmutable()
+end
+
 util.convert = {
     ItemTagToRefillerTag = {
         ["mobilebattery"]="batterycellrecharger",
