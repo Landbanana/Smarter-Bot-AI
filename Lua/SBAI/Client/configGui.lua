@@ -406,10 +406,6 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
-        if Game.IsMultiplayer then
-            SBAI.Network.RequestConfig()
-        end
-
         LoadConfigSectionsToGUI(sectionList)
     end)
     button.ToolTip = "Reload the saved config to GUI"
@@ -556,6 +552,9 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
+        if Game.IsMultiplayer then
+            SBAI.Network.RequestConfig()
+        end
         defaultConfigCache = SBAI.Config.defaults()
         return MakeSBAIMenu(parent)
     end
