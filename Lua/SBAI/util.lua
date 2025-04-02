@@ -313,25 +313,33 @@ function util.GetClosest(startPosition, ...)
 end
 
 ---@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
+---@generic T:Barotrauma.AIObjective
+---@param instance Barotrauma.AIObjective
+---@param objective nil
+---@param constructor fun():T
+---@param onCompletedGenerator fun(Barotrauma.AIObjective: any)
+---@param onAbandonGenerator fun(Barotrauma.AIObjective: any)
+---@return boolean
+---@return T?
 function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
-    if objective[1] ~= nil then
-        if not util.ListContains(instance.subObjectives, objective[1]) then objective[1] = nil end
+    if objective ~= nil then
+        if not util.ListContains(instance.subObjectives, objective) then objective = nil end
         return false
     else
-        objective[1] = constructor()
+        objective = constructor()
 
-        if util.ListContains(instance.subObjectives, objective[1]) then return false end
+        if util.ListContains(instance.subObjectives, objective) then return false end
         if instance.AllowMultipleInstances then
-            objective[1].SourceObjective = this
-            instance.subObjectives.Add(objective[1])
+            objective.SourceObjective = this
+            instance.subObjectives.Add(objective)
         else
-            instance.AddSubObjective(objective[1])
+            instance.AddSubObjective(objective)
         end
         if onCompletedGenerator ~= nil then
-            objective[1].Completed.add(onCompletedGenerator(objective[1]))
+            objective.Completed.add(onCompletedGenerator(objective))
         end
         if onAbandonGenerator ~= nil then
-            objective[1].Abandoned.add(onAbandonGenerator(objective[1]))
+            objective.Abandoned.add(onAbandonGenerator(objective))
         end
         return true
     end

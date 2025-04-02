@@ -50,6 +50,8 @@ return function(namespace, options)
     ---@param minimumCondition number
     ---@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
     local function GenerateItemPredicate(objective, minimumCondition)
+        local containableItemTag
+
         ---@param character Barotrauma.Character
         ---@param item Barotrauma.Item
         ---@return boolean
@@ -57,15 +59,20 @@ return function(namespace, options)
             if SBAI.util.ListContains(objective.ignoredItems, item) then return false end
 
             local parentItem = item.Container
+
             while parentItem ~= nil do
                 if parentItem.HasTag("donttakeitems") then return false end
                 parentItem = parentItem.Container
             end
             
+            for i in objective.ValidContainableItemIdentifiers do
+                if containableItemTag ~= nil then break end
+                containableItemTag = SBAI.util.convert.ItemTagToContainableItemTag[i]
+            end
             if  not character.HasItem(item) and not objective.CanEquip(item, false) or
                 not objective.ItemContainer.CanBeContained(item) or (
                     item.Container ~= nil and
-                    SBAI.util.IsSpecifiedContainer(item.Container, item) and
+                    SBAI.util.IsSpecifiedContainer(item.Container, containableItemTag or item) and
                     item.ConditionPercentage >= minimumCondition or
                     item.IsFullCondition
                 ) and
@@ -119,11 +126,11 @@ return function(namespace, options)
                     instance.targetItem = item
                     instance.objectiveManager.GetObjective(AIObjectiveIdle).wander(ptable["deltaTime"])
                 else
-                    local targetItem = nil --[[@type Barotrauma.Item?]]
-                    local targetContainer = nil --[[@type Barotrauma.Item|Barotrauma.Items.Components.ItemContainer?]]
+                    local targetItem --[[@type Barotrauma.Item?]]
+                    local targetContainer --[[@type Barotrauma.Item|Barotrauma.Items.Components.ItemContainer?]]
                     local container = item.Container --[[@type Barotrauma.Item?]]
 
-                    if container and SBAI.util.IsSpecifiedContainer(container, item) then
+                    if container and SBAI.util.IsSpecifiedContainer(container, targetContainableItemTag) then
                         local potentialContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], targetContainableItemTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                         
                         if potentialContainer then
@@ -138,7 +145,7 @@ return function(namespace, options)
                         end
                     end
 
-                    if not instance.decontainObjective and not (targetItem and targetContainer) then
+                    if not instance.decontainObjective and not (targetItem and targetContainer) or targetItem.ConditionIncreasedRecently then
                         instance.IgnoreTargetItem()
                         instance.Reset()
                         return
@@ -165,6 +172,7 @@ return function(namespace, options)
                         ---@nodiscard
                         local function onCompletedGenerator(objective)
                             return function()
+                                --instance.character.AIController.HandleRelocation(instance.targetItem)
                                 instance.IsCompleted = true
                                 instance.RemoveSubObjective(AIObjectiveDecontainItem, objective)
                             end
@@ -179,11 +187,7 @@ return function(namespace, options)
                                 instance.Reset()
                             end
                         end
-
-                        local decontainObjectiveRef = {instance.decontainObjective}
-
-                        SBAI.util.TryAddSubObjective(instance, decontainObjectiveRef, constructor, onCompletedGenerator, onAbandonGenerator)
-                        instance.decontainObjective = decontainObjectiveRef[1]
+                        _, instance.decontainObjective = SBAI.util.TryAddSubObjective(instance, instance.decontainObjective, constructor, onCompletedGenerator, onAbandonGenerator)
                     end
                 end
             end

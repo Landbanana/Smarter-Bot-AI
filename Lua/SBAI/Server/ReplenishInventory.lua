@@ -213,17 +213,15 @@ return function(namespace, options)
                                     return onAbandon
                                 end
 
-                                local AIObjectiveDecontainRef = {nil}
+                                local AIObjectiveDecontain
 
                                 for objective in instance.subObjectives do
-                                    if SBAI.LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontainItem") then
-                                        AIObjectiveDecontainRef = {objective}
+                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontainItem") then
+                                        AIObjectiveDecontain = objective
                                         break
                                     end
                                 end
-
-                                SBAI.util.TryAddSubObjective(instance, AIObjectiveDecontainRef, constructor, onCompletedGenerator, onAbandonGenerator)
-                                instanceData.decontainObjective = AIObjectiveDecontainRef[1]
+                                _, AIObjectiveDecontain = SBAI.util.TryAddSubObjective(instance, AIObjectiveDecontain, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
