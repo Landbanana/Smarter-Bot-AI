@@ -1,9 +1,12 @@
-local SBAI = require("SBAI")
+
+local Config = require("SBAI.Shared.config")
+local HF = require("SBAI.Shared.helperfunctions")
+local TryAddSubObjective, LuaUserData, Hook, ItemGroup = table.unpack(require("SBAI.Shared.redefinitions"))
 
 local descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "Act")
+LuaUserData.MakeMethodAccessible(descriptor, "Act")
 
-local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
+local startTimeBetween = Config.defaults.START_TIME_BETWEEN
 
 ---@type table<AIObjective,{timer:number, decontainObjective:Barotrauma.AIObjectiveDecontainItem?}>
 local allInstanceData = setmetatable({}, {
@@ -63,7 +66,7 @@ return function(namespace, options)
 
     ---@type table<string,fun(instance:Barotrauma.AIObjective):boolean>
     local specifierFunctions = {
-        ["Idle"]=SBAI.util.True,
+        ["Idle"]=HF.True,
         ---@param instance Barotrauma.AIObjectiveGoTo
         ---@return boolean
         ["Wait"]=function(instance)
@@ -84,8 +87,8 @@ return function(namespace, options)
             hasSelectedReplenish = true
             selectedReplenish[replenishType]={
                 targetItemTag=targetItemTag,
-                targetContainableItemTag=SBAI.util.convert.ItemTagToContainableItemTag[targetItemTag],
-                refillerTag=SBAI.util.convert.ItemTagToRefillerTag[targetItemTag],
+                targetContainableItemTag=HF.convert.ItemTagToContainableItemTag[targetItemTag],
+                refillerTag=HF.convert.ItemTagToRefillerTag[targetItemTag],
                 minimumCondition=section["minimumCondition"],
                 MinimumEquippedConditionTest=GenerateEquippedConditionTest(section["minimumEquippedCondition"])
             }
@@ -103,11 +106,11 @@ return function(namespace, options)
         
         objectiveFullType = objectiveTypeToObjectiveFullType[objectiveType]
         specifierFunction = specifierFunctions[objectiveType]
-        onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"] and OnlyAtFriendlyOutposts or SBAI.util.True
+        onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"] and OnlyAtFriendlyOutposts or HF.True
 
-        SBAI.LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
+        LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
         
-        SBAI.Hook.Patch(namespace(), objectiveFullType, "Act",
+        Hook.Patch(namespace(), objectiveFullType, "Act",
         ---@param instance Barotrauma.AIObjective
         ---@param ptable Barotrauma.LuaCsHook.ParameterTable
         function(instance, ptable)
@@ -119,7 +122,7 @@ return function(namespace, options)
                 local instanceData = allInstanceData[instance]
                 
                 if instanceData.timer <= 0 then
-                    instanceData.timer = SBAI.util.AddNoise(timeBetween, 0.1)
+                    instanceData.timer = HF.AddNoise(timeBetween, 0.1)
                     
                     if  instanceData.decontainObjective == nil and
                         specifierFunction(instance) and
@@ -132,13 +135,13 @@ return function(namespace, options)
                         local targetItem = nil --[[@type Barotrauma.Item]]
                         
                         for _, replenishData in pairs(selectedReplenish) do
-                            local potentialItem = SBAI.util.FindItem(character, itemList, replenishData.targetItemTag, {0, replenishData.minimumCondition}, replenishData.MinimumEquippedConditionTest)
+                            local potentialItem = HF.FindItem(character, itemList, replenishData.targetItemTag, {0, replenishData.minimumCondition}, replenishData.MinimumEquippedConditionTest)
                             
                             if potentialItem ~= nil then
-                                local potentialContainer = SBAI.util.GetClosest(character.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
+                                local potentialContainer = HF.GetClosest(character.WorldPosition, HF.FindSpecificContainers(character, ItemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
                                 
                                 if potentialContainer ~= nil then
-                                    local potentialFullItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), replenishData.targetItemTag, 100) --[[@type Barotrauma.Item]]
+                                    local potentialFullItem = HF.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), replenishData.targetItemTag, 100) --[[@type Barotrauma.Item]]
                                     
                                     if potentialFullItem ~= nil then
                                         i = i + 1
@@ -149,7 +152,7 @@ return function(namespace, options)
                             end
                         end
 
-                        local closestFullItem = SBAI.util.GetClosest(character.WorldPosition, potentialFullItems) --[[@type Barotrauma.Item]]
+                        local closestFullItem = HF.GetClosest(character.WorldPosition, potentialFullItems) --[[@type Barotrauma.Item]]
                         
                         for n, item in ipairs(potentialFullItems) do
                             if closestFullItem == item then
@@ -166,7 +169,7 @@ return function(namespace, options)
                                 local hasDecontainSubObjective = false
 
                                 for objective in instance.subObjectives do
-                                    if SBAI.LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontain") then
+                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontain") then
                                         hasDecontainSubObjective = true
                                         break
                                     end
@@ -213,17 +216,18 @@ return function(namespace, options)
                                     return onAbandon
                                 end
 
-                                local AIObjectiveDecontainRef = {nil}
+                                local objective
 
-                                for objective in instance.subObjectives do
-                                    if SBAI.LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontainItem") then
-                                        AIObjectiveDecontainRef = {objective}
+                                for obj in instance.subObjectives do
+                                    if LuaUserData.IsTargetType(obj, "Barotrauma.AIObjectiveDecontainItem") then
+                                        objective = obj
                                         break
                                     end
                                 end
 
-                                SBAI.util.TryAddSubObjective(instance, AIObjectiveDecontainRef, constructor, onCompletedGenerator, onAbandonGenerator)
-                                instanceData.decontainObjective = AIObjectiveDecontainRef[1]
+                                if not LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontainItem") then error("No decontain objective found") end
+                                
+                                _, instanceData.decontainObjective = TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
@@ -233,20 +237,20 @@ return function(namespace, options)
             end
         end, Hook.HookMethodType.Before)
 
-        SBAI.Hook.Patch((namespace + objectiveType)(), "Barotrauma.AIObjectiveContainItem", "Act",
+        Hook.Patch((namespace + objectiveType)(), "Barotrauma.AIObjectiveContainItem", "Act",
         ---@param instance Barotrauma.AIObjectiveContainItem
         ---@param _ Barotrauma.LuaCsHook.ParameterTable
         function(instance, _)
             if  not instance.TargetSlot and
                 instance.SourceObjective and
                 instance.SourceObjective.SourceObjective and
-                SBAI.LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, objectiveFullType)
+                LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, objectiveFullType)
             then
                 local baseObjective = instance.SourceObjective.SourceObjective
                     
                 for k, _ in pairs(allInstanceData) do
                     if k == baseObjective then
-                        local index = SBAI.util.GetSpecificSlot(instance.container.Item, instance.SourceObjective.TargetItem)
+                        local index = HF.GetSpecificSlot(instance.container.Item, instance.SourceObjective.TargetItem)
 
                         if index then
                             instance.TargetSlot = index
@@ -263,12 +267,12 @@ return function(namespace, options)
 
     -- hopefully prevent any memory leaks
     if hasSelectedObjectives and hasSelectedReplenish then
-        SBAI.Hook.Add("roundEnd", namespace(),
+        Hook.Add("roundEnd", namespace(),
         function()
-            SBAI.util.ClearTable(allInstanceData)
+            HF.ClearTable(allInstanceData)
         end)
     end
 end,
 function()
-    SBAI.util.ClearTable(allInstanceData)
+    HF.ClearTable(allInstanceData)
 end

@@ -1,5 +1,5 @@
-local SBAI = require("SBAI")
-local Config = require("SBAI.config")
+local SBAI = require("SBAI.Shared.SBAI")
+local Config = require("SBAI.Shared.config")
 local Network = {}
 
 ---@enum NetworkMsg

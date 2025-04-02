@@ -1,12 +1,13 @@
-local util = {Hook=Hook, LuaUserData=LuaUserData}
+local P = {Hook=Hook, LuaUserData=LuaUserData}
+local _, LuaUserData, Hook, _ = table.unpack(require("SBAI.Shared.redefinitions"))
 
-util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
 
 local readOnlyTable__newindex = function(_, _, _) error("attempt to modify a read-only table", 2) end
 ---@generic T: table
 ---@param t T
 ---@return T
-function util.MakeReadOnlyTable(t)
+function P.MakeReadOnlyTable(t)
     local proxy = {} --[[@type table]]
     local mt = {__index=t, __newindex=readOnlyTable__newindex}
 
@@ -19,7 +20,7 @@ local random = math.random
 ---@param value number
 ---@param deviation number
 ---@return number
-function util.AddNoise(value, deviation)
+function P.AddNoise(value, deviation)
     return value*(1 + deviation*(2*random() - 1))
 end
 
@@ -28,14 +29,14 @@ end
 ---@param identifier string
 ---@param func fun(T...)
 ---@param ... T
-function util.AddHookAndDo(name, identifier, func, ...)
+function P.AddHookAndDo(name, identifier, func, ...)
     Hook.Add(name, identifier, func)
     func(...)
 end
 
 ---@return true
 ---@nodiscard
-function util.True()
+function P.True()
     return true
 end
 
@@ -43,7 +44,7 @@ end
 ---@param list T[]
 ---@param obj T
 ---@return boolean
-function util.ListContains(list, obj)
+function P.ListContains(list, obj)
     for v in list do
         if v == obj then
             return true
@@ -56,7 +57,7 @@ end
 ---@param table table<integer,T>
 ---@param obj T
 ---@return boolean
-function util.ITableContains(table, obj)
+function P.ITableContains(table, obj)
     for _, v in ipairs(table) do
         if v == obj then
             return true
@@ -68,7 +69,7 @@ end
 ---@generic T
 ---@param t T
 ---@return T
-function util.CopyTable(t)
+function P.CopyTable(t)
     local tNew = {}
 
     for k, v in pairs(t) do
@@ -78,7 +79,7 @@ function util.CopyTable(t)
 end
 
 ---@param t table
-function util.ClearTable(t)
+function P.ClearTable(t)
     for k, _ in pairs(t) do
         t[k] = nil
     end
@@ -89,7 +90,7 @@ end
 ---@return fun(t:V[], i?:integer):(integer, V)
 ---@return V[]
 ---@return integer i
-function util.ipairsFlexible(t)
+function P.ipairsFlexible(t)
     if type(t) == "table" then return ipairs(t) end
 
     local n = #t
@@ -108,7 +109,7 @@ end
 ---@param t table<integer,any>[]
 ---@return fun():(...|nil)
 ---@nodiscard
-function util.VariableIterator(t)
+function P.VariableIterator(t)
     local i = 0
     local n = #t
     
@@ -126,14 +127,14 @@ function util.VariableIterator(t)
     end
 end
 
-util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
-util.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
+LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
 ---@param container Barotrauma.Item
 ---@param item Barotrauma.Item
 ---@return integer?
 ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):integer
-function util.GetSpecificSlot(container, item)
+function P.GetSpecificSlot(container, item)
     local itemContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer|nil]]
 
     if itemContainer ~= nil then 
@@ -152,15 +153,15 @@ end
 ---@param item Barotrauma.Item
 ---@return boolean
 ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):boolean
-function util.IsSpecifiedContainer(container, item)
-    return util.GetSpecificSlot(container, item) ~= nil
+function P.IsSpecifiedContainer(container, item)
+    return P.GetSpecificSlot(container, item) ~= nil
 end
 
 ---@param character Barotrauma.Character
 ---@param item Barotrauma.Item
 ---@return boolean
 ---@nodiscard
-function util.HasSimpleAccess(character, item)
+function P.HasSimpleAccess(character, item)
     if  item == nil or
         item.Removed or
         item.currentHull == nil or
@@ -180,7 +181,7 @@ function util.HasSimpleAccess(character, item)
     local submarine = item.Submarine
     local owner = item.GetRootInventoryOwner()
 
-    if  util.LuaUserData.IsTargetType(owner, "Barotrauma.Character") and owner ~= character or
+    if  LuaUserData.IsTargetType(owner, "Barotrauma.Character") and owner ~= character or
         not item.HasAccess(character) or
         submarine == nil or
         submarine.TeamID ~= character.TeamID or
@@ -212,11 +213,11 @@ end
 ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
 ---@return boolean
 ---@nodiscard
-function util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate)
+function P.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate)
     return  item ~= nil and
             item.HasTag(targetTag) and
             ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange) and
-            (not character or util.HasSimpleAccess(character, item)) and
+            (not character or P.HasSimpleAccess(character, item)) and
             (not predicate or predicate(character, item))
 end
 
@@ -226,10 +227,10 @@ end
 ---@param targetConditionPercentageRange? number|number[]
 ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
 ---@return Barotrauma.Item?
-function util.FindItem(character, itemList, targetTag, targetConditionPercentageRange, predicate)
+function P.FindItem(character, itemList, targetTag, targetConditionPercentageRange, predicate)
     -- if not itemList then error("itemList must be provided", 2) end
     for _, item in ipairs(itemList) do --[[@cast item Barotrauma.Item]]
-        if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
+        if P.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
             return item
         end
     end
@@ -241,12 +242,12 @@ end
 ---@param targetConditionPercentageRange? number|number[]
 ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
 ---@return Barotrauma.Item[] items
-function util.FindItems(character, itemList, targetTag, targetConditionPercentageRange, predicate)
+function P.FindItems(character, itemList, targetTag, targetConditionPercentageRange, predicate)
     local i = 0 --[[@type integer]]
     local items = {} --[=[@type Barotrauma.Item[]]=]
 
     for _, item in ipairs(itemList) do --[[@cast item Barotrauma.Item]]
-        if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
+        if P.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
             i = i + 1
             items[i] = item
         end
@@ -264,21 +265,21 @@ end
 ---@param isSpecifiedAlready? boolean
 ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
 ---@return Barotrauma.Item[]
-function util.FindSpecificContainers(character, containerList, targetContainableItemTag, targetContainerTag, targetConditionPercentageRange, hasEmptySlots, isSpecifiedAlready, predicate)
+function P.FindSpecificContainers(character, containerList, targetContainableItemTag, targetContainerTag, targetConditionPercentageRange, hasEmptySlots, isSpecifiedAlready, predicate)
     local i = 0 --[[@type integer]]
     local containers = {} --[=[@type Barotrauma.Item[]]=]
 
     local function containerPredicate(_, container)
-        return  util.IsSpecifiedContainer(container, targetContainableItemTag) and
+        return  P.IsSpecifiedContainer(container, targetContainableItemTag) and
                 (not predicate or predicate(character, container))
     end
     -- if not containerList then error("containerList must be provided", 2) end
     for _, container in ipairs(containerList) do --[[@cast container Barotrauma.Item]]
-        if util.MatchItem(character, container, targetContainerTag, nil, not isSpecifiedAlready and containerPredicate or predicate) then
+        if P.MatchItem(character, container, targetContainerTag, nil, not isSpecifiedAlready and containerPredicate or predicate) then
             local inventory = container.OwnInventory
 
             if  (not hasEmptySlots or inventory.EmptySlotCount > 0) and
-                (not targetContainableItemTag or util.FindItem(nil, inventory.FindAllItems(nil, true), targetContainableItemTag, targetConditionPercentageRange))
+                (not targetContainableItemTag or P.FindItem(nil, inventory.FindAllItems(nil, true), targetContainableItemTag, targetConditionPercentageRange))
                     then
                 i = i + 1
                 containers[i] = container
@@ -291,7 +292,7 @@ end
 ---@param startPosition Microsoft.Xna.Framework.Vector
 ---@param ... Barotrauma.Item[]
 ---@return Barotrauma.Item item
-function util.GetClosest(startPosition, ...)
+function P.GetClosest(startPosition, ...)
     local arg = {...}
     local closestItem = nil
     local bestDistanceFactor = 0.0
@@ -309,43 +310,8 @@ function util.GetClosest(startPosition, ...)
     return closestItem
 end
 
----@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
-function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
-    if objective[1] ~= nil then
-        if not util.ListContains(instance.subObjectives, objective[1]) then objective[1] = nil end
-        return false
-    else
-        objective[1] = constructor()
-
-        if util.ListContains(instance.subObjectives, objective[1]) then return false end
-        if instance.AllowMultipleInstances then
-            objective[1].SourceObjective = this
-            instance.subObjectives.Add(objective[1])
-        else
-            instance.AddSubObjective(objective[1])
-        end
-        if onCompletedGenerator ~= nil then
-            objective[1].Completed.add(onCompletedGenerator(objective[1]))
-        end
-        if onAbandonGenerator ~= nil then
-            objective[1].Abandoned.add(onAbandonGenerator(objective[1]))
-        end
-        return true
-    end
-end
-
 local descriptor = Descriptors["Barotrauma.ItemPrefab"]
 LuaUserData.MakeFieldAccessible(descriptor, "tags")
-
----@type Barotrauma.ItemPrefab
-local prefabTemp = ItemPrefab.Prefabs["opdeco_officechair"]
-
--- descriptor = LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
-
--- LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
-
-
-
 
 local temp = function()
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
@@ -361,17 +327,18 @@ local temp = function()
 
     ---@param obj any
     ---@return any
-    function util.CreateImmutableHashSetBuilder(obj)
+    function P.CreateImmutableHashSetBuilder(obj)
         return builder.CreateBuilder(obj)
     end
+    
     return nil
 end
 temp = temp()
 
 ---@param prefab Barotrauma.ItemPrefab
 ---@param ... Barotrauma.Identifier-arr
-function util.AddTagsToPrefab(prefab, ...)
-    local builder = util.CreateImmutableHashSetBuilder(Identifier)
+function P.AddTagsToPrefab(prefab, ...)
+    local builder = P.CreateImmutableHashSetBuilder(Identifier)
     local newTags = table.pack(...)
 
     for i=1,newTags.n do
@@ -386,8 +353,8 @@ end
 
 ---@param prefab Barotrauma.ItemPrefab
 ---@param ... Barotrauma.Identifier-arr
-function util.RemoveTagsFromPrefab(prefab, ...)
-    local builder = util.CreateImmutableHashSetBuilder(Identifier)
+function P.RemoveTagsFromPrefab(prefab, ...)
+    local builder = P.CreateImmutableHashSetBuilder(Identifier)
     local badTags = table.pack(...)
 
     for tag in prefab.tags do
@@ -400,7 +367,7 @@ function util.RemoveTagsFromPrefab(prefab, ...)
     prefab.tags = builder.ToImmutable()
 end
 
-util.convert = {
+P.convert = {
     ItemTagToRefillerTag = {
         ["mobilebattery"]="batterycellrecharger",
         ["refillableoxygensource"]="oxygentankrefiller"
@@ -411,4 +378,4 @@ util.convert = {
     }
 }
 
-return util.MakeReadOnlyTable(util)
+return P.MakeReadOnlyTable(P)

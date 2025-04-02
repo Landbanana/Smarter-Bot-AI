@@ -1,7 +1,7 @@
-local SBAI = require("SBAI")
+local HF = require("SBAI.Shared.helperfunctions")
 
-local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllowInFriendlySubs")
+local descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
+LuaUserData.MakePropertyAccessible(descriptor, "AllowInFriendlySubs")
 
 ---@param namespace Namespace
 ---@param options table
@@ -9,18 +9,18 @@ return function(namespace, options)
     local playerSubmarineHasNoDeconstructor = nil
 
     -- bought a new sub, some mod adds deployable deconstructors, etc.
-    SBAI.Hook.Add("roundEnd", namespace(), function()
+    Hook.Add("roundEnd", namespace(), function()
         playerSubmarineHasNoDeconstructor = nil --[[@type boolean|nil]]
     end)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "get_AllowInFriendlySubs",
+    Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "get_AllowInFriendlySubs",
     ---@param instance Barotrauma.AIObjective
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
         ptable.PreventExecution = true
 
         if playerSubmarineHasNoDeconstructor == nil then
-            playerSubmarineHasNoDeconstructor = util.FindItem(nil, Item.ItemList, "deconstructor", nil,
+            playerSubmarineHasNoDeconstructor = HF.FindItem(nil, Item.ItemList, "deconstructor", nil,
             function(character, item)
                 return item.InPlayerSubmarine
             end) ~= nil
@@ -29,7 +29,7 @@ return function(namespace, options)
         return playerSubmarineHasNoDeconstructor
     end, Hook.HookMethodType.Before)
 
-    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
+    -- Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
     -- function(instance, ptable)
     --     local deconstructor --[[@type Barotrauma.Items.Components.Deconstructor]]
     --     local closestDeconstructor = nil --[[@type Barotrauma.Items.Components.Deconstructor|nil]]
@@ -39,15 +39,15 @@ return function(namespace, options)
     --     ptable.PreventExecution = true
 
     --     if playerSubmarineHasDeconstructor == nil then
-    --         local i, deconstructorItem = next(SBAI.itemGroup["deconstructor"], nil)
+    --         local i, deconstructorItem = next(ItemGroup["deconstructor"], nil)
 
     --         while i and not playerSubmarineHasDeconstructor do
     --             playerSubmarineHasDeconstructor = deconstructorItem.InPlayerSubmarine
-    --             i, deconstructorItem = next(SBAI.itemGroup["deconstructor"], i)
+    --             i, deconstructorItem = next(ItemGroup["deconstructor"], i)
     --         end
     --     end
 
-    --     for _, deconstructorItem in ipairs(SBAI.itemGroup["deconstructor"]) do
+    --     for _, deconstructorItem in ipairs(ItemGroup["deconstructor"]) do
     --         if deconstructorItem == nil then goto continue end
     --         if playerSubmarineHasDeconstructor and not deconstructorItem.InPlayerSubmarine then goto continue end
     --         deconstructor = deconstructorItem.GetComponent(Components.Deconstructor) --[[@type Barotrauma.Items.Components.Deconstructor]]

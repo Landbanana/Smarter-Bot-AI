@@ -1,21 +1,20 @@
-local SBAI = require("SBAI")
-local Network = setmetatable({}, {__index=require("SBAI.Shared.networking")})
+local P = setmetatable({}, {__index=require("SBAI.Shared.networking")})
 
-function Network.SendConfig()
-    local message = Networking.Start(Network.NETWORK_MSG.ConfigUpdate)
+function P.SendConfig()
+    local message = Networking.Start(P.NETWORK_MSG.ConfigUpdate)
 
-    message.WriteString(Network.SerializeConfig())
-    networking.Send(message)
+    message.WriteString(P.SerializeConfig())
+    Networking.Send(message)
 end
 
-function Network.RequestConfig()
-    Networking.Send(Networking.Start(Network.NETWORK_MSG.ConfigRequest))
+function P.RequestConfig()
+    Networking.Send(Networking.Start(P.NETWORK_MSG.ConfigRequest))
 end
 
-Networking.Receive(Network.NETWORK_MSG.ConfigUpdate,
+Networking.Receive(P.NETWORK_MSG.ConfigUpdate,
 ---@param message Barotrauma.Networking.IReadMessage
 function(message)
-	Network.UnserializeConfig(message)
+	P.UnserializeConfig(message)
 end)
 
-return Network
+return P

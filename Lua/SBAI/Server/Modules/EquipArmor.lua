@@ -1,6 +1,8 @@
-local SBAI = require("SBAI")
+local Config = require("SBAI.Shared.config")
+local HF = require("SBAI.Shared.helperfunctions")
+local SBAI = require("SBAI.Shared.SBAI")
 
-local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
+local startTimeBetween = Config.defaults.START_TIME_BETWEEN
 
 ---@type table<AIObjectiveIdle,{timer:number}>
 local allInstanceData = setmetatable({}, {
@@ -41,7 +43,7 @@ local function GenerateWearableArmorPredicate(slotTypes)
         end
 
         for slot in slotTypes do
-            if SBAI.util.ListContains(item.AllowedSlots, slot) then
+            if HF.ListContains(item.AllowedSlots, slot) then
                 return true
             end
         end
@@ -61,7 +63,7 @@ return function(namespace, options)
         local character = instance.character --[[@type Barotrauma.Character]]
         
         if instanceData.timer <= 0 then
-            instanceData.timer = SBAI.util.AddNoise(timeBetween, 0.1)
+            instanceData.timer = HF.AddNoise(timeBetween, 0.1)
             
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
             local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
@@ -74,7 +76,7 @@ return function(namespace, options)
             
             if #filteredClothesSlotTypes <= 0 then return end
 
-            local wearables = SBAI.util.FindItems(character, inventory.FindAllItems(nil, true), nil, nil, GenerateWearableArmorPredicate(filteredClothesSlotTypes))
+            local wearables = HF.FindItems(character, inventory.FindAllItems(nil, true), nil, nil, GenerateWearableArmorPredicate(filteredClothesSlotTypes))
             
             for _, slotType in ipairs(filteredClothesSlotTypes) do
                 for _, item in ipairs(wearables) do
@@ -91,9 +93,9 @@ return function(namespace, options)
     -- hopefully prevent any memory leaks
     Hook.Add("roundEnd", namespace(),
     function()
-        SBAI.util.ClearTable(allInstanceData)
+        HF.ClearTable(allInstanceData)
     end)
 end,
 function()
-    SBAI.util.ClearTable(allInstanceData)
+    HF.ClearTable(allInstanceData)
 end

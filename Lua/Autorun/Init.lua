@@ -1,13 +1,15 @@
-local SBAI = require("SBAI")
+local SBAI = require("SBAI.Shared.SBAI")
 
 if SERVER or Game.IsSingleplayer then
-    require("SBAI.Server.networking")
+    SBAI.Server.Activate()
+    -- require("SBAI.Server.networking")
 
-    SBAI.Control.Activate()
+    -- SBAI.Control.Activate()
 end
 
 if CLIENT or Game.IsSingleplayer then
-    Activate = require("SBAI.Client.configGui")
+    SBAI.Client.Activate()
+    -- Activate = require("SBAI.Client.configGui")
 
-    Activate(SBAI.namespace, SBAI.Config.data)
+    -- Activate(SBAI.namespace, Config.data)
 end
