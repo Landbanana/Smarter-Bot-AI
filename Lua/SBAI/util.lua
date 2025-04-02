@@ -130,30 +130,33 @@ util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.It
 util.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
 ---@param container Barotrauma.Item
----@param item Barotrauma.Item
+---@param itemTag Barotrauma.Item
 ---@return integer?
 ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):integer
-function util.GetSpecificSlot(container, item)
+function util.GetSpecificSlot(container, itemTag)
     local itemContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer|nil]]
 
     if itemContainer ~= nil then 
         local i = 0
         
         for s in itemContainer.slotRestrictions do
-            if s.ContainableItems ~= nil and s.MatchesItem(item) then
-                return i
+            for c in s.ContainableItems do
+                for t in c.Identifiers do
+                    if t == itemTag then return i end
+                end
             end
-            i = i + 1
         end
+        i = i + 1
     end
 end
 
+
 ---@param container Barotrauma.Item
----@param item Barotrauma.Item
+---@param itemTag Barotrauma.Item
 ---@return boolean
 ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):boolean
-function util.IsSpecifiedContainer(container, item)
-    return util.GetSpecificSlot(container, item) ~= nil
+function util.IsSpecifiedContainer(container, itemTag)
+    return util.GetSpecificSlot(container, itemTag) ~= nil
 end
 
 ---@param character Barotrauma.Character
@@ -228,7 +231,7 @@ end
 ---@return Barotrauma.Item?
 function util.FindItem(character, itemList, targetTag, targetConditionPercentageRange, predicate)
     -- if not itemList then error("itemList must be provided", 2) end
-    for _, item in ipairs(itemList) do --[[@cast item Barotrauma.Item]]
+    for item in itemList do --[[@cast item Barotrauma.Item]]
         if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
             return item
         end
@@ -245,7 +248,7 @@ function util.FindItems(character, itemList, targetTag, targetConditionPercentag
     local i = 0 --[[@type integer]]
     local items = {} --[=[@type Barotrauma.Item[]]=]
 
-    for _, item in ipairs(itemList) do --[[@cast item Barotrauma.Item]]
+    for item in itemList do --[[@cast item Barotrauma.Item]]
         if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
             i = i + 1
             items[i] = item
