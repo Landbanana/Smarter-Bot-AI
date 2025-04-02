@@ -106,9 +106,9 @@ function util.ipairsFlexible(t)
 end
 
 ---@param t table<integer,any>[]
----@return fun():(...|nil)
+---@return fun()
 ---@nodiscard
-function util.VariableIterator(t)
+function util.Variator(t)
     local i = 0
     local n = #t
     
@@ -125,6 +125,7 @@ function util.VariableIterator(t)
         end
     end
 end
+
 
 util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 util.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
