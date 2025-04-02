@@ -5,7 +5,7 @@ function Network.SendConfig()
     local message = Networking.Start(Network.NETWORK_MSG.ConfigUpdate)
 
     message.WriteString(Network.SerializeConfig())
-    networking.Send(message)
+    Networking.Send(message)
 end
 
 function Network.RequestConfig()

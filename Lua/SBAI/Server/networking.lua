@@ -7,7 +7,7 @@ function Network.SendConfig(client)
     local message = Networking.Start(Network.NETWORK_MSG.ConfigUpdate)
 
     message.WriteString(Network.SerializeConfig())
-    networking.Send(message, client and client.Connection or nil)
+    Networking.Send(message, client and client.Connection or nil)
 end
 
 Networking.Receive(Network.NETWORK_MSG.ConfigUpdate,
@@ -23,7 +23,7 @@ Networking.Receive(Network.NETWORK_MSG.ConfigRequest,
 ---@param _ Barotrauma.Networking.IReadMessage
 ---@param client Barotrauma.Networking.IReadMessage
 function(_, client)
-    if not sender then return end
+    if not client then return end
 
     Network.SendConfig(client)
 end)
