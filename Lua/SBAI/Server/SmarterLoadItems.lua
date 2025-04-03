@@ -11,7 +11,7 @@ SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
 SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
 --SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
---SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
+-- SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "Container")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
@@ -44,46 +44,22 @@ do  for loadType , itemTag, containableTag, refillerTag in
         {"OxygenTanks", loadTypeToTargetItemTag["OxygenTanks"], SBAI.util.convert.ItemTagToContainableItemTag[loadTypeToTargetItemTag["OxygenTanks"]], SBAI.util.convert.ItemTagToRefillerTag[loadTypeToTargetItemTag["OxygenTanks"]]}})
     do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
         AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
----@param namespace Namespace
----@param options table<string,any>
-return function(namespace, options)
-    local minimumCondition = options[loadType]["minimumCondition"]
-    namespace = namespace + loadType
-local function RefillerPredicate(character, item)
-    return AIObjectiveLoadItems.IsValidTarget(item, character)
-end
----@param objective Barotrauma.AIObjective
----@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
-local function GenerateItemPredicate(objective, minimumCondition)
-    ---@param character Barotrauma.Character
-    ---@param item Barotrauma.Item
-    ---@return boolean
-    return function(character, item)
-        if SBAI.util.ListContains(objective.ignoredItems, item) then return false end
-
-        local parentItem = item.Container
-
-        while parentItem ~= nil do
-            if parentItem.HasTag("donttakeitems") then return false end
-            parentItem = parentItem.Container
-        end
-        
-        -- for i in objective.ValidContainableItemIdentifiers do
-        --     if containableItemTag ~= nil then break end
-        --     containableItemTag = SBAI.util.convert.ItemTagToContainableItemTag[i]
-        -- end
-        if  not character.HasItem(item) and not objective.CanEquip(item, false) or
-            not objective.ItemContainer.CanBeContained(item) or (
-                item.Container ~= nil and
-                SBAI.util.IsSpecifiedContainer(item.Container, containableTag) and
-                item.ConditionPercentage >= minimumCondition or
-                item.IsFullCondition and not item.Container.HasTag(refillerTag)or
-                item.ConditionIncreasedRecently) then
-                return false
-            end
-        return true
-    end
-end
+            ---@param namespace Namespace
+            ---@param options table<string,any>
+            
+            if if battter.HasConditionIncreasedRecently and
+                
+				if 	item.ConditionIncreasedRecently and
+					if 	item.IsFullCondition then
+                        rsSpecifiedContainer(destContainer,)
+						not destContainer.HasTag(refillerTag) and
+						SBAI.util.Find()
+						
+						SBAI.util.Find(character, destContainer.OwnInventory.FindAllItems(), itemTag, {0, minimumCondition)m return true
+					else
+						not container.HasTags(refillableTag)
+					end
+                end
 
 SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "IsValidContainable",
 ---@param instance Barotrauma.AIObjective
@@ -91,7 +67,6 @@ SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "IsValidContainab
 function(instance, ptable)
     if instance.TargetContainerTags[1] == refillerTag then
         ptable.PreventExecution = true
-
         return SBAI.util.MatchItem(instance.character, ptable["item"], nil, nil, GenerateItemPredicate(instance, minimumCondition))
     end
 end, Hook.HookMethodType.Before)
@@ -120,10 +95,11 @@ function(instance, ptable)
                 local potentialContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                 
                 if potentialContainer then
-                    targetItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), targetItemTag, 100) --[[@type Barotrauma.Item]]
+                    targetItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
                     targetContainer = item.Container
                 end
             else
+                if container then print(container) end
                 targetItem = item
                 for hasEmptySlots in {true, false} do
                     targetContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
