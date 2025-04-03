@@ -1,48 +1,49 @@
 local SBAI = require("SBAI")
 
-local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+--local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
+--SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
+--SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
 
-descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
+local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
 SBAI.LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "GetPriority")
+--SBAI.LuaUserData.MakeMethodAccessible(descriptor, "GetPriority")
 SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
 SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
+--SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
+--SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "Container")
 SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
 SBAI.LuaUserData.MakeFieldAccessible(descriptor, "abandonGetItemDialogueIdentifier")
 SBAI.LuaUserData.MakeFieldAccessible(descriptor, "decontainObjective")
 SBAI.LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
+--SBAI.LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
 SBAI.LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "subObjectives")
+--SBAI.LuaUserData.MakeFieldAccessible(descriptor, "subObjectives")
 
-descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "item")
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "CheckObjectiveState")
+-- descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
+-- SBAI.LuaUserData.MakeFieldAccessible(descriptor, "item")
+--SBAI.LuaUserData.MakeMethodAccessible(descriptor, "CheckObjectiveState")
 
 descriptor = Descriptors["Barotrauma.Items.Components.ItemContainer"]
 SBAI.LuaUserData.MakeFieldAccessible(descriptor, "slotRestrictions")
 SBAI.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
-descriptor = Descriptors["Barotrauma.ItemInventory"]
-LuaUserData.MakeFieldAccessible(descriptor, "slots")
+-- descriptor = Descriptors["Barotrauma.ItemInventory"]
+-- LuaUserData.MakeFieldAccessible(descriptor, "slots")
 
 local loadTypeToTargetItemTag = {
     BatteryCells="mobilebattery",
     OxygenTanks="refillableoxygensource"
 }
 
-AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+
 do  for loadType , itemTag, containableTag, refillerTag in 
         SBAI.util.Variator({{"BatteryCells", loadTypeToTargetItemTag["BatteryCells"], SBAI.util.convert.ItemTagToContainableItemTag[loadTypeToTargetItemTag["BatteryCells"]], SBAI.util.convert.ItemTagToRefillerTag[loadTypeToTargetItemTag["BatteryCells"]]},
         {"OxygenTanks", loadTypeToTargetItemTag["OxygenTanks"], SBAI.util.convert.ItemTagToContainableItemTag[loadTypeToTargetItemTag["OxygenTanks"]], SBAI.util.convert.ItemTagToRefillerTag[loadTypeToTargetItemTag["OxygenTanks"]]}})
-    do
+    do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
+        AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
 ---@param namespace Namespace
 ---@param options table<string,any>
 return function(namespace, options)
@@ -67,17 +68,17 @@ local function GenerateItemPredicate(objective, minimumCondition)
             parentItem = parentItem.Container
         end
         
-        for i in objective.ValidContainableItemIdentifiers do
-            if containableItemTag ~= nil then break end
-            containableItemTag = SBAI.util.convert.ItemTagToContainableItemTag[i]
-        end
+        -- for i in objective.ValidContainableItemIdentifiers do
+        --     if containableItemTag ~= nil then break end
+        --     containableItemTag = SBAI.util.convert.ItemTagToContainableItemTag[i]
+        -- end
         if  not character.HasItem(item) and not objective.CanEquip(item, false) or
             not objective.ItemContainer.CanBeContained(item) or (
                 item.Container ~= nil and
-                SBAI.util.IsSpecifiedContainer(item.Container, containableItemTag or item) and
+                SBAI.util.IsSpecifiedContainer(item.Container, containableTag) and
                 item.ConditionPercentage >= minimumCondition or
-                item.IsFullCondition
-            and item.ConditionIncreasedRecently) then
+                item.IsFullCondition and not item.Container.HasTag(refillerTag)or
+                item.ConditionIncreasedRecently) then
                 return false
             end
         return true
@@ -103,7 +104,6 @@ function(instance, ptable)
         local character = instance.character --[[@type Barotrauma.Character]]
         local item = instance.targetItem --[[@type Barotrauma.Item]]
 
-        if instance.isCompleted then print("DONEZO") end
         if item == nil then
             item = SBAI.util.FindItem(character, SBAI.itemGroup[itemTag], itemTag, {0, minimumCondition}, GenerateItemPredicate(instance, minimumCondition))
             if item == nil then
@@ -205,63 +205,65 @@ SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItems", "ItemMatchesTarg
 ---@param ptable Barotrauma.LuaCsHook.ParameterTable
 function(instance, ptable)
     local item = ptable["item"]
+
     if item.HasTag(itemTag) then
         ptable.PreventExecution = true
         return item.Container ~= nil and
-            SBAI.util.IsSpecifiedContainer(item.Container, item) and
+            SBAI.util.IsSpecifiedContainer(item.Container, itemTag) and
             item.ConditionPercentage >= minimumCondition or
             item.IsFullCondition
         end
     end, Hook.HookMethodType.Before)
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "GetPriority",
-    ---@param instance Barotrauma.AIObjective
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    function(instance, ptable)
-            if instance.TargetContainerTags[1] == refillerTag then
-                if  not instance.IsAllowed then
-                    instance.HandleDisallowed()
-                    return Priority
-                elseif not AIObjectiveLoadItems.IsValidTarget(instance.Container, instance.character, nil, instance.TargetItemCondition) then
-                    instance.Priority = 0
-                elseif instance.targetItem == nil then
-                    instance.Priority = 0
-                else
-                local dist = 0.0
-                local function AddDistance(startPos, targetPos)
-                local yDist = math.Abs(startPos.Y - targetPos.Y)
+
+    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "GetPriority",
+    -- ---@param instance Barotrauma.AIObjective
+    -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+    -- function(instance, ptable)
+    --         if instance.TargetContainerTags[1] == refillerTag then
+    --             if  not instance.IsAllowed then
+    --                 instance.HandleDisallowed()
+    --                 return Priority
+    --             elseif not AIObjectiveLoadItems.IsValidTarget(instance.Container, instance.character, nil, instance.TargetItemCondition) then
+    --                 instance.Priority = 0
+    --             elseif instance.targetItem == nil then
+    --                 instance.Priority = 0
+    --             else
+    --             local dist = 0.0
+    --             local function AddDistance(startPos, targetPos)
+    --             local yDist = math.Abs(startPos.Y - targetPos.Y)
                 
-                if yDist > 100 then dist = yDist + yDist end
+    --             if yDist > 100 then dist = yDist + yDist end
                 
-                dist = dist + math.Abs(instance.character.WorldPosition.X - targetPos.X)
-                end
+    --             dist = dist + math.Abs(instance.character.WorldPosition.X - targetPos.X)
+    --             end
 
-                local distanceFactor =  instance.GetDistanceFactor(instance.targetItem.WorldPosition, nil, 5, 5000, 0.9, 0)
+    --             local distanceFactor =  instance.GetDistanceFactor(instance.targetItem.WorldPosition, nil, 5, 5000, 0.9, 0)
 
-                if instance.character.CurrentHull ~= instance.targetItem.CurrentHull then
-                    AddDistance(instance.character.WorldPosition, instance.targetItem.WorldPosition)
-                end
+    --             if instance.character.CurrentHull ~= instance.targetItem.CurrentHull then
+    --                 AddDistance(instance.character.WorldPosition, instance.targetItem.WorldPosition)
+    --             end
 
-                if instance.targetItem.CurrentHull ~= instance.Container.CurrentHull then
-                    AddDistance(instance.targetItem.WorldPosition, instance.Container.WorldPosition)
-                end
-                    local hasContainable = instance.character.HasItem(instance.targetItem)
-                    local devotion = (instance.CumulatedDevotion + (hasContainable and (100 - instance.MaxDevotion) or 0))/100
-                    local max = AIObjectiveManager.LowestOrderPriority - (hasContainable and 1 or 2)
-                    instance.Priority = math.lerp(0, max, math.clamp(devotion + (distanceFactor * instance.PriorityModifier), 0, 1))
-                    if instance.decontainObjective and instance.targetItem.Container ~= instance.Container then
-                    if not instance.IsValidContainable(instance.targetItem) then
-                        instance.decontainObjective.Abandon = true;
-                    elseif not instance.ItemContainer.Inventory.CanBePut(instance.targetItem) then
-                        for item in instance.ItemContainer.Inventory.AllItems do
-                            --item.endNone instance.ItemMatchesTargetCondition(TargetItemCondition
-                        end
-                    end instance.decontainObjective.Abandon = true;
-                        if instance.ItemContainer.Inventory.IsFull() then Priority = Priority/4; end
+    --             if instance.targetItem.CurrentHull ~= instance.Container.CurrentHull then
+    --                 AddDistance(instance.targetItem.WorldPosition, instance.Container.WorldPosition)
+    --             end
+    --                 local hasContainable = instance.character.HasItem(instance.targetItem)
+    --                 local devotion = (instance.CumulatedDevotion + (hasContainable and (100 - instance.MaxDevotion) or 0))/100
+    --                 local max = AIObjectiveManager.LowestOrderPriority - (hasContainable and 1 or 2)
+    --                 instance.Priority = math.lerp(0, max, math.clamp(devotion + (distanceFactor * instance.PriorityModifier), 0, 1))
+    --                 if instance.decontainObjective and instance.targetItem.Container ~= instance.Container then
+    --                 if not instance.IsValidContainable(instance.targetItem) then
+    --                     instance.decontainObjective.Abandon = true;
+    --                 elseif not instance.ItemContainer.Inventory.CanBePut(instance.targetItem) then
+    --                     for item in instance.ItemContainer.Inventory.AllItems do
+    --                         --item.endNone instance.ItemMatchesTargetCondition(TargetItemCondition
+    --                     end
+    --                 end instance.decontainObjective.Abandon = true;
+    --                     if instance.ItemContainer.Inventory.IsFull() then Priority = Priority/4; end
                         
-                    end 
-                    return Priority;
-                end namespace = -namespace
-            end
-end, Hook.HookMethodType.Before)end
+    --                 end 
+    --                 return Priority;
+    --             end namespace = -namespace
+    --         end, Hook.HookMethodType.Before)end
+end
 end
 end
