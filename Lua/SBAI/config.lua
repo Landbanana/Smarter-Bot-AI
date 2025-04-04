@@ -114,8 +114,8 @@ local function getData()
             MakeSection("OxygenTanks", true, "Let the AI replenish their oxygen tanks", {
                 MakeOption(BASEOPTION.minimumCondition, 95, Config.OPTION_TYPE.float, "Minimum condition of oxygen tanks in an idling/waiting AI's inventory (not equipped) before replacing them"),
                 MakeOption(BASEOPTION.minimumEquippedCondition, 10, Config.OPTION_TYPE.float, "Minimum condition of oxygen tanks equipped by an idling/waiting AI before replacing them")
-            }),
-            MakeOption(BASEOPTION.timeBetween, 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all")
+            })-- ,
+            -- MakeOption(BASEOPTION.timeBetween, 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all")
         })
     }
 end
