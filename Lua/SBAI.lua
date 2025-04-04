@@ -118,8 +118,7 @@ function SBAI.Control.Activate(modules)
     for postfix, module in pairs(GetModules()) do
         local namespace = SBAI.namespace + postfix
         local options = SBAI.Config.data[postfix]
-        
-        if options.enable then
+        if  options.enable then
             module.Activate(namespace, options)
         end
     end

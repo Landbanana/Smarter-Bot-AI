@@ -1,26 +1,38 @@
 local util = {Hook=Hook, LuaUserData=LuaUserData}
+do
+    local LuaUserData = LuaUserData
+    local Descriptors = Descriptors
+    
+    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
 
-util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
-
-local readOnlyTable__newindex = function(_, _, _) error("attempt to modify a read-only table", 2) end
----@generic T: table
----@param t T
----@return T
-function util.MakeReadOnlyTable(t)
-    local proxy = {} --[[@type table]]
-    local mt = {__index=t, __newindex=readOnlyTable__newindex}
-
-    setmetatable(proxy, mt)
-    return proxy
+    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
+    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
+    LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 end
 
-local random = math.random
+do
+    local mt__newindex = function(_, _, _) error("attempt to modify a read-only table", 2) end
+    ---@generic T: table
+    ---@param t T
+    ---@return T
+    function util.MakeReadOnlyTable(t)
+        local proxy = {} --[[@type table]]
+        local mt = {__index=t, __newindex=mt__newindex}
 
----@param value number
----@param deviation number
----@return number
-function util.AddNoise(value, deviation)
-    return value*(1 + deviation*(2*random() - 1))
+        setmetatable(proxy, mt)
+        return proxy
+    end
+end
+
+do
+    local random = math.random
+
+    ---@param value number
+    ---@param deviation number
+    ---@return number
+    function util.AddNoise(value, deviation)
+        return value*(1 + deviation*(2*random() - 1))
+    end
 end
 
 ---@generic T: ...
@@ -111,24 +123,20 @@ end
 function util.Variator(t)
     local i = 0
     local n = #t
-    
+
     if i >= n then return function() end end
 
     local ni = #t[1]
 
     return function()
         i = i + 1
-        
+
         if i <= n then
-            if #t[i] ~= ni then error("table sizes must be the same", 2) end
+        if #t[i] ~= ni then error("table sizes must be the same", 2) end
             return table.unpack(t[i])
         end
     end
 end
-
-
-util.LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
-util.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
 ---@param container Barotrauma.Item
 ---@param itemTag Barotrauma.Item
@@ -150,7 +158,6 @@ function util.GetSpecificSlot(container, itemTag)
         i = i + 1
     end
 end
-
 
 ---@param container Barotrauma.Item
 ---@param itemTag Barotrauma.Item

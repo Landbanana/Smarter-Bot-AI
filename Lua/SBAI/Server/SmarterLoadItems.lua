@@ -1,37 +1,45 @@
 local SBAI = require("SBAI")
 
---local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
---SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
---SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+do
+    local LuaUserData = LuaUserData
+    local descriptor --[[@type MoonSharp.Interpreter.Interop.IUserDataDescriptor]]
 
-local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
---SBAI.LuaUserData.MakeMethodAccessible(descriptor, "GetPriority")
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
---SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
--- SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "Container")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "abandonGetItemDialogueIdentifier")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "decontainObjective")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
---SBAI.LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
---SBAI.LuaUserData.MakeFieldAccessible(descriptor, "subObjectives")
+    descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
+    LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+    -- LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
+    -- LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+    -- descriptor = Descriptors["Barotrauma.AIObjective"]
+    -- LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
 
--- descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
--- SBAI.LuaUserData.MakeFieldAccessible(descriptor, "item")
---SBAI.LuaUserData.MakeMethodAccessible(descriptor, "CheckObjectiveState")
+    descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
+    LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
+    -- LuaUserData.MakeMethodAccessible(descriptor, "GetPriority")
+    LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
+    LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
+    -- LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
+    LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
+    -- LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
+    LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+    LuaUserData.MakePropertyAccessible(descriptor, "Container")
+    LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
+    LuaUserData.MakeFieldAccessible(descriptor, "abandonGetItemDialogueIdentifier")
+    LuaUserData.MakeFieldAccessible(descriptor, "decontainObjective")
+    LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
+    -- LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
+    LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
+    -- LuaUserData.MakeFieldAccessible(descriptor, "subObjectives")
 
-descriptor = Descriptors["Barotrauma.Items.Components.ItemContainer"]
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "slotRestrictions")
-SBAI.LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+    -- descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
+    -- LuaUserData.MakeFieldAccessible(descriptor, "item")
+    -- LuaUserData.MakeMethodAccessible(descriptor, "CheckObjectiveState")
 
--- descriptor = Descriptors["Barotrauma.ItemInventory"]
--- LuaUserData.MakeFieldAccessible(descriptor, "slots")
+    descriptor = Descriptors["Barotrauma.Items.Components.ItemContainer"]
+    LuaUserData.MakeFieldAccessible(descriptor, "slotRestrictions")
+    LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+
+    -- descriptor = Descriptors["Barotrauma.ItemInventory"]
+    -- LuaUserData.MakeFieldAccessible(descriptor, "slots")
+end
 
 local loadTypeToTargetItemTag = {
     BatteryCells="mobilebattery",
