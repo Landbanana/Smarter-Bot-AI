@@ -216,6 +216,19 @@ local function ItemMatchesConditionPercentageRange(item, targetConditionPercenta
     end
 end
 
+---@param item Barotrauma.Item
+---@return boolean
+function util.PoweredItemHasNeededPower(item)
+    local poweredComponent = item.GetComponent(Components.Powered)
+
+    if  not poweredComponent or
+        not (poweredComponent.PowerConsumption > 0 and
+        poweredComponent.HasPower == false)
+    then
+        return false
+    end
+end
+
 ---@param character Barotrauma.Character
 ---@param item Barotrauma.Item
 ---@param targetTag? Barotrauma.Identifier
@@ -264,6 +277,18 @@ function util.FindItems(character, itemList, targetTag, targetConditionPercentag
     end
 
     return items
+end
+
+---@param item Barotrauma.Item
+---@return boolean
+function util.ParentItemsHaveDontTakeItemsTag(item)
+    local container = item.Container
+    
+    while container do
+        if container.HasTag("donttakeitems") then return true end
+        container = container.Container
+    end
+    return false
 end
 
 ---@param character? Barotrauma.Character
