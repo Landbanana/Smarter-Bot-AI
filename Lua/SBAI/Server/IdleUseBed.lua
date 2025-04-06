@@ -27,7 +27,6 @@ local function GetLikelyBeds()
     return likelyBeds
 end
 
-
 return function(namespace, _)
     for prefab in GetLikelyBeds() do
         SBAI.util.AddTagsToPrefab(prefab, "chair")
