@@ -2,8 +2,6 @@ local SBAI = require("SBAI")
 
 SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
 
-
-
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
