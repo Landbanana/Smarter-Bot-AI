@@ -56,7 +56,12 @@ for loadType, itemTag, containableTag, refillerTag in SBAI.util.Variator({
             {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
         })
 do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
-    local minimumCondition = options[loadType]["minimumCondition"]
+    local section = options[loadType]
+    local minimumCondition
+
+    if not section.enable then goto continue end
+
+    minimumCondition = section["minimumCondition"]
 
     namespace = namespace + loadType
 
@@ -93,8 +98,6 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             end)
         end
     end, Hook.HookMethodType.Before)
-
-    
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "Act",
     ---@param instance Barotrauma.AIObjective
@@ -408,5 +411,6 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --         end
     --     end
     -- end, Hook.HookMethodType.Before)
+::continue::
 end
 end
