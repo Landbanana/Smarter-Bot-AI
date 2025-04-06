@@ -385,8 +385,8 @@ do
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet")
     
-    local builder = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableHashSet")
-    builder.CreateBuilder(Identifier).ToImmutable().ToBuilder().Add(Identifier("chair"))           -- needed or Moonsharp forgets
+    local ImmutableHashSet = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableHashSet")
+    ImmutableHashSet.CreateBuilder(Identifier).ToImmutable().ToBuilder().Add(Identifier("chair"))           -- needed or Moonsharp forgets
     
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
@@ -400,6 +400,7 @@ do
     ---@param prefab Barotrauma.ItemPrefab
     ---@param ... Barotrauma.Identifier-arr
     function util.AddTagsToPrefab(prefab, ...)
+        local builder = ImmutableHashSet.CreateBuilder(Identifier)
         local newTags = table.pack(...)
 
         for i=1,newTags.n do
@@ -415,12 +416,18 @@ do
     ---@param prefab Barotrauma.ItemPrefab
     ---@param ... Barotrauma.Identifier-arr
     function util.RemoveTagsFromPrefab(prefab, ...)
-        local builder = util.CreateImmutableHashSetBuilder(Identifier)
+        local builder = ImmutableHashSet.CreateBuilder(Identifier)
         local badTags = table.pack(...)
 
+        local temp = {}
+
+        for i=1,badTags.n do
+            temp[i] = badTags[i]
+        end
+
         for tag in prefab.tags do
-            for i=1,badTags.n do
-                if tag == badTags[i] then goto continue end
+            for badTag in temp do
+                if tag == badTag then goto continue end
             end
             builder.Add(tag)
             ::continue::
