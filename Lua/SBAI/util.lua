@@ -238,8 +238,8 @@ end
 ---@nodiscard
 function util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate)
     return  item ~= nil and
-            item.HasTag(targetTag) and
-            ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange) and
+            (not targetTag or item.HasTag(targetTag)) and
+            (not targetConditionPercentageRange or ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange)) and
             (not character or util.HasSimpleAccess(character, item)) and
             (not predicate or predicate(character, item))
 end

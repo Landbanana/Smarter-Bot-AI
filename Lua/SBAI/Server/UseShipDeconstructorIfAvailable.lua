@@ -1,66 +1,51 @@
 local SBAI = require("SBAI")
 
-local descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
-SBAI.LuaUserData.MakePropertyAccessible(descriptor, "AllowInFriendlySubs")
+SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
+
+
 
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
-    local playerSubmarineHasNoDeconstructor = nil
+    local playerSubmarineDeconstructors --[=[@type Barotrauma.Item[]?]=]
 
     -- bought a new sub, some mod adds deployable deconstructors, etc.
     SBAI.Hook.Add("roundEnd", namespace(), function()
-        playerSubmarineHasNoDeconstructor = nil --[[@type boolean|nil]]
+        playerSubmarineDeconstructors = nil
     end)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "get_AllowInFriendlySubs",
-    ---@param instance Barotrauma.AIObjective
+    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
+    ---@param instance Baroreauma.AIObjective
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+    ---@return Barotrauma.Item
     function(instance, ptable)
-        ptable.PreventExecution = true
+        local character = instance.character
 
-        if playerSubmarineHasNoDeconstructor == nil then
-            playerSubmarineHasNoDeconstructor = util.FindItem(nil, Item.ItemList, "deconstructor", nil,
-            function(character, item)
-                return item.InPlayerSubmarine
-            end) ~= nil
+        if not playerSubmarineDeconstructors then
+            playerSubmarineDeconstructors = {}
+            local i = 0
+
+            for _, item in ipairs(Item.ItemList) do
+                if  item ~= nil and
+                    item.GetComponent(Components.Deconstructor) ~= nil and
+                    item.InPlayerSubmarine
+                then
+                    i = i + 1
+                    playerSubmarineDeconstructors[i] = item
+                end
+            end
         end
-        
-        return playerSubmarineHasNoDeconstructor
+
+        if #playerSubmarineDeconstructors > 0 then
+            local closestDeconstructorItem = SBAI.util.GetClosest(character.WorldPosition, SBAI.util.FindItems(nil, playerSubmarineDeconstructors, nil, nil,
+            function(_, i)
+                return i.GetComponent(Components.Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
+                    i.HasAccess(character)
+            end))
+
+            ptable.PreventExecution = true
+
+            return closestDeconstructorItem and closestDeconstructorItem.GetComponent(Components.Deconstructor) or nil
+        end
     end, Hook.HookMethodType.Before)
-
-    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
-    -- function(instance, ptable)
-    --     local deconstructor --[[@type Barotrauma.Items.Components.Deconstructor]]
-    --     local closestDeconstructor = nil --[[@type Barotrauma.Items.Components.Deconstructor|nil]]
-    --     local bestDistFactor = 0.0 --[[@type System.Single]]
-    --     local distFactor --[[@type System.Single]]
-
-    --     ptable.PreventExecution = true
-
-    --     if playerSubmarineHasDeconstructor == nil then
-    --         local i, deconstructorItem = next(SBAI.itemGroup["deconstructor"], nil)
-
-    --         while i and not playerSubmarineHasDeconstructor do
-    --             playerSubmarineHasDeconstructor = deconstructorItem.InPlayerSubmarine
-    --             i, deconstructorItem = next(SBAI.itemGroup["deconstructor"], i)
-    --         end
-    --     end
-
-    --     for _, deconstructorItem in ipairs(SBAI.itemGroup["deconstructor"]) do
-    --         if deconstructorItem == nil then goto continue end
-    --         if playerSubmarineHasDeconstructor and not deconstructorItem.InPlayerSubmarine then goto continue end
-    --         deconstructor = deconstructorItem.GetComponent(Components.Deconstructor) --[[@type Barotrauma.Items.Components.Deconstructor]]
-    --         if not deconstructor.InputContainer.Inventory.CanBePut(instance.Item) then goto continue end
-    --         if not deconstructorItem.HasAccess(instance.character) then goto continue end
-
-    --         distFactor = AIObjective.GetDistanceFactor(instance.Item.WorldPosition, deconstructorItem.WorldPosition, 0.2)
-    --         if distFactor > bestDistFactor then
-    --             closestDeconstructor = deconstructor
-    --             bestDistFactor = distFactor
-    --         end
-    --         ::continue::
-    --     end
-    --     return closestDeconstructor
-    -- end, Hook.HookMethodType.Before)
 end
