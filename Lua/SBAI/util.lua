@@ -392,11 +392,6 @@ do
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
 
-    ---@return any
-    function CreateBuilder()
-        return builder.CreateBuilder(Identifier)
-    end
-
     ---@param prefab Barotrauma.ItemPrefab
     ---@param ... Barotrauma.Identifier-arr
     function util.AddTagsToPrefab(prefab, ...)
