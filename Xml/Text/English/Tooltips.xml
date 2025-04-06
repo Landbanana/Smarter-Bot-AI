@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
-  <GUI.tooltips.equiparmor.delay>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.delay>
+  <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
   <GUI.tooltips.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, both in regard to ship weapons and attacking intruders. Helps with getting ransoms</GUI.tooltips.preventattackinghandcuffed>
   <GUI.tooltips.useshipdeconstructorifavailable>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.useshipdeconstructorifavailable>
   <GUI.tooltips.smarterloaditems>AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery</GUI.tooltips.smarterloaditems>
@@ -20,5 +20,7 @@
   <GUI.tooltips.replenishinventory.oxygentanks>Let the AI replenish their oxygen tanks</GUI.tooltips.replenishinventory.oxygentanks>
   <GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>Minimum condition of oxygen tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>
   <GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>Minimum condition of oxygen tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>
-  <GUI.tooltips.replenishinventory.delay>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.delay>
+  <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
+  <GUI.tooltips.idleusebed>Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)</GUI.tooltips.idleusebed>
+  <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
 </infotexts>

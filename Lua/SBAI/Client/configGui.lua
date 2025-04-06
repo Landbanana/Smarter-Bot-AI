@@ -260,6 +260,10 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
 
     local typeTable --[[@type table<OptionType|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
 
+    local match = string.match
+    local endsWith = string.endsWith
+    local sub = string.sub
+
     ---@param defaults ConfigSection|ConfigOption
     ---@param option string
     local function MakeNamedCut(defaults, option)
@@ -268,9 +272,19 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
 
         currentOptionCut = CutComponent(optionsFrame, Point(xMax - xSpacing, clickableSize))
         currentOptionCut.RectTransform.Translate(Point(xSpacing, 0))
+
         local textBlock = AddTextBlock(currentOptionCut.Content, Point(xText, clickableSize), GUI.Anchor.CenterLeft, option..":", "", font, GUI.Alignment.Center, false, true)
+
         textBlock.ForceUpperCase = ForceUpperCase.No
-        textBlock.ToolTip = defaults.description
+        --textBlock.ToolTip = defaults.description
+        
+        local textTag = "GUI.tooltips."..match(namespace(), "^SBAI%.(.+)$")
+        
+        if endsWith(textTag, ".enable") then
+            textTag = sub(textTag, 1, #textTag - 7)
+        end
+
+        if textTag ~= nil then textBlock.ToolTip = TextManager.get(textTag) end
     end
 
     ---@param defaults ConfigSection|ConfigOption
@@ -340,7 +354,6 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             else
                 MakeNamedCut(defaults, option)
             end
-            
             
             local configRef = SBAI.Config.Get(-namespace)
             local key = namespace.stack[#namespace.stack]

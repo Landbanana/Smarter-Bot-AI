@@ -5,10 +5,9 @@ local configPath = modConfigsDir.."/SBAI.json" --[[@type string]]
 ---@class ConfigOption
 ---@field public value string|boolean|number
 ---@field public optionType string|boolean|number
----@field public description string
 ---@field public min? number
 ---@field public max? number
----@field public new fun(self:ConfigOption, default:string|boolean|number, optionType:Config.OPTION_TYPE, description:string, min:number?, max:number?):ConfigOption
+---@field public new fun(self:ConfigOption, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
 ---@field public Set fun(self:ConfigOption, value:string|boolean|number)
 
 ---@enum OptionType
@@ -32,16 +31,14 @@ local ConfigOption = {}
 ---@param self ConfigOption
 ---@param default string|boolean|number
 ---@param optionType Config.OPTION_TYPE
----@param description string
 ---@param min? number
 ---@param max? number
 ---@return ConfigOption
-function ConfigOption:new(default, optionType, description, min, max)
+function ConfigOption:new(default, optionType, min, max)
     local t = setmetatable({}, self)
     self.__index = self
 
     t.optionType = optionType
-    t.description = description
     t.min = min
     t.max = max
     t:Set(default)
@@ -67,7 +64,6 @@ do
 end
 
 ---@class ConfigSection
----@field public description string
 ---@field public new fun(self:ConfigSection, description:string):ConfigSection
 ---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, description:string, min:number?, max:number?):ConfigOption
 ---@field public CreateSection fun(self:ConfigSection, name:string, description:string?):ConfigSection
@@ -75,13 +71,11 @@ end
 
 local ConfigSection = {}
 
----@param description? string
 ---@return ConfigSection
-function ConfigSection:new(description)
+function ConfigSection:new()
     local t = setmetatable({}, self)
     self.__index = self
 
-    if description then t:CreateOption("enable", true, "boolean", description) end
     return t
 end
 
@@ -89,21 +83,20 @@ end
 ---@param name string
 ---@param default string|boolean|number
 ---@param optionType Config.OPTION_TYPE
----@param description string
 ---@param min? number
 ---@param max? number
 ---@return ConfigOption
-function ConfigSection:CreateOption(name, default, optionType, description, min, max)
-    self[name] = ConfigOption:new(default, optionType, description, min, max)
+function ConfigSection:CreateOption(name, default, optionType, min, max)
+    self[name] = ConfigOption:new(default, optionType, min, max)
     return self[name]
 end
 
 ---@param self ConfigSection
 ---@param name string
----@param description string
 ---@return ConfigSection
-function ConfigSection:CreateSection(name, description)
-    self[name] = ConfigSection:new(description)
+function ConfigSection:CreateSection(name)
+    self[name] = ConfigSection:new()
+    self[name]:CreateOption("enable", true, "boolean")
     return self[name]
 end
 
@@ -125,42 +118,42 @@ end
 
 do
     local defaults = ConfigSection:new()
-    local section = defaults:CreateSection("EquipArmor", "AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes \"forgetting\" to put a helmet back on after using a diving mask, for example")
+    local section = defaults:CreateSection("EquipArmor")
     
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all", 0, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 0, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("PreventAttackingHandcuffed", "AI will no longer attack anyone who's handcuffed, both in regard to ship weapons and attacking intruders. Helps with getting ransoms")
-    defaults:CreateSection("UseShipDeconstructorIfAvailable", "If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans")
+    defaults:CreateSection("PreventAttackingHandcuffed")
+    defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
-    section = defaults:CreateSection("SmarterLoadItems", "AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery")
+    section = defaults:CreateSection("SmarterLoadItems")
 
-    local subsection = section:CreateSection("BatteryCells", "Apply this setting to AI loading battery cells")
+    local subsection = section:CreateSection("BatteryCells")
     
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, "Minimum condition before AI ordered to load batteries will replace batteries", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    subsection = section:CreateSection("OxygenTanks", "Apply this setting to AI loading oxygen tanks")
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, "Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection = section:CreateSection("OxygenTanks")
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    section = defaults:CreateSection("ReplenishInventory", "AI will refill some of their empty reloadables while idling/waiting")
-    subsection = section:CreateSection("Idle", "Allow an AI that has no active order to occasionally leave their post to refill their inventory")
-    subsection:CreateOption("OnlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean, "AI will only replenish when docked at an outpost while idling")
+    section = defaults:CreateSection("ReplenishInventory")
+    subsection = section:CreateSection("Idle")
+    subsection:CreateOption("OnlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean)
 
-    subsection = section:CreateSection("Wait", "Allow an AI that is set to the \"wait\" order to occasionally leave their post to refill their inventory")
-    subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean, "AI will only replenish when docked at an outpost while set to wait (THEY WILL BRIEFLY LEAVE THEIR POST)")
+    subsection = section:CreateSection("Wait")
+    subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
-    subsection = section:CreateSection("BatteryCells", "Let the AI replenish their battery cells")
-    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, "Minimum condition of batteries in an idling/waiting AI's inventory (not equipped) before replacing them", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, "Minimum condition of batteries equipped by an idling/waiting AI before replacing them", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection = section:CreateSection("BatteryCells")
+    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    subsection = section:CreateSection("OxygenTanks", "Let the AI replenish their oxygen tanks")
-    subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.float, "Minimum condition of oxygen tanks in an idling/waiting AI's inventory (not equipped) before replacing them", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, "Minimum condition of oxygen tanks equipped by an idling/waiting AI before replacing them", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection = section:CreateSection("OxygenTanks")
+    subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all", 0, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 0, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("IdleUseBed", "Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)")
+    defaults:CreateSection("IdleUseBed")
 
-    defaults:CreateSection("CrewStaysInSub", "Bots will spawn in the sub when docking at any outpost")
+    defaults:CreateSection("CrewStaysInSub")
 
     Config.defaults.CONFIG = defaults
 end
