@@ -378,56 +378,56 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
--- do
---     local LuaUserData = LuaUserData
+do
+    local LuaUserData = LuaUserData
 
---     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
---     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
---     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet")
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
+    LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet")
     
---     local builder = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableHashSet")
---     builder.CreateBuilder(Identifier).ToImmutable().ToBuilder().Add(Identifier("chair"))           -- needed or Moonsharp forgets
+    local builder = LuaUserData.CreateStatic("System.Collections.Immutable.ImmutableHashSet")
+    builder.CreateBuilder(Identifier).ToImmutable().ToBuilder().Add(Identifier("chair"))           -- needed or Moonsharp forgets
     
---     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
---     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
---     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
+    LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
 
---     ---@return any
---     function CreateBuilder()
---         return builder.CreateBuilder(Identifier)
---     end
+    ---@return any
+    function CreateBuilder()
+        return builder.CreateBuilder(Identifier)
+    end
 
---     ---@param prefab Barotrauma.ItemPrefab
---     ---@param ... Barotrauma.Identifier-arr
---     function util.AddTagsToPrefab(prefab, ...)
---         local newTags = table.pack(...)
+    ---@param prefab Barotrauma.ItemPrefab
+    ---@param ... Barotrauma.Identifier-arr
+    function util.AddTagsToPrefab(prefab, ...)
+        local newTags = table.pack(...)
 
---         for i=1,newTags.n do
---             builder.Add(newTags[i])
---         end
+        for i=1,newTags.n do
+            builder.Add(newTags[i])
+        end
 
---         for tag in prefab.tags do
---             builder.Add(tag)
---         end
---         prefab.tags = builder.ToImmutable()
---     end
+        for tag in prefab.tags do
+            builder.Add(tag)
+        end
+        prefab.tags = builder.ToImmutable()
+    end
 
---     ---@param prefab Barotrauma.ItemPrefab
---     ---@param ... Barotrauma.Identifier-arr
---     function util.RemoveTagsFromPrefab(prefab, ...)
---         local builder = util.CreateImmutableHashSetBuilder(Identifier)
---         local badTags = table.pack(...)
+    ---@param prefab Barotrauma.ItemPrefab
+    ---@param ... Barotrauma.Identifier-arr
+    function util.RemoveTagsFromPrefab(prefab, ...)
+        local builder = util.CreateImmutableHashSetBuilder(Identifier)
+        local badTags = table.pack(...)
 
---         for tag in prefab.tags do
---             for i=1,badTags.n do
---                 if tag == badTags[i] then goto continue end
---             end
---             builder.Add(tag)
---             ::continue::
---         end
---         prefab.tags = builder.ToImmutable()
---     end
--- end
+        for tag in prefab.tags do
+            for i=1,badTags.n do
+                if tag == badTags[i] then goto continue end
+            end
+            builder.Add(tag)
+            ::continue::
+        end
+        prefab.tags = builder.ToImmutable()
+    end
+end
 
 util.convert = {
     ItemTagToRefillerTag = {

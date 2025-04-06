@@ -156,6 +156,8 @@ do
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all", 0, Config.defaults.MAX_TIME_BETWEEN)
 
+    defaults:CreateSection("IdleUseBed", "Bots will use the bed when they idle, just like chairs")
+
     Config.defaults.CONFIG = defaults
 end
 
