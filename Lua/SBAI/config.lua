@@ -126,6 +126,7 @@ end
 do
     local defaults = ConfigSection:new()
     local section = defaults:CreateSection("EquipArmor", "AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes \"forgetting\" to put a helmet back on after using a diving mask, for example")
+    
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, "Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all", 0, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed", "AI will no longer attack anyone who's handcuffed, both in regard to ship weapons and attacking intruders. Helps with getting ransoms")
@@ -134,6 +135,7 @@ do
     section = defaults:CreateSection("SmarterLoadItems", "AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery")
 
     local subsection = section:CreateSection("BatteryCells", "Apply this setting to AI loading battery cells")
+    
     subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, "Minimum condition before AI ordered to load batteries will replace batteries", Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("OxygenTanks", "Apply this setting to AI loading oxygen tanks")

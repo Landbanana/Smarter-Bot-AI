@@ -1,6 +1,6 @@
 local SBAI = {
     Name="Smarter Bot AI",
-    Version="1.2.2",
+    Version="1.2.3",
     Path=...,
     Config=require("SBAI.config"),
     util=require("SBAI.util")
@@ -118,7 +118,7 @@ function SBAI.Control.Activate(modules)
     for postfix, module in pairs(GetModules()) do
         local namespace = SBAI.namespace + postfix
         local options = SBAI.Config.data[postfix]
-        
+
         if  options.enable then
             module.Activate(namespace, options)
         end
