@@ -100,10 +100,10 @@ SBAI.itemGroup={} --[[@type table<string,Barotrauma.Item[]>]]
 local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
 
-    for _, v in ipairs(SBAI.Config.defaults()) do
-        local Activate, Cleanup = require("SBAI.Server."..v.name)
+    for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+        local Activate, Cleanup = require("SBAI.Server."..k)
         
-        modules[v.name] = {Activate=Activate, Cleanup=Cleanup}
+        modules[k] = {Activate=Activate, Cleanup=Cleanup}
     end
 
     return modules
@@ -118,6 +118,7 @@ function SBAI.Control.Activate(modules)
     for postfix, module in pairs(GetModules()) do
         local namespace = SBAI.namespace + postfix
         local options = SBAI.Config.data[postfix]
+        
         if  options.enable then
             module.Activate(namespace, options)
         end

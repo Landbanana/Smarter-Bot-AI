@@ -1,4 +1,5 @@
 local SBAI = require("SBAI")
+local Config = require("SBAI.config")
 SBAI.Network = require("SBAI.Client.networking")
 SBAI.GUI = {}
 
@@ -227,7 +228,6 @@ local function AddTitleText(parent, text, font, noUnderline, ignoreColors)
 end
 
 local mainFrame --[[@type Barotrauma.GUIFrame?]]
-local defaultConfigCache --[=[@type (ConfigSection|ConfigOption)[]]=]
 local clickableSize --[[@type number?]]
 local clickableSizePoint --[[@type number?]]
 
@@ -241,7 +241,6 @@ local function CloseSBAIMenu()
     if mainFrame then
         mainFrame.Parent.RemoveChild(mainFrame)
         mainFrame = nil
-        defaultConfigCache = nil
         clickableSize = nil
         clickableSizePoint = nil
     end
@@ -249,8 +248,7 @@ end
 
 ---@param optionsFrame Barotrauma.GUIFrame
 ---@param sectionName string
----@param sectionIndex int
-local function LoadSectionOptionsToGUI(optionsFrame, sectionName, sectionIndex)
+local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
     optionsFrame.ClearChildren()
     
     local namespace = SBAI.namespace
@@ -323,14 +321,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName, sectionIndex)
     ---@param value `OptionType`|table
     local function LoadOptionsRecurse(defaults, option, value)
         namespace = namespace + option
-        if defaults.optionType then
-            typeTable[defaults.optionType](defaults, option, value)
-        else --[[@cast defaults ConfigSection]]
-            typeTable[SBAI.Config.OPTION_TYPE.boolean](defaults, option, value)
-            if defaults.options then
-                typeTable["table"](defaults.options, option, value)
-            end
-        end
+        typeTable[defaults.optionType or "table"](defaults, option, value)
         namespace = -namespace
     end
 
@@ -342,18 +333,17 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName, sectionIndex)
         [SBAI.Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, SBAI.Config.OPTION_TYPE.float) end,
         [SBAI.Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, SBAI.Config.OPTION_TYPE.int) end,
         [SBAI.Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
-            MakeNamedCut(defaults, option)
-            local configRef
-            local key
-
-            if not defaults.optionType then
-                configRef = SBAI.Config.Get(-namespace + namespace.stack[#namespace.stack])
-                key = "enable"
+            if option == "enable" then
+                xSpacing = xSpacing - 4*D_PADDING
+                MakeNamedCut(defaults, namespace.stack[#namespace.stack - 1])
+                xSpacing = xSpacing + 4*D_PADDING
             else
-                configRef = SBAI.Config.Get(-namespace)
-                key = namespace.stack[#namespace.stack]
+                MakeNamedCut(defaults, option)
             end
-
+            
+            
+            local configRef = SBAI.Config.Get(-namespace)
+            local key = namespace.stack[#namespace.stack]
             local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
             ---@param button Barotrauma.GUIButton
             ---@param obj any
@@ -364,21 +354,17 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName, sectionIndex)
                 return button.Selected
             end)
             button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
-            if type(value) == "boolean" then
-                button.Selected = value
-            else
-                button.Selected = value.enable
-            end
+            button.Selected = value
         end,
         ["table"]=function(defaults, option, value) --[[@cast value table]]
             xSpacing = xSpacing + 4*D_PADDING
-            for def in defaults do --[[@cast def ConfigSection|ConfigOption]]
-                LoadOptionsRecurse(def, def.name, value[def.name])
+            for k, v in pairs(defaults) do --[[@cast v ConfigSection|ConfigOption]]
+                LoadOptionsRecurse(v, k, value[k])
             end
             xSpacing = xSpacing - 4*D_PADDING
         end
     }
-    LoadOptionsRecurse(defaultConfigCache[sectionIndex + 1], sectionName, SBAI.Config.data[sectionName])
+    LoadOptionsRecurse(Config.defaults.CONFIG[sectionName], sectionName, Config.data[sectionName])
 end
 
 ---@param sectionList Barotrauma.GUIListBox
@@ -386,7 +372,7 @@ local function LoadConfigSectionsToGUI(sectionList)
     local oldSelectionText = sectionList.SelectedComponent and sectionList.SelectedComponent.Text.SanitizedValue --[[@type Barotrauma.GUITextBlock]]
 
     sectionList.ClearChildren()
-    for sectionName, sectionData in pairs(SBAI.Config.data) do
+    for sectionName, _ in pairs(SBAI.Config.data) do
         local sectionBlock = AddTextBlock(sectionList.Content, Point(sectionList.Content.Rect.Width, clickableSize), GUI.Anchor.TopLeft, sectionName, nil, "SubHeading", GUI.Alignment.Left, false)
         
         sectionBlock.Color = Color.Transparent
@@ -493,7 +479,7 @@ local function MakeSBAIMenu(parent)
     ---@param _ System.Object
     ---@return boolean
     sectionList.OnSelected = function(component, _)
-        LoadSectionOptionsToGUI(optionList.Content, component.Text.SanitizedValue, sectionList.Content.GetChildIndex(component))
+        LoadSectionOptionsToGUI(optionList.Content, component.Text.SanitizedValue)
         return true
     end
 
@@ -550,7 +536,7 @@ local function ShowSBAIMenu(parent)
         if Game.IsMultiplayer then
             SBAI.Network.RequestConfig()
         end
-        defaultConfigCache = SBAI.Config.defaults()
+
         return MakeSBAIMenu(parent)
     end
 end
