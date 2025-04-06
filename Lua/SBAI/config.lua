@@ -160,6 +160,8 @@ do
 
     defaults:CreateSection("IdleUseBed", "Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)")
 
+    defaults:CreateSection("CrewStaysInSub", "Bots will spawn in the sub when docking at any outpost")
+
     Config.defaults.CONFIG = defaults
 end
 
