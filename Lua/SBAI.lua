@@ -1,6 +1,6 @@
 local SBAI = {
     Name="Smarter Bot AI",
-    Version="1.2.1a",
+    Version="1.2.2",
     Path=...,
     Config=require("SBAI.config"),
     util=require("SBAI.util")
