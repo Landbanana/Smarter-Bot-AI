@@ -8,6 +8,7 @@
   <Other file="%ModDir%/Lua/SBAI/Client/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/EquipArmor.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/GunnersNeverAttackIntruders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/IdleUseBed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/PreventAttackingHandcuffed.lua" />

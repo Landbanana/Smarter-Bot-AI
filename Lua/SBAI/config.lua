@@ -65,7 +65,7 @@ end
 
 ---@class ConfigSection
 ---@field public new fun(self:ConfigSection, description:string):ConfigSection
----@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, description:string, min:number?, max:number?):ConfigOption
+---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
 ---@field public CreateSection fun(self:ConfigSection, name:string, description:string?):ConfigSection
 ---@field public Flatten fun(self:ConfigSection):table
 
@@ -123,6 +123,10 @@ do
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 0, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
+
+    section = defaults:CreateSection("GunnersNeverAttackIntruders")
+    section:CreateOption("OnlyIfNoOtherBotsFightingIntruders", true, "boolean")
+
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("SmarterLoadItems")
