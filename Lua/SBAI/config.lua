@@ -21,7 +21,7 @@ Config.OPTION_TYPE = {
 Config.defaults = {
     MAX_CONDITION_PERCENTAGE = 95,
     MIN_CONDITION_PERCENTAGE = 0,
-    MAX_TIME_BETWEEN = 300,
+    MAX_TIME_BETWEEN = 1000,
     START_TIME_BETWEEN = 1,
     CONFIG = {}
 }
@@ -120,7 +120,7 @@ do
     local defaults = ConfigSection:new()
     local section = defaults:CreateSection("EquipArmor")
     
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 0, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
@@ -153,11 +153,14 @@ do
     subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
     subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 0, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("IdleUseBed")
 
     defaults:CreateSection("CrewStaysInSub")
+
+    section = defaults:CreateSection("LadderFix")
+    section:CreateOption("timeBetween", 1000, Config.OPTION_TYPE.float, 10, Config.defaults.MAX_TIME_BETWEEN)
 
     Config.defaults.CONFIG = defaults
 end

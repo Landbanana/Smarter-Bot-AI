@@ -25,4 +25,6 @@
   <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
   <GUI.tooltips.idleusebed>Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)</GUI.tooltips.idleusebed>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
+  <GUI.tooltips.ladderfix>(WARNING: BETA) Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
+  <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
 </infotexts>
