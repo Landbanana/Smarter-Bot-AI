@@ -3,7 +3,7 @@ local SBAI = require("SBAI")
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.HumanAIController"], "IsBotInTheCrew")
 
 return function(namespace, options)
-    local onlyIfNoOtherBotsFightingIntruders = options["OnlyIfNoOtherBotsFightingIntruders"] --[[@type boolean]]
+    local onlyIfOtherBotsFightingIntruders = options["OnlyIfOtherBotsFightingIntruders"] --[[@type boolean]]
 
     local function CrewHasBotSetFightIntruders(character)
         local aiController = character.AIController
@@ -35,8 +35,10 @@ return function(namespace, options)
         local order = character.AIController.objectiveManager.CurrentOrder --[[@type Barotrauma.Order]]
         
         if  order and
-            order.Identifier == "operateweapons" and
-            not onlyIfNoOtherBotsFightingIntruders or CrewHasBotSetFightIntruders(character)
+            order.Identifier == "operateweapons" and (
+                not onlyIfOtherBotsFightingIntruders or
+                CrewHasBotSetFightIntruders(character)
+            )
         then
             ptable.PreventExecution = true
             return 0
