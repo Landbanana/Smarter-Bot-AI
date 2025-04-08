@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 return function(namespace, _)
     SBAI.Hook.Patch(namespace(), "Barotrauma.Level", "ShouldSpawnCrewInsideOutpost",

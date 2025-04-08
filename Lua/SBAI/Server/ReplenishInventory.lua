@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 local descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
 SBAI.LuaUserData.MakeMethodAccessible(descriptor, "Act")

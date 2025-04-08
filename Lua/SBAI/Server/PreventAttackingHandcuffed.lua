@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 ---@param namespace Namespace
 ---@param options table

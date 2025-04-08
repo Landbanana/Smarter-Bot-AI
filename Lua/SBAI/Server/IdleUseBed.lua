@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 

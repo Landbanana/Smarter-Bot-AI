@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 if SERVER or Game.IsSingleplayer then
     require("SBAI.Server.networking")

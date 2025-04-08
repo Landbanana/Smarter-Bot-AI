@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 local Config = require("SBAI.config")
 local Network = {}
 

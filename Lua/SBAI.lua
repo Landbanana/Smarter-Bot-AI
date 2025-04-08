@@ -1,4 +1,4 @@
-local SBAI = {
+SBAI = {
     Name="Smarter Bot AI",
     Version="1.3.0",
     Path=...,

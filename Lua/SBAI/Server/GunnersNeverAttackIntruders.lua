@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.HumanAIController"], "IsBotInTheCrew")
 

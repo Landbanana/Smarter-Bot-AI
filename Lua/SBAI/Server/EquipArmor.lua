@@ -1,4 +1,4 @@
-local SBAI = require("SBAI")
+SBAI = require("SBAI")
 
 local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
 
