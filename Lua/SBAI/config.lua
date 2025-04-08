@@ -2,14 +2,6 @@ local Config = {data={}}
 local modConfigsDir = Game.SaveFolder.."/ModConfigs" --[[@type string]]
 local configPath = modConfigsDir.."/SBAI.json" --[[@type string]]
 
----@class ConfigOption
----@field public value string|boolean|number
----@field public optionType string|boolean|number
----@field public min? number
----@field public max? number
----@field public new fun(self:ConfigOption, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
----@field public Set fun(self:ConfigOption, value:string|boolean|number)
-
 ---@enum OptionType
 Config.OPTION_TYPE = {
     string="string",
@@ -26,16 +18,23 @@ Config.defaults = {
     CONFIG = {}
 }
 
+---@class ConfigBase
+---@field public new fun(self:ConfigBase, ...):ConfigBase
+---@field public Flatten fun(self:ConfigBase):string|boolean|number|table
+---@field public __index ConfigBase
+
+---@class (exact) ConfigOption: ConfigBase 
+---@field public value string|boolean|number
+---@field public optionType string|boolean|number
+---@field public min? number
+---@field public max? number
+---@field public new fun(self:ConfigOption, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
+---@field public Set fun(self:ConfigOption, value:string|boolean|number)
+---@field public Flatten fun(self:ConfigOption):string|boolean|number
 local ConfigOption = {}
 
----@param self ConfigOption
----@param default string|boolean|number
----@param optionType Config.OPTION_TYPE
----@param min? number
----@param max? number
----@return ConfigOption
-function ConfigOption:new(default, optionType, min, max)
-    local t = setmetatable({}, self)
+function ConfigOption.new(self, default, optionType, min, max)
+    local t = setmetatable({}, self) ---@type ConfigOption
     self.__index = self
 
     t.optionType = optionType
@@ -48,9 +47,7 @@ end
 do
     local clamp = math.clamp
 
-    ---@param self ConfigOption
-    ---@param value string|boolean|number
-    function ConfigOption:Set(value)
+    function ConfigOption.Set(self, value)
         local optionType = type(value)
 
         if optionType == "number" and self.optionType == "float" or self.optionType == "int" then
@@ -63,58 +60,43 @@ do
     end
 end
 
----@class ConfigSection
----@field public new fun(self:ConfigSection, description:string):ConfigSection
+ConfigOption.Flatten=function(self)
+    return self.value
+end
+
+---@class (exact) ConfigSection: ConfigBase
+---@field public new fun(self:ConfigSection):ConfigSection
 ---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
 ---@field public CreateSection fun(self:ConfigSection, name:string, description:string?):ConfigSection
 ---@field public Flatten fun(self:ConfigSection):table
-
 local ConfigSection = {}
 
----@return ConfigSection
-function ConfigSection:new()
-    local t = setmetatable({}, self)
+function ConfigSection.new(self)
+    local t = setmetatable({}, self) ---@type ConfigSection
     self.__index = self
 
     return t
 end
 
----@param self ConfigSection
----@param name string
----@param default string|boolean|number
----@param optionType Config.OPTION_TYPE
----@param min? number
----@param max? number
----@return ConfigOption
-function ConfigSection:CreateOption(name, default, optionType, min, max)
+function ConfigSection.CreateOption(self, name, default, optionType, min, max)
     self[name] = ConfigOption:new(default, optionType, min, max)
     return self[name]
 end
 
----@param self ConfigSection
----@param name string
----@return ConfigSection
-function ConfigSection:CreateSection(name)
+function ConfigSection.CreateSection(self, name)
     self[name] = ConfigSection:new()
     self[name]:CreateOption("enable", true, "boolean")
     return self[name]
 end
 
----@param self ConfigSection
----@return table
-function ConfigSection:Flatten()
+function ConfigSection.Flatten(self)
     local t = {}
 
-    for k, v in pairs(self) do
-        if type(v.Set) == "function" then
-            t[k] = v.value
-        else
-            t[k] = v:Flatten()
-        end
+    for k, v in pairs(self) do --[[@cast k string]]  --[[@cast v ConfigBase]]
+        t[k] = v.Flatten()
     end
     return t
 end
-
 
 do
     local defaults = ConfigSection:new()
@@ -238,6 +220,6 @@ function Config.Load()
 end
 
 Config.Load()
-Config.Save()
+if not File.Exists(configPath) then Config.Save() end
 
 return Config

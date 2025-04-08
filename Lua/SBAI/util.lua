@@ -1,6 +1,8 @@
 local util = {Hook=Hook, LuaUserData=LuaUserData}
+
+local LuaUserData = LuaUserData
+
 do
-    local LuaUserData = LuaUserData
     local Descriptors = Descriptors
     
     LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
@@ -35,16 +37,6 @@ do
     end
 end
 
----@generic T: ...
----@param name string
----@param identifier string
----@param func fun(T...)
----@param ... T
-function util.AddHookAndDo(name, identifier, func, ...)
-    Hook.Add(name, identifier, func)
-    func(...)
-end
-
 ---@return true
 ---@nodiscard
 function util.True()
@@ -53,11 +45,11 @@ end
 
 ---@generic T
 ---@param list T[]
----@param obj T
+---@param value T
 ---@return boolean
-function util.ListContains(list, obj)
+function util.ValsContain(list, value)
     for v in list do
-        if v == obj then
+        if v == value then
             return true
         end
     end
@@ -65,12 +57,12 @@ function util.ListContains(list, obj)
 end
 
 ---@generic T
----@param table table<integer,T>
----@param obj T
+---@param dict table<T,any>
+---@param key T
 ---@return boolean
-function util.ITableContains(table, obj)
-    for _, v in ipairs(table) do
-        if v == obj then
+function util.KeysContain(dict, key)
+    for k, _ in pairs(dict) do
+        if k == key then
             return true
         end
     end
@@ -191,7 +183,7 @@ function util.HasSimpleAccess(character, item)
     local submarine = item.Submarine
     local owner = item.GetRootInventoryOwner()
 
-    if  util.LuaUserData.IsTargetType(owner, "Barotrauma.Character") and owner ~= character or
+    if  LuaUserData.IsTargetType(owner, "Barotrauma.Character") and owner ~= character or
         not item.HasAccess(character) or
         submarine == nil or
         submarine.TeamID ~= character.TeamID or
@@ -356,12 +348,12 @@ end
 ---@return T?
 function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
     if objective ~= nil then
-        if not util.ListContains(instance.subObjectives, objective) then objective = nil end
+        if not util.ValsContain(instance.subObjectives, objective) then objective = nil end
         return false
     else
         objective = constructor()
 
-        if util.ListContains(instance.subObjectives, objective) then return false end
+        if util.ValsContain(instance.subObjectives, objective) then return false end
         if instance.AllowMultipleInstances then
             objective.SourceObjective = this
             instance.subObjectives.Add(objective)

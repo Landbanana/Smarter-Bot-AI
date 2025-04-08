@@ -41,7 +41,7 @@ local function GenerateWearableArmorPredicate(slotTypes)
         end
 
         for slot in slotTypes do
-            if SBAI.util.ListContains(item.AllowedSlots, slot) then
+            if SBAI.util.ValsContain(item.AllowedSlots, slot) then
                 return true
             end
         end
@@ -66,7 +66,7 @@ return function(namespace, options)
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
             local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
 
-            for _, slotType in ipairs(clothesSlotTypes) do
+            for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
                 if inventory.GetItemInLimbSlot(slotType) == nil then
                     table.insert(filteredClothesSlotTypes, slotType)
                 end

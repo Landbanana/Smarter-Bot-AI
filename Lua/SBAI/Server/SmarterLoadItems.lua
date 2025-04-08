@@ -76,7 +76,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             ---@param item Barotrauma.Item
             ---@return boolean
             function(character, item)
-                if SBAI.util.ListContains(instance.ignoredItems, item) or SBAI.util.ParentItemsHaveDontTakeItemsTag(item) then
+                if SBAI.util.ValsContain(instance.ignoredItems, item) or SBAI.util.ParentItemsHaveDontTakeItemsTag(item) then
                     return false
                 end
 
@@ -115,7 +115,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 ---@param newItem Barotrauma.Item
                 ---@return boolean
                 function(_, newItem)
-                    if  SBAI.util.ListContains(instance.ignoredItems, newItem) or
+                    if  SBAI.util.ValsContain(instance.ignoredItems, newItem) or
                         newItem.ConditionPercentage >= minimumCondition or
                         StaticFindItem(newItem)
                     then

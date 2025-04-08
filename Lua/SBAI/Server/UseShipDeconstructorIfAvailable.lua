@@ -23,7 +23,7 @@ return function(namespace, options)
             playerSubmarineDeconstructors = {}
             local i = 0
 
-            for _, item in ipairs(Item.ItemList) do
+            for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
                 if  item ~= nil and
                     item.GetComponent(Components.Deconstructor) ~= nil and
                     item.InPlayerSubmarine

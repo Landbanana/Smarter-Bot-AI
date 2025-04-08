@@ -1,7 +1,11 @@
 SBAI = require("SBAI")
 
+
+local LuaUserData = LuaUserData
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"], "host")
+
+local Vector2 = Vector2
 
 local stuckData = setmetatable({}, {__index=function(t, k) t[k] = {timer=0}; return t[k] end})
 
