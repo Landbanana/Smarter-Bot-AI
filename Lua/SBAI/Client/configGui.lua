@@ -405,6 +405,11 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
+        if Game.IsMultiplayer and CLIENT and Game.Client.MyClient.IsOwner then
+            Config.Load()
+        else
+            SBAI.Network.RequestConfig()
+        end
         LoadConfigSectionsToGUI(sectionList)
     end)
     button.ToolTip = "Reload the saved config to GUI"
@@ -417,8 +422,12 @@ end
 local function AddSaveButton(parent, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
     function()
-        SBAI.Config.Save()
-        SBAI.Control.Reactivate()
+        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
+            SBAI.Config.Save()
+            SBAI.Control.Reactivate()
+        else
+            SBAI.Network.SendConfig()
+        end
     end)
     
     button.ToolTip = "Save and apply config changes"
@@ -546,7 +555,9 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        if Game.IsMultiplayer then
+        if Game.IsSingleplayer or Game.IsMultiplayer and CLIENT and Game.Client.MyClient.IsOwner then
+            Config.Load()
+        else
             SBAI.Network.RequestConfig()
         end
 

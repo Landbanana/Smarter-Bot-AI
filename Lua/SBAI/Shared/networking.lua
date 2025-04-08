@@ -16,8 +16,6 @@ end
 ---@param message Barotrauma.Networking.IReadMessage
 function Network.UnserializeConfig(message)
     Config.data = json.parse(message.ReadString())
-    Config.Save()
-    SBAI.Control.Reactivate()
 end
 
 return Network

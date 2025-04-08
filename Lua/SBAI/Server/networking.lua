@@ -17,6 +17,8 @@ function(message, client)
     if not client.HasPermission(ClientPermissions.ManageSettings) then return end
 
     Network.UnserializeConfig(message)
+    Config.Save()
+    SBAI.Control.Reactivate()
 end)
 
 Networking.Receive(Network.NETWORK_MSG.ConfigRequest,
