@@ -555,14 +555,25 @@ local function ShowSBAIMenu(parent)
 end
 
 ---@param namespace Namespace
----@param options table
-return function(namespace, options)
+---@param _ table
+return function(namespace, _)
     Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {}, function(instance, ptable)
         if GUI.GUI.PauseMenuOpen then
-            AddButton(GUI.GUI.PauseMenu.GetChild(Int32(1)).GetChild(Int32(0)), Vector2(1, 0.05), GUI.Anchor.BottomCenter, SBAI.Name, "GUIButtonSmall", false,
+            local pauseFrame = GUI.GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
+            local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
+
+            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, SBAI.Name, "GUIButtonSmall", false,
             function()
                 return ShowSBAIMenu(GUI.GUI.PauseMenu)
             end)
+
+            local ySize = 0
+            for component in layoutGroup.Children do
+                ySize = ySize + component.Rect.Height + layoutGroup.AbsoluteSpacing
+            end
+
+            ySize = ySize/layoutGroup.RectTransform.RelativeSize.Y + layoutGroup.AbsoluteSpacing
+            pauseFrame.RectTransform.MinSize = Point(pauseFrame.RectTransform.MinSize.X, math.max(ySize, pauseFrame.RectTransform.MinSize.Y))
         else
             CloseSBAIMenu()
         end
