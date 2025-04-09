@@ -181,8 +181,6 @@ function Config.Get(optionString)
 end
 
 function Config.Save()
-    if Game.IsMultiplayer and CLIENT and Game.Client.MyClient.IsOwner then return end
-
     File.CreateDirectory(modConfigsDir)
 	File.Write(configPath, json.serialize(Config.data))
 end
