@@ -60,7 +60,7 @@ do
     end
 end
 
-ConfigOption.Flatten=function(self)
+function ConfigOption.Flatten(self)
     return self.value
 end
 
@@ -91,9 +91,9 @@ end
 
 function ConfigSection.Flatten(self)
     local t = {}
-
+    
     for k, v in pairs(self) do --[[@cast k string]]  --[[@cast v ConfigBase]]
-        t[k] = v.Flatten()
+        t[k] = v:Flatten()
     end
     return t
 end
@@ -195,15 +195,18 @@ function Config.Load()
     ---@param optionDefault ConfigOption|ConfigSection
     local function LoadRecurse(option, optionName, optionDefault)
         local optionValue = option[optionName]
+        
         local optionType = type(optionDefault.value)
-
+        
         if optionDefault.value ~= nil then --[[@cast optionDefault -ConfigSection]]
+            
             if optionValue == nil or type(optionValue) ~= optionType then
                 option[optionName] = optionDefault.value
             elseif optionType == "number" then
                 option[optionName] = math.clamp(optionValue, optionDefault.min, optionDefault.max)
             end
         else --[[@cast optionDefault -ConfigOption]]
+            
             if optionValue == nil then
                 option[optionName] = optionDefault:Flatten()
             else
@@ -213,7 +216,7 @@ function Config.Load()
             end
         end
     end
-
+    
     for k, v in pairs(Config.defaults.CONFIG) do
         LoadRecurse(Config.data, k, v)
     end

@@ -36,7 +36,7 @@ local function GenerateWearableArmorPredicate(slotTypes)
         if  wearable == nil or
             item.HasTag("lightdiving") or
             item.HasTag("deepdiving")
-                then
+        then
             return false
         end
 
