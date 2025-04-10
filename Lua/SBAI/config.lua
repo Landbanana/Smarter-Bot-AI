@@ -106,9 +106,6 @@ do
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
-    section = defaults:CreateSection("GunnersNeverAttackIntruders")
-    section:CreateOption("OnlyIfOtherBotsFightingIntruders", true, "boolean")
-
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("SmarterLoadItems")

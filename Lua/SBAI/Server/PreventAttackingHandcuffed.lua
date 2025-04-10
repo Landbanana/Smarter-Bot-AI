@@ -3,21 +3,23 @@ SBAI = require("SBAI")
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
+    LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
+
     -- Operate Weapons: Prevent attacking handcuffed people
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveCombat", "GetPriority",
+    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveCombat", "get_TargetEliminated",
     ---@param instance Barotrauma.AIObjectiveCombat
-    ---@param _ Barotrauma.LuaCsHook.ParameterTable
+    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     ---@return integer
-    function(instance, _)
-        if instance.Enemy.IsHandcuffed then return 0 end
+    function(instance, ptable)
+        return ptable.ReturnValue or (instance.character.IsOnPlayerTeam and instance.Enemy.IsHandcuffed)
     end, Hook.HookMethodType.Before)
 
-    -- Fight Intruders: Prevent attacking any handcuffed people, regardless of being knocked down
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveFightIntruders", "IsValidTarget", {"Barotrauma.Character"},
-    ---@param _ Barotrauma.AIObjectiveFightIntruders
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    ---@return boolean
-    function(_, ptable)
-        return ptable.ReturnValue and not ptable["target"].IsHandcuffed
-    end, Hook.HookMethodType.After)
+    -- -- Fight Intruders: Prevent attacking any handcuffed people, regardless of being knocked down
+    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveFightIntruders", "IsValidTarget", {"Barotrauma.Character"},
+    -- ---@param _ Barotrauma.AIObjectiveFightIntruders
+    -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+    -- ---@return boolean
+    -- function(_, ptable)
+    --     return ptable.ReturnValue and not ptable["target"].IsHandcuffed
+    -- end, Hook.HookMethodType.After)
 end
