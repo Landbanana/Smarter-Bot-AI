@@ -4,6 +4,8 @@ do
     local LuaUserData = LuaUserData
     local descriptor --[[@type MoonSharp.Interpreter.Interop.IUserDataDescriptor]]
 
+    LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
+
     descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
     LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
     -- LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
@@ -14,16 +16,16 @@ do
     descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
     LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
     -- LuaUserData.MakeMethodAccessible(descriptor, "GetPriority")
-    LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
+    -- LuaUserData.MakeMethodAccessible(descriptor, "IgnoreTargetItem")
     LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
     -- LuaUserData.MakePropertyAccessible(descriptor, "AllValidContainableItemIdentifiers")
-    LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
+    -- LuaUserData.MakePropertyAccessible(descriptor, "IsCompleted")
     -- LuaUserData.MakePropertyAccessible(descriptor, "ValidContainableItemIdentifiers")
     LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
     LuaUserData.MakePropertyAccessible(descriptor, "Container")
     LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
-    LuaUserData.MakeFieldAccessible(descriptor, "abandonGetItemDialogueIdentifier")
-    LuaUserData.MakeFieldAccessible(descriptor, "decontainObjective")
+    -- LuaUserData.MakeFieldAccessible(descriptor, "abandonGetItemDialogueIdentifier")
+    -- LuaUserData.MakeFieldAccessible(descriptor, "moveItemObjective")
     LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
     -- LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
     LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
@@ -33,9 +35,9 @@ do
     -- LuaUserData.MakeFieldAccessible(descriptor, "item")
     -- LuaUserData.MakeMethodAccessible(descriptor, "CheckObjectiveState")
 
-    descriptor = Descriptors["Barotrauma.Items.Components.ItemContainer"]
-    LuaUserData.MakeFieldAccessible(descriptor, "slotRestrictions")
-    LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+    -- descriptor = Descriptors["Barotrauma.Items.Components.ItemContainer"]
+    -- LuaUserData.MakeFieldAccessible(descriptor, "slotRestrictions")
+    -- LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
     -- descriptor = Descriptors["Barotrauma.ItemInventory"]
     -- LuaUserData.MakeFieldAccessible(descriptor, "slots")
@@ -80,19 +82,27 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                     return false
                 end
 
-                local destContainer = instance.Container
+                --local destContainer = instance.Container
 
-                if not character.HasItem(item) and not instance.CanEquip(item, false) and destContainer then
+                if not character.HasItem(item) and not instance.CanEquip(item, false) then
                     local container = item.Container
 
-                    if item.IsFullCondition then
-                        return not destContainer.HasTag(refillerTag) and
+                    return not item.IsFullCondition and
+                        not item.ConditionIncreasedRecently and
+                        not (
+                            container and
                             container.HasTag(refillerTag) and
-                            SBAI.util.IsSpecifiedContainer(destContainer, containableTag)
-                            --maybe add something here to check if destContainer already has a full battery
-                    elseif item.ConditionPercentage <= minimumCondition then
-                        return destContainer.HasTag(refillerTag)
-                    end
+                            SBAI.util.PoweredItemHasNeededPower(container)
+                        )
+
+                    -- if item.IsFullCondition then
+                    --     return not destContainer.HasTag(refillerTag) and
+                    --         container.HasTag(refillerTag) and
+                    --         SBAI.util.IsSpecifiedContainer(destContainer, containableTag)
+                    --         --maybe add something here to check if destContainer already has a full battery
+                    -- elseif item.ConditionPercentage <= minimumCondition then
+                    --     return destContainer.HasTag(refillerTag)
+                    -- end
                 end
                 return true
             end)
@@ -166,7 +176,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 --     instance.objectiveManager.GetObjective(AIObjectiveIdle).wander(ptable["deltaTime"])
                 -- end
 
-            --     if not instance.decontainObjective and not (targetItem and targetContainer) then
+            --     if not instance.moveItemObjective and not (targetItem and targetContainer) then
             --         instance.IgnoreTargetItem()
             --         instance.Reset()
             --         return
@@ -175,10 +185,10 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             --     if targetItem and targetContainer then
             --         targetContainer = targetContainer.GetComponent(Components.ItemContainer)
 
-            --         ---@return Barotrauma.AIObjectiveDecontainItem
+            --         ---@return Barotrauma.AIObjectiveMoveItem
             --         ---@nodiscard
             --         local function constructor()
-            --             local objective = AIObjectiveDecontainItem(character, targetItem, instance.objectiveManager, nil, targetContainer, instance.PriorityModifier)
+            --             local objective = AIObjectiveMoveItem(character, targetItem, instance.objectiveManager, nil, targetContainer, instance.PriorityModifier)
 
             --             objective.AbandonGetItemDialogueIdentifier = instance.abandonGetItemDialogueIdentifier
             --             objective.DropIfFails = true
@@ -195,7 +205,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             --             return function()
             --                 --instance.character.AIController.HandleRelocation(instance.targetItem)
             --                 instance.IsCompleted = true
-            --                 instance.RemoveSubObjective(AIObjectiveDecontainItem, objective)
+            --                 instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
             --             end
             --         end
 
@@ -208,7 +218,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             --                 instance.Reset()
             --             end
             --         end
-            --         _, instance.decontainObjective = SBAI.util.TryAddSubObjective(instance, instance.decontainObjective, constructor, onCompletedGenerator, onAbandonGenerator)
+            --         _, instance.moveItemObjective = SBAI.util.TryAddSubObjective(instance, instance.moveItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
             --     end
             -- end
             
@@ -224,14 +234,14 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
 
     --         if item then
     --             local character = instance.character --[[@type Barotrauma.Character]]
-    --             local decontainObjective = instance.decontainObjective --[[@type Barotrauma.AIObjectiveDecontainItem]]
+    --             local moveItemObjective = instance.moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
     --             local originalInventory = ptable.OriginalReturnValue.Inventory --[[@type Barotrauma.ItemInventory]]
 
-    --             if  decontainObjective then
+    --             if  moveItemObjective then
     --                 if  not originalInventory.CanBePut(item) and
     --                     not SBAI.util.FindItem(character, originalInventory.FindAllItems(nil, false), itemTag, 100)
     --                 then
-    --                     decontainObjective.Abandon = true
+    --                     moveItemObjective.Abandon = true
     --                 end
     --             else
     --                 local container = item.Container --[[@type Barotrauma.Item?]]
@@ -264,8 +274,8 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --     end
     -- end, Hook.HookMethodType.After)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDecontainItem", ".ctor", {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
-    ---@param instance Barotrauma.AIObjectiveDecontainItem
+    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveMoveItem", ".ctor", {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
+    ---@param instance Barotrauma.AIObjectiveMoveItem
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
         local destContainer = ptable["targetContainer"] --[[@type Barotrauma.Items.Components.ItemContainer?]]
@@ -282,16 +292,19 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             then --[[@cast destContainer -nil]]
                 local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
                 local container = item.Container
-
+                
                 if  container and
                     not container.HasTag(refillerTag) and
                     SBAI.util.IsSpecifiedContainer(container, containableTag)
                 then
-                    local fullItem = SBAI.util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100)
+                    local fullItem = SBAI.util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
+                    local targetContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
 
-                    if fullItem then
-                        ptable["targetContainer"] = container.GetComponent(Components.ItemContainer) --AIObjectiveDecontainItem will abandon on its own if this is nil
+                    if fullItem and targetContainer then
+                        ptable["targetContainer"] = targetContainer
                         ptable["targetItem"] = fullItem
+                    else
+                        instance.Abandon = true
                     end
                 end
             end
@@ -303,7 +316,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     -- function(instance, ptable)
     --     if instance.TargetContainerTags[1] == refillerTag then
-    --         local decontainObjective = instance.decontainObjective --[[@type Barotrauma.AIObjectiveDecontainItem]]
+    --         local moveItemObjective = instance.moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
 
     --         ptable["Contaienr"]
     --     end
@@ -392,16 +405,16 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --                 local max = AIObjectiveManager.LowestOrderPriority - (hasContainable and 1 or 2)
                     
     --                 instance.Priority = math.lerp(0, max, math.clamp(devotion + (distanceFactor * instance.PriorityModifier), 0, 1))
-    --                 if instance.decontainObjective and instance.targetItem.Container ~= instance.Container then
+    --                 if instance.moveItemObjective and instance.targetItem.Container ~= instance.Container then
     --                     if not instance.IsValidContainable(instance.targetItem) then
-    --                         instance.decontainObjective.Abandon = true
+    --                         instance.moveItemObjective.Abandon = true
     --                     elseif not instance.ItemContainer.Inventory.CanBePut(instance.targetItem) then
     --                         for item in instance.ItemContainer.Inventory.AllItems do
     --                             --item.endNone instance.ItemMatchesTargetCondition(TargetItemCondition
     --                         end
     --                     end
 
-    --                     instance.decontainObjective.Abandon = true
+    --                     instance.moveItemObjective.Abandon = true
 
     --                     if instance.ItemContainer.Inventory.IsFull() then
     --                         Priority = Priority/4

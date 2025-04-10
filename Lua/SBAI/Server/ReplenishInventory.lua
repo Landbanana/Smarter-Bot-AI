@@ -1,21 +1,21 @@
 SBAI = require("SBAI")
 
-local descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "Act")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
+LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
 local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
 
----@type table<AIObjective,{timer:number, decontainObjective:Barotrauma.AIObjectiveDecontainItem?}>
+---@type table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
 local allInstanceData = setmetatable({}, {
-    ---@param t table<AIObjective,{timer:number, decontainObjective:Barotrauma.AIObjectiveDecontainItem?}>
+    ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
     ---@param k Barotrauma.AIObjective
     __index = function(t, k)
-        t[k] = {timer=startTimeBetween, decontainObjective=nil}
+        t[k] = {timer=startTimeBetween, moveItemObjective=nil}
         return t[k]
     end,
-    ---@param t table<AIObjective,{timer:number, decontainObjective:Barotrauma.AIObjectiveDecontainItem?}>
+    ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
     ---@param k Barotrauma.AIObjective
-    ---@param v {timer:number, decontainObjective:Barotrauma.AIObjectiveDecontainItem?}
+    ---@param v {timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}
     __newindex = function(t, k, v)
         if rawget(t, k) == nil then
             local function removeInstanceFunction()
@@ -30,6 +30,7 @@ local allInstanceData = setmetatable({}, {
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
+    local LuaUserData = LuaUserData
     local timeBetween = options["timeBetween"] --[[@type number]]
     
     ---@param minimumEquippedCondition number
@@ -71,6 +72,8 @@ return function(namespace, options)
         end
     }
 
+    local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
+
     local selectedReplenish = {} --[[@type table<string,{targetItemTag:Barotrauma.Identifier, targetContainableItemTag:Barotrauma.Identifier, refillerTag:Barotrauma.Identifier, minimumCondition:number, MinimumEquippedConditionTest:fun(character?:Barotrauma.Character, item:Barotrauma.Item):boolean}>]]
     local hasSelectedObjectives = false --[[@type boolean]]
     local hasSelectedReplenish = false --[[@type boolean]]
@@ -105,7 +108,7 @@ return function(namespace, options)
         specifierFunction = specifierFunctions[objectiveType]
         onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"] and OnlyAtFriendlyOutposts or SBAI.util.True
 
-        SBAI.LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
+        LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
         
         SBAI.Hook.Patch(namespace(), objectiveFullType, "Act",
         ---@param instance Barotrauma.AIObjective
@@ -121,7 +124,7 @@ return function(namespace, options)
                 if instanceData.timer <= 0 then
                     instanceData.timer = SBAI.util.AddNoise(timeBetween, 0.1)
                     
-                    if  instanceData.decontainObjective == nil and
+                    if  instanceData.moveItemObjective == nil and
                         specifierFunction(instance) and
                         onlyAtFriendlyOutposts(character)
                     then
@@ -163,25 +166,25 @@ return function(namespace, options)
                             ptable.PreventExecution = true
 
                             if closestFullItem == nil or targetContainer == nil then
-                                local hasDecontainSubObjective = false
+                                local hasMoveItemSubObjective = false
 
                                 for objective in instance.subObjectives do
-                                    if SBAI.LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontain") then
-                                        hasDecontainSubObjective = true
+                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
+                                        hasMoveItemSubObjective = true
                                         break
                                     end
                                 end
-                                if not hasDecontainSubObjective then return end
+                                if not hasMoveItemSubObjective then return end
                             end
 
                             if closestFullItem ~= nil and targetContainer ~= nil then
                                 
                                 local originalClosestFullItemContainer = closestFullItem.Container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
                                 
-                                ---@return Barotrauma.AIObjectiveDecontainItem
+                                ---@return Barotrauma.AIObjectiveMoveItem
                                 ---@nodiscard
                                 local function constructor()
-                                    local objective = AIObjectiveDecontainItem(character, closestFullItem, instance.objectiveManager, nil, targetContainer.GetComponent(Components.ItemContainer), instance.PriorityModifier)
+                                    local objective = AIObjectiveMoveItem(character, closestFullItem, instance.objectiveManager, nil, targetContainer.GetComponent(Components.ItemContainer), instance.PriorityModifier)
                                     
                                     objective.Equip = false
                                     objective.RemoveExistingWhenNecessary = true
@@ -189,39 +192,39 @@ return function(namespace, options)
 
                                     return objective
                                 end
-                                ---@param objective Barotrauma.AIObjectiveDecontainItem
+                                ---@param objective Barotrauma.AIObjectiveMoveItem
                                 ---@return fun()
                                 local function onCompletedGenerator(objective)
                                     ---@type fun()
                                     local function onCompleted()
                                         originalClosestFullItemContainer.Inventory.TryPutItem(targetItem, character, nil, true, true)
 
-                                        instanceData.decontainObjective = nil
-                                        instance.RemoveSubObjective(AIObjectiveDecontainItem, objective)
+                                        instanceData.moveItemObjective = nil
+                                        instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
                                     end
                                     return onCompleted
                                 end
 
-                                ---@param objective Barotrauma.AIObjectiveDecontainItem
+                                ---@param objective Barotrauma.AIObjectiveMoveItem
                                 ---@return fun()
                                 local function onAbandonGenerator(objective)
                                     ---@type fun()
                                     local function onAbandon()
-                                        instanceData.decontainObjective = nil
-                                        instance.RemoveSubObjective(AIObjectiveDecontainItem, objective)
+                                        instanceData.moveItemObjective = nil
+                                        instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
                                     end
                                     return onAbandon
                                 end
 
-                                local AIObjectiveDecontain
+                                local AIObjectiveMoveItem
 
                                 for objective in instance.subObjectives do
-                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveDecontainItem") then
-                                        AIObjectiveDecontain = objective
+                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
+                                        AIObjectiveMoveItem = objective
                                         break
                                     end
                                 end
-                                _, AIObjectiveDecontain = SBAI.util.TryAddSubObjective(instance, AIObjectiveDecontain, constructor, onCompletedGenerator, onAbandonGenerator)
+                                _, AIObjectiveMoveItem = SBAI.util.TryAddSubObjective(instance, AIObjectiveMoveItem, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
@@ -238,7 +241,7 @@ return function(namespace, options)
             if  not instance.TargetSlot and
                 instance.SourceObjective and
                 instance.SourceObjective.SourceObjective and
-                SBAI.LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, objectiveFullType)
+                LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, objectiveFullType)
             then
                 local baseObjective = instance.SourceObjective.SourceObjective
                     
