@@ -385,7 +385,7 @@ local function LoadConfigSectionsToGUI(sectionList)
     local oldSelectionText = sectionList.SelectedComponent and sectionList.SelectedComponent.Text.SanitizedValue --[[@type Barotrauma.GUITextBlock]]
 
     sectionList.ClearChildren()
-    for sectionName, _ in pairs(SBAI.Config.data) do
+    for sectionName, _ in pairs(SBAI.Config.defaults.CONFIG) do
         local sectionBlock = AddTextBlock(sectionList.Content, Point(sectionList.Content.Rect.Width, clickableSize), GUI.Anchor.TopLeft, sectionName, nil, "SubHeading", GUI.Alignment.Left, false)
         
         sectionBlock.Color = Color.Transparent
@@ -405,7 +405,7 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
-        if Game.IsMultiplayer and CLIENT and Game.Client.MyClient.IsOwner then
+        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
             Config.Load()
         else
             SBAI.Network.RequestConfig()
@@ -555,12 +555,11 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        if Game.IsSingleplayer or Game.IsMultiplayer and CLIENT and Game.Client.MyClient.IsOwner then
+        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
             Config.Load()
         else
             SBAI.Network.RequestConfig()
         end
-
         return MakeSBAIMenu(parent)
     end
 end
