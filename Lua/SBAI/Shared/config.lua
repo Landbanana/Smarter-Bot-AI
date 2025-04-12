@@ -15,7 +15,6 @@ Config.defaults = {
     MAX_CONDITION_PERCENTAGE = 95,
     MIN_CONDITION_PERCENTAGE = 0,
     MAX_TIME_BETWEEN = 1000,
-    START_TIME_BETWEEN = 1,
     CONFIG = {}
 }
 

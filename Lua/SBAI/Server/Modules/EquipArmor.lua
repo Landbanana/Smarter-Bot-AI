@@ -1,7 +1,6 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
-
-local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
+local Types = require("SBAI.Shared.types")
 
 ---@param slotTypes InvSlotType[]
 ---@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
@@ -31,41 +30,27 @@ end
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
-    local timeBetween = options["timeBetween"] --[[@type number]]
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
 
-    ---@type table<AIObjectiveIdle,{timer:number}>
-    local allInstanceData = setmetatable(util.RoundEndTemp:Add(namespace()), {
-        ---@param t table<AIObjectiveIdle,{timer:number}>
-        ---@param k Barotrauma.AIObjectiveIdle
+    ---@type table<Barotrauma.Character,Types.Timer>
+    local characterData = setmetatable(util.RoundEndTemp:Add(namespace()), {
+        ---@param t table<Barotrauma.Character,Types.Timer>
+        ---@param k Barotrauma.Character
         __index = function(t, k)
-            t[k] = {timer=startTimeBetween}
+            t[k] = Types.Timer:new(options["timeBetween"])
             return t[k]
-        end,
-        ---@param t table<AIObjectiveIdle,{timer:number}>
-        ---@param k Barotrauma.AIObjectiveIdle
-        ---@param v {timer:number}
-        __newindex = function(t, k, v)
-            if rawget(t, k) == nil then
-                local function removeInstanceFunction()
-                    t[k] = nil
-                end
-                k.Deselected.add(removeInstanceFunction)
-            end
-            rawset(t, k, v)
         end
     })
+
+    util.ClearTableKeyOnCharacterDeath(characterData, namespace(), SBAI.Hook.Add)
     
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveIdle", "Act",
     ---@param instance Barotrauma.AIObjectiveIdle
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
-        local instanceData = allInstanceData[instance]
         local character = instance.character --[[@type Barotrauma.Character]]
         
-        if instanceData.timer <= 0 then
-            instanceData.timer = util.AddNoise(timeBetween, 0.1)
-            
+        if characterData[character]:Update(ptable["deltaTime"]) then
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
             local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
 
@@ -86,8 +71,6 @@ return function(namespace, options)
                     end
                 end
             end
-        else
-            instanceData.timer = instanceData.timer - ptable["deltaTime"]
         end
     end, Hook.HookMethodType.Before)
 end

@@ -1,5 +1,6 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
+local Types = require("SBAI.Shared.types")
 
 local LuaUserData = LuaUserData
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
@@ -10,15 +11,16 @@ local Vector2 = Vector2
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
-    local timeBetween = options.timeBetween
+    ---@type table<Barotrauma.Character,Types.Timer>
+    local characterData = setmetatable(util.RoundEndTemp:Add(namespace()), {
+        ---@param t table<Barotrauma.Character,Types.Timer>
+        ---@param k Barotrauma.Character
+        __index=function(t, k)
+            t[k] = Types.Timer:new(options["timeBetween"], 0)
+            return t[k]
+        end})
 
-    local stuckData = setmetatable(util.RoundEndTemp:Add(namespace()), {__index=function(t, k) t[k] = {timer=0}; return t[k] end})
-
-    SBAI.Hook.Add("character.death", namespace(),
-    ---@param character Barotrauma.Character
-    function(character)
-        stuckData[character] = nil
-    end)
+    util.ClearTableKeyOnCharacterDeath(characterData, namespace(), SBAI.Hook.Add)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.IndoorsSteeringManager", "Update",
     ---@param instance Barotrauma.IndoorsSteeringManager
@@ -26,16 +28,16 @@ return function(namespace, options)
     function(instance, ptable)
         local controller = instance.host --[[@type Barotrauma.HumanAIController]]
         local character = controller.Character --[[@type Barotrauma.Character]]
-        local stuckDataInstance = stuckData[character]
+        local characterDataInstance = characterData[character]
 
         if  character.SpeciesName == "Human" and
-            stuckDataInstance.timer <= 0
+            characterDataInstance:Update(1)
         then
             if  instance.GetCurrentLadder() and
                 character.IsClimbing and
                 controller.Steering.Length() > 1
             then
-                local oldSimPos = stuckDataInstance.simPos --[[@type Microsoft.Xna.Framework.Vector2]]
+                local oldSimPos = characterDataInstance["simPos"] --[[@type Microsoft.Xna.Framework.Vector2]]
                 local simPos = controller.SimPosition --[[@type Microsoft.Xna.Framework.Vector2]]
 
                 if oldSimPos then
@@ -57,24 +59,22 @@ return function(namespace, options)
                                         potentialNode.ConnectedDoor.HasAccess(character)
                                     )
                                 then
-                                    stuckDataInstance.simPos = nil
+                                    characterDataInstance["simPos"] = nil
                                     currentPath.SkipToNode(potentialIndex)
                                     break
                                 end
                             end
                         end
                     else
-                        stuckDataInstance.simPos = nil
+                        characterDataInstance["simPos"] = nil
                     end
-                    stuckDataInstance.timer = timeBetween
+                    characterDataInstance:Reset()
                 else
-                    stuckDataInstance.simPos = simPos
+                    characterDataInstance["simPos"] = simPos
                 end
             else
-                stuckDataInstance.simPos = nil
+                characterDataInstance["simPos"] = nil
             end
-        else
-            stuckDataInstance.timer = stuckData[character].timer - 1
         end
     end, Hook.HookMethodType.Before)
 end
