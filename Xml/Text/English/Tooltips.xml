@@ -14,12 +14,18 @@
   <GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while idling</GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>
   <GUI.tooltips.replenishinventory.wait>Allow an AI that is set to the "wait" order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.wait>
   <GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while set to wait (THEY WILL BRIEFLY LEAVE THEIR POST)</GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>
+  <GUI.tooltips.replenishinventory.ammunition>Let the AI replenish their magazine ammunition (SMG, HMG)</GUI.tooltips.replenishinventory.ammunition>
+  <GUI.tooltips.replenishinventory.ammunition.minimumcondition>Minimum percentage of bullets left in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumcondition>
+  <GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>Minimum percentage of bullets left in items equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>
   <GUI.tooltips.replenishinventory.batterycells>Let the AI replenish their battery cells</GUI.tooltips.replenishinventory.batterycells>
   <GUI.tooltips.replenishinventory.batterycells.minimumcondition>Minimum condition of batteries in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.batterycells.minimumcondition>
   <GUI.tooltips.replenishinventory.batterycells.minimumequippedcondition>Minimum condition of batteries equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.batterycells.minimumequippedcondition>
   <GUI.tooltips.replenishinventory.oxygentanks>Let the AI replenish their oxygen tanks</GUI.tooltips.replenishinventory.oxygentanks>
   <GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>Minimum condition of oxygen tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>
   <GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>Minimum condition of oxygen tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>
+  <GUI.tooltips.replenishinventory.weldingfuel>Let the AI replenish their welding fuel tanks</GUI.tooltips.replenishinventory.weldingfuel>
+  <GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>Minimum condition of welding fuel tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>
+  <GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>Minimum condition of welding fuel tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>
   <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
   <GUI.tooltips.idleusebed>Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)</GUI.tooltips.idleusebed>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
