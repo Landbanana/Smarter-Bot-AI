@@ -1,8 +1,9 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 
+local LuaUserData = LuaUserData
+
 do
-    local LuaUserData = LuaUserData
     local descriptor --[[@type MoonSharp.Interpreter.Interop.IUserDataDescriptor]]
 
     LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")

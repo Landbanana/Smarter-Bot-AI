@@ -3,7 +3,8 @@ local Constants = {
     Acronym="SBAI",
     Version="1.3.2",
     Path=...,
-    ModConfigsDirPath = Game.SaveFolder.."/ModConfigs" --[[@type string]]
+    ModConfigsDirPath = Game.SaveFolder.."/ModConfigs", --[[@type string]]
+    D_TIMER_NOISE = 0.1
 }
 
 Constants.ConfigPath = Constants.ModConfigsDirPath.."/"..Constants.Acronym..".json" --[[@type string]]

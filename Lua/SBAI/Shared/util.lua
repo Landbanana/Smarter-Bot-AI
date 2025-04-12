@@ -35,7 +35,6 @@ do
         ---@param self table
         ClearAll=function(self)
             for k, t in pairs(self[dataKey]) do
-                print(k)
                 util.ClearTable(t)
             end
         end
@@ -137,9 +136,18 @@ end
 ---@param t table
 function util.ClearTable(t)
     for k, _ in pairs(t) do
-        print(k)
         t[k] = nil
     end
+end
+
+---@param t table<Barotrauma.Character,any>
+---@param identifier string
+---@param hookAddFunc fun(name:string, identifier:string, func:fun(...))
+function util.ClearTableKeyOnCharacterDeath(t, identifier, hookAddFunc)
+    (hookAddFunc or Hook.Add)("character.death", identifier,
+    function(character)
+        t[character] = nil
+    end)
 end
 
 ---@param t table<integer,any>[]
@@ -455,16 +463,5 @@ do
         prefab.tags = builder.ToImmutable()
     end
 end
-
-util.convert = {
-    ItemTagToRefillerTag = {
-        ["mobilebattery"]="batterycellrecharger",
-        ["refillableoxygensource"]="oxygentankrefiller"
-    },
-    ItemTagToContainableItemTag = {
-        ["mobilebattery"]="mobilebattery",
-        ["refillableoxygensource"]="oxygensource"
-    }
-}
 
 return util
