@@ -13,20 +13,6 @@ do
     LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 end
 
-do
-    local mt__newindex = function(_, _, _) error("attempt to modify a read-only table", 2) end
-    ---@generic T: table
-    ---@param t T
-    ---@return T
-    function util.MakeReadOnlyTable(t)
-        local proxy = {} --[[@type table]]
-        local mt = {__index=t, __newindex=mt__newindex}
-
-        setmetatable(proxy, mt)
-        return proxy
-    end
-end
-
 ---@type table<string,Barotrauma.Item[]>
 util.ItemGroup = setmetatable({}, {
     __index = function(t, k)
@@ -452,4 +438,4 @@ util.convert = {
     }
 }
 
-return util.MakeReadOnlyTable(util)
+return util
