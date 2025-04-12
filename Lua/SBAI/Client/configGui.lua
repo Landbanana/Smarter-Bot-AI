@@ -25,6 +25,8 @@ local D_COLOR_TEXT = Color(225, 221, 184)
 local D_COLOR_HOVER_TEXT = Color(245, 241, 204)
 local D_COLOR_SELECTED_TEXT = Color(205, 201, 164)
 
+local D_BIGBRAIN_SIZE = Point(120, 92)
+
 local D_PADDING = 10
 
 local D_WIDTH = 0.6
@@ -498,15 +500,15 @@ local function MakeSBAIMenu(parent)
 
     local bigBrain = GUI.Image(
         GUI.RectTransform(
-            Point(bottomRightCut.Content.Rect.Width, bottomRightCut.Content.Rect.Height),
+            D_BIGBRAIN_SIZE,
             bottomRightCut.Content.RectTransform,
             GUI.Anchor.BottomCenter
         ),
         "BigBrain"
     )
     bigBrain.ToolTip = "big brain"
-
-    local availableTextWidth = bottomRightCut.Rect.Width/2 - 4*D_PADDING
+    
+    local availableTextWidth = (bottomRightCut.Rect.Width - D_BIGBRAIN_SIZE.X - D_PADDING)/2
 
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
