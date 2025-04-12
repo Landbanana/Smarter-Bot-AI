@@ -94,7 +94,6 @@ SBAI.Hook = setmetatable({
 }, {__index=Hook})
 
 SBAI.LuaUserData = setmetatable({}, {__index=LuaUserData})
-SBAI.itemGroup={} --[[@type table<string,Barotrauma.Item[]>]]
 
 local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
@@ -147,42 +146,5 @@ function SBAI.Control.Reactivate()
     SBAI.Control.Deactivate(modules)
     SBAI.Control.Activate(modules)
 end
-
-setmetatable(SBAI.itemGroup, {
-    __index = function(t, k)
-        local name = SBAI.namespace.base..".itemGroup."..k
-        local isRegistered, table = pcall(Util.GetItemGroup, name)
-
-        if isRegistered then
-            t[k] = table
-        else
-            Util.RegisterItemGroup(name, function(item)
-                return item.HasTag(k)
-            end)
-            t[k] = Util.GetItemGroup(name)
-        end
-        return t[k]
-
-        -- if rawget(t, k) == nil then
-        --     local isRegistered, table = pcall(Util.GetItemGroup, name)
-
-        --     if not isRegistered then
-        --         Util.RegisterItemGroup(name, function(item)
-        --             return item.HasTag(k)
-        --         end)
-        --         t[k] = Util.GetItemGroup(name)
-        --     elseif rawget(t, k) == nil then
-        --         t[k] = table
-        --     end
-        -- end
-        -- return rawget(t, k)
-    end
-})
-
--- needed since SBAI.itemGroup is reset at roundEnd
-Hook.Add("roundEnd", SBAI.Constants.Acronym..".itemGroup.Reset",
-function()
-    util.ClearTable(SBAI.itemGroup)
-end)
 
 return SBAI

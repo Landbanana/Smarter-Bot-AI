@@ -139,7 +139,7 @@ return function(namespace, options)
                             local potentialItem = util.FindItem(character, itemList, replenishData.targetItemTag, {0, replenishData.minimumCondition}, replenishData.MinimumEquippedConditionTest)
                             
                             if potentialItem ~= nil then
-                                local potentialContainer = util.GetClosest(character.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
+                                local potentialContainer = util.GetClosest(character.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
                                 
                                 if potentialContainer ~= nil then
                                     local potentialFullItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), replenishData.targetItemTag, 100) --[[@type Barotrauma.Item]]

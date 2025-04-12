@@ -1,4 +1,5 @@
 local util = {Hook=Hook, LuaUserData=LuaUserData}
+local Constants = require("SBAI.Shared.constants")
 
 local LuaUserData = LuaUserData
 
@@ -25,6 +26,44 @@ do
         return proxy
     end
 end
+
+---@type table<string,Barotrauma.Item[]>
+util.ItemGroup = setmetatable({}, {
+    __index = function(t, k)
+        local name = SBAI.namespace.base..".itemGroup."..k
+        local isRegistered, table = pcall(Util.GetItemGroup, name)
+
+        if isRegistered then
+            t[k] = table
+        else
+            Util.RegisterItemGroup(name, function(item)
+                return item.HasTag(k)
+            end)
+            t[k] = Util.GetItemGroup(name)
+        end
+        return t[k]
+
+        -- if rawget(t, k) == nil then
+        --     local isRegistered, table = pcall(Util.GetItemGroup, name)
+
+        --     if not isRegistered then
+        --         Util.RegisterItemGroup(name, function(item)
+        --             return item.HasTag(k)
+        --         end)
+        --         t[k] = Util.GetItemGroup(name)
+        --     elseif rawget(t, k) == nil then
+        --         t[k] = table
+        --     end
+        -- end
+        -- return rawget(t, k)
+    end
+})
+
+-- needed since util.ItemGroup is reset at roundEnd
+Hook.Add("roundEnd", SBAI.Constants.Acronym..".itemGroup.Reset",
+function()
+    util.ClearTable(util.ItemGroup)
+end)
 
 do
     local random = math.random

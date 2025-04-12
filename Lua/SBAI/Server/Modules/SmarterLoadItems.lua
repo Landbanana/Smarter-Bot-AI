@@ -121,7 +121,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             if item == nil then
                 ptable.PreventExecution = true
 
-                item = util.FindItem(character, SBAI.itemGroup[itemTag], nil, {0, minimumCondition},
+                item = util.FindItem(character, util.ItemGroup[itemTag], nil, {0, minimumCondition},
                 ---@param _ Barotrauma.Character
                 ---@param newItem Barotrauma.Item
                 ---@return boolean
@@ -155,7 +155,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 --     local container = item.Container --[[@type Barotrauma.Item?]]
                     
                 --     if container and util.IsSpecifiedContainer(container, containableTag) then
-                --         local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
+                --         local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                         
                 --         if potentialContainer then
                 --             targetItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
@@ -164,7 +164,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 --     else
                 --         targetItem = item
                 --         for hasEmptySlots in {true, false} do
-                --             targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
+                --             targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
                 --             if targetContainer then break end
                 --         end
                 --     end
@@ -250,7 +250,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --                 local targetContainer --[[@type Barotrauma.Item|Barotrauma.Items.Components.ItemContainer?]]
                     
     --                 if container and util.IsSpecifiedContainer(container, containableTag) then
-    --                     local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
+    --                     local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                         
     --                     if potentialContainer then
     --                         targetItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
@@ -259,7 +259,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --                 else
     --                     targetItem = item
     --                     for hasEmptySlots in {true, false} do
-    --                         targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
+    --                         targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
     --                         if targetContainer then break end
     --                     end
     --                 end
