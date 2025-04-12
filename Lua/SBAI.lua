@@ -100,7 +100,7 @@ local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
 
     for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
-        local Activate, Cleanup = require("SBAI.Server."..k)
+        local Activate, Cleanup = require("SBAI.Server.Modules."..k)
         
         modules[k] = {Activate=Activate, Cleanup=Cleanup}
     end
