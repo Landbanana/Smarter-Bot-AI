@@ -354,7 +354,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                     sourceObjective.Identifier == "load item" and
                     sourceObjective.TargetContainerTags[1] == refillerTag
                 then
-                    local index = util.GetSpecificSlot(instance.container.Item, containableTag)
+                    local index = util.GetSpecificSlot(instance.container.Item.GetComponent(Components.ItemContainer), containableTag)
 
                     if index then
                         instance.TargetSlot = index

@@ -171,32 +171,22 @@ function util.Variator(t)
     end
 end
 
-do
-    local D_COMMON_IDENTIFIERS = {"smallitem", "mediumitem"}
 
-    ---@param container Barotrauma.Item
-    ---@param itemTag Barotrauma.Item
-    ---@return integer?
-    ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):integer
-    function util.GetSpecificSlot(container, itemTag)
-        local itemContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer|nil]]
-
-        if itemContainer then
-            local i = 0
-
-            if LuaUserData.IsTargetType(itemTag, "Barotrauma.Item") then
-                return itemContainer.ShouldBeContained(itemTag)
-            end
-            
-            for s in itemContainer.slotRestrictions do
-                for c in s.ContainableItems do
-                    for t in c.Identifiers do
-                        if t == itemTag then return i end
-                    end
+---@param itemContainer Barotrauma.Items.Components.ItemContainer
+---@param itemTag Barotrauma.Identifier
+---@return integer?
+function util.GetSpecificSlot(itemContainer, itemTag)
+    if itemContainer then
+        local i = 0
+        
+        for s in itemContainer.slotRestrictions do
+            for c in s.ContainableItems do
+                for t in c.Identifiers do
+                    if t == itemTag then return i end
                 end
             end
-            i = i + 1
         end
+        i = i + 1
     end
 end
 
@@ -205,7 +195,13 @@ end
 ---@return boolean
 ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):boolean
 function util.IsSpecifiedContainer(container, itemTag)
-    return util.GetSpecificSlot(container, itemTag) ~= nil
+    local itemContainer = container.GetComponent(Components.ItemContainer)
+
+    if type(itemTag) ~= "string" then
+        local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
+        return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
+    end
+    return util.GetSpecificSlot(itemContainer, itemTag) ~= nil
 end
 
 ---@param character Barotrauma.Character

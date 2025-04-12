@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.tooltips.cleanablepetitems>Pet items can now be picked up (specifically, poop, chitin chunks, and mucus balls). They will be placed in the same type of containers as pomegrenades</GUI.tooltips.cleanablepetitems>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
   <GUI.tooltips.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.preventattackinghandcuffed>

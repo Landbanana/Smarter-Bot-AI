@@ -100,22 +100,23 @@ end
 
 do
     local defaults = ConfigSection:new()
-    local section = defaults:CreateSection("EquipArmor")
+    local section
     
+    defaults:CreateSection("CleanablePetItems")
+
+    defaults:CreateSection("CrewStaysInSub")
+
+    section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+
+    defaults:CreateSection("IdleUseBed")
+
+    section = defaults:CreateSection("LadderFix")
+    section:CreateOption("timeBetween", 1000, Config.OPTION_TYPE.float, 10, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
-
-    section = defaults:CreateSection("SmarterLoadItems")
-
-    local subsection = section:CreateSection("BatteryCells")
-    
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")
@@ -123,6 +124,10 @@ do
 
     subsection = section:CreateSection("Wait")
     subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("Ammunition")
+    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("BatteryCells")
     subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
@@ -134,20 +139,18 @@ do
 
     subsection = section:CreateSection("WeldingFuel")
     subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("Ammunition")
-    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("IdleUseBed")
+    section = defaults:CreateSection("SmarterLoadItems")
 
-    defaults:CreateSection("CrewStaysInSub")
+    local subsection = section:CreateSection("BatteryCells")
+    
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    section = defaults:CreateSection("LadderFix")
-    section:CreateOption("timeBetween", 1000, Config.OPTION_TYPE.float, 10, Config.defaults.MAX_TIME_BETWEEN)
+    subsection = section:CreateSection("OxygenTanks")
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     Config.defaults.CONFIG = defaults
 end

@@ -19,10 +19,7 @@ local function generateFullItemPredicate(itemTag, refillerTag)
                 
                 return not container or
                     not (
-                            (
-                                container.GetComponent(Components.Holdable) or
-                                container.GetComponent(Components.Wearable)
-                            ) and
+                        container.GetComponent(Components.Pickable) and
                         util.IsSpecifiedContainer(container, item)
                     )
             end
@@ -80,10 +77,11 @@ return function(namespace, options)
             local container = item.Container
             
             return  container and
-                    util.IsSpecifiedContainer(container, item) and (
-                        not character.HasEquippedItem(container) or
-                        item.ConditionPercentage <= minimumEquippedCondition
-                    )
+                container.GetComponent(Components.Pickable) and
+                util.IsSpecifiedContainer(container, item) and (
+                    not character.HasEquippedItem(container) or
+                    item.ConditionPercentage <= minimumEquippedCondition
+                )
         end
         fullItemPredicate = generateFullItemPredicate(itemTag, refillerTag)
 
@@ -134,7 +132,7 @@ return function(namespace, options)
                                 end
                                 return true
                             end)
-
+                            print(targetItem)
                             local targetContainer = targetItem and targetItem.Container or nil --[[@type Barotrauma.Item?]]
                             local closestFullItem = targetItem and util.GetClosest(character.WorldPosition, util.FindItems(character, util.ItemGroup[itemTag], nil, nil,
                             function(c, i)
@@ -150,9 +148,6 @@ return function(namespace, options)
                                 end
                                     return false
                             end)) or nil --[[@type Barotrauma.Item?]]
-
-                            -- print(targetItem)
-                            -- print(closestFullItem)
                             
                             if targetContainer and closestFullItem then
                                 local closestFullItemContainer = closestFullItem.Container
