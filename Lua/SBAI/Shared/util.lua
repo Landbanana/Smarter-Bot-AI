@@ -197,11 +197,13 @@ end
 function util.IsSpecifiedContainer(container, itemTag)
     local itemContainer = container.GetComponent(Components.ItemContainer)
 
-    if type(itemTag) ~= "string" then
-        local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
-        return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
+    if type(itemTag) == "string" then
+        return util.GetSpecificSlot(itemContainer, itemTag) ~= nil
+        
     end
-    return util.GetSpecificSlot(itemContainer, itemTag) ~= nil
+    local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
+    
+    return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
 end
 
 ---@param character Barotrauma.Character

@@ -52,13 +52,13 @@ return function(namespace, options)
 
     local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
 
-    for loadType, itemTag, refillerTag, isFungible in util.Variator({
-        {"BatteryCells", "mobilebattery", "batterycellrecharger", true},
-        {"OxygenTanks", "refillableoxygensource", "oxygentankrefiller", true},
-        {"WeldingFuel", "weldingtoolfuel", "", false},
-        {"Ammunition", "handheldammo", "", false}
+    for loadType, itemTag, containableTag, refillerTag, isFungible in util.Variator({
+        {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger", true},
+        {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller", true},
+        {"WeldingFuel", "weldingtoolfuel", "weldingtoolfuel", "", false},
+        {"Ammunition", "handheldammo", "handheldammo", "", false}
     })
-    do --[[@cast loadType string]] --[[@cast itemTag Barotrauma.Identifier]] --[[@cast refillerTag Barotrauma.Identifier]] --[[@cast isFungible boolean]]
+    do --[[@cast loadType string]] --[[@cast itemTag Barotrauma.Identifier]] --[[@cast containableTag Barotrauma.Identifier]] --[[@cast refillerTag Barotrauma.Identifier]] --[[@cast isFungible boolean]]
         local section = options[loadType]
         local minimumCondition
         local minimumEquippedCondition
@@ -78,7 +78,8 @@ return function(namespace, options)
             
             return  container and
                 container.GetComponent(Components.Pickable) and
-                util.IsSpecifiedContainer(container, item) and (
+                util.IsSpecifiedContainer(container, refillerTag == "" and item or containableTag)
+                 and (
                     not character.HasEquippedItem(container) or
                     item.ConditionPercentage <= minimumEquippedCondition
                 )
@@ -132,7 +133,7 @@ return function(namespace, options)
                                 end
                                 return true
                             end)
-                            print(targetItem)
+                            
                             local targetContainer = targetItem and targetItem.Container or nil --[[@type Barotrauma.Item?]]
                             local closestFullItem = targetItem and util.GetClosest(character.WorldPosition, util.FindItems(character, util.ItemGroup[itemTag], nil, nil,
                             function(c, i)
