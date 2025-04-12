@@ -93,8 +93,6 @@ SBAI.Hook = setmetatable({
     end
 }, {__index=Hook})
 
-SBAI.LuaUserData = setmetatable({}, {__index=LuaUserData})
-
 local function GetModules()
     local modules = {} --[[@type table<string,ModuleFuncs>]]
 

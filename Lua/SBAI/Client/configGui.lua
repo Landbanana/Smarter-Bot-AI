@@ -1,12 +1,12 @@
 local SBAI = require("SBAI")
 
-local ForceUpperCase = SBAI.LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
+local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
 
 local descriptor = Descriptors["Barotrauma.GUITextBlock"]
-SBAI.LuaUserData.MakeMethodAccessible(descriptor, "MeasureText", {"System.String"})
+LuaUserData.MakeMethodAccessible(descriptor, "MeasureText", {"System.String"})
 
 descriptor = Descriptors["Barotrauma.RectTransform"]
-SBAI.LuaUserData.MakeFieldAccessible(descriptor, "ChildrenChanged")
+LuaUserData.MakeFieldAccessible(descriptor, "ChildrenChanged")
 
 local D_BUTTON_TEXT_ALIGN = GUI.Alignment.Center
 local D_BUTTON_STYLE = "GUIButton"

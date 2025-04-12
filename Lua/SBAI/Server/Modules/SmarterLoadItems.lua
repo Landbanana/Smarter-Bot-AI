@@ -9,7 +9,7 @@ do
 
     ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
 
-    descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
+    descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
     LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
     -- LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
     -- LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
