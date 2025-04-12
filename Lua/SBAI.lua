@@ -111,7 +111,7 @@ SBAI.Control = {}
 
 ---@param modules? table<string,ModuleFuncs>
 function SBAI.Control.Activate(modules)
-    if modules == nil then modules = GetModules() end
+    modules = modules or GetModules()
     
     for postfix, module in pairs(GetModules()) do
         local namespace = SBAI.namespace + postfix
@@ -125,7 +125,7 @@ end
 
 ---@param modules? table<string,ModuleFuncs>
 function SBAI.Control.Deactivate(modules)
-    if modules == nil then modules = GetModules() end
+    modules = modules or GetModules()
 
     for k, _ in pairs(SBAI.Hook.list.add) do
         Hook.Remove(k.name, k.identifier)
@@ -134,6 +134,8 @@ function SBAI.Control.Deactivate(modules)
     for k, _ in pairs(SBAI.Hook.list.patch) do
         Hook.RemovePatch(k.identifier, k.className, k.methodName, k.parameterTypes, k.hookType)
     end
+
+    util.RoundEndTemp:ClearAll()
 
     for _, module in pairs(modules) do
         if module.Cleanup then module.Cleanup() end

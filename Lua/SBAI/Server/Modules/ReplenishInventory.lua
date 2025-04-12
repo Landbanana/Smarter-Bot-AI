@@ -4,35 +4,37 @@ local util = require("SBAI.Shared.util")
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
 LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
-local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
+---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
 
----@type table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
-local allInstanceData = setmetatable({}, {
-    ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
-    ---@param k Barotrauma.AIObjective
-    __index = function(t, k)
-        t[k] = {timer=startTimeBetween, moveItemObjective=nil}
-        return t[k]
-    end,
-    ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
-    ---@param k Barotrauma.AIObjective
-    ---@param v {timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}
-    __newindex = function(t, k, v)
-        if rawget(t, k) == nil then
-            local function removeInstanceFunction()
-                t[k] = nil
-            end
-            k.Deselected.add(removeInstanceFunction)
-        end
-        rawset(t, k, v)
-    end
-})
+local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
 
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
     local LuaUserData = LuaUserData
     local timeBetween = options["timeBetween"] --[[@type number]]
+
+    ---@type table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
+    local allInstanceData = setmetatable(util.RoundEndTemp:Add(namespace), {
+        ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
+        ---@param k Barotrauma.AIObjective
+        __index = function(t, k)
+            t[k] = {timer=startTimeBetween, moveItemObjective=nil}
+            return t[k]
+        end,
+        ---@param t table<AIObjective,{timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}>
+        ---@param k Barotrauma.AIObjective
+        ---@param v {timer:number, moveItemObjective:Barotrauma.AIObjectiveMoveItem?}
+        __newindex = function(t, k, v)
+            if rawget(t, k) == nil then
+                local function removeInstanceFunction()
+                    t[k] = nil
+                end
+                k.Deselected.add(removeInstanceFunction)
+            end
+            rawset(t, k, v)
+        end
+    })
     
     ---@param minimumEquippedCondition number
     ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
@@ -76,7 +78,7 @@ return function(namespace, options)
     local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
 
     local selectedReplenish = {} --[[@type table<string,{targetItemTag:Barotrauma.Identifier, targetContainableItemTag:Barotrauma.Identifier, refillerTag:Barotrauma.Identifier, minimumCondition:number, MinimumEquippedConditionTest:fun(character?:Barotrauma.Character, item:Barotrauma.Item):boolean}>]]
-    local hasSelectedObjectives = false --[[@type boolean]]
+    --local hasSelectedObjectives = false --[[@type boolean]]
     local hasSelectedReplenish = false --[[@type boolean]]
 
     for _, replenishType in pairs({"BatteryCells", "OxygenTanks"}) do
@@ -97,7 +99,7 @@ return function(namespace, options)
     end
 
     for objectiveType in {"Idle", "Wait"} do
-        hasSelectedObjectives = true
+        --hasSelectedObjectives = true
         if not hasSelectedReplenish then break end
         
         local section = options[objectiveType]
@@ -112,7 +114,7 @@ return function(namespace, options)
         LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
         
         SBAI.Hook.Patch(namespace(), objectiveFullType, "Act",
-        ---@param instance Barotrauma.AIObjective
+        ---@param instance Barotrauma.AIObjectiveMoveItem
         ---@param ptable Barotrauma.LuaCsHook.ParameterTable
         function(instance, ptable)
             local character = instance.character --[[@type Barotrauma.Character]]
@@ -262,15 +264,4 @@ return function(namespace, options)
         end, Hook.HookMethodType.Before)
         ::continue::
     end
-
-    -- hopefully prevent any memory leaks
-    if hasSelectedObjectives and hasSelectedReplenish then
-        SBAI.Hook.Add("roundEnd", namespace(),
-        function()
-            util.ClearTable(allInstanceData)
-        end)
-    end
-end,
-function()
-    util.ClearTable(allInstanceData)
 end

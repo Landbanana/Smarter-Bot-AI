@@ -28,7 +28,9 @@ local function GetLikelyBeds()
     return likelyBeds
 end
 
-return function(namespace, _)
+---@param namespace Namespace
+---@param options table
+return function(namespace, options)
     for prefab in GetLikelyBeds() do
         util.AddTagsToPrefab(prefab, "chair")
     end

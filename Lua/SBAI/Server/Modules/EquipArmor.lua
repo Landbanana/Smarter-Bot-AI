@@ -3,28 +3,6 @@ local util = require("SBAI.Shared.util")
 
 local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
 
----@type table<AIObjectiveIdle,{timer:number}>
-local allInstanceData = setmetatable({}, {
-    ---@param t table<AIObjectiveIdle,{timer:number}>
-    ---@param k Barotrauma.AIObjectiveIdle
-    __index = function(t, k)
-        t[k] = {timer=startTimeBetween}
-        return t[k]
-    end,
-    ---@param t table<AIObjectiveIdle,{timer:number}>
-    ---@param k Barotrauma.AIObjectiveIdle
-    ---@param v {timer:number}
-    __newindex = function(t, k, v)
-        if rawget(t, k) == nil then
-            local function removeInstanceFunction()
-                t[k] = nil
-            end
-            k.Deselected.add(removeInstanceFunction)
-        end
-        rawset(t, k, v)
-    end
-})
-
 ---@param slotTypes InvSlotType[]
 ---@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
 local function GenerateWearableArmorPredicate(slotTypes)
@@ -50,9 +28,33 @@ local function GenerateWearableArmorPredicate(slotTypes)
     end
 end
 
+---@param namespace Namespace
+---@param options table
 return function(namespace, options)
     local timeBetween = options["timeBetween"] --[[@type number]]
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
+
+    ---@type table<AIObjectiveIdle,{timer:number}>
+    local allInstanceData = setmetatable(util.RoundEndTemp:Add(namespace()), {
+        ---@param t table<AIObjectiveIdle,{timer:number}>
+        ---@param k Barotrauma.AIObjectiveIdle
+        __index = function(t, k)
+            t[k] = {timer=startTimeBetween}
+            return t[k]
+        end,
+        ---@param t table<AIObjectiveIdle,{timer:number}>
+        ---@param k Barotrauma.AIObjectiveIdle
+        ---@param v {timer:number}
+        __newindex = function(t, k, v)
+            if rawget(t, k) == nil then
+                local function removeInstanceFunction()
+                    t[k] = nil
+                end
+                k.Deselected.add(removeInstanceFunction)
+            end
+            rawset(t, k, v)
+        end
+    })
     
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveIdle", "Act",
     ---@param instance Barotrauma.AIObjectiveIdle
@@ -88,13 +90,4 @@ return function(namespace, options)
             instanceData.timer = instanceData.timer - ptable["deltaTime"]
         end
     end, Hook.HookMethodType.Before)
-
-    -- hopefully prevent any memory leaks
-    Hook.Add("roundEnd", namespace(),
-    function()
-        util.ClearTable(allInstanceData)
-    end)
-end,
-function()
-    util.ClearTable(allInstanceData)
 end

@@ -7,20 +7,17 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"]
 
 local Vector2 = Vector2
 
-local stuckData = setmetatable({}, {__index=function(t, k) t[k] = {timer=0}; return t[k] end})
-
+---@param namespace Namespace
+---@param options table
 return function(namespace, options)
     local timeBetween = options.timeBetween
+
+    local stuckData = setmetatable(util.RoundEndTemp:Add(namespace()), {__index=function(t, k) t[k] = {timer=0}; return t[k] end})
 
     SBAI.Hook.Add("character.death", namespace(),
     ---@param character Barotrauma.Character
     function(character)
         stuckData[character] = nil
-    end)
-
-    SBAI.Hook.Add("roundEnd", namespace(),
-    function()
-        util.ClearTable(stuckData)
     end)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.IndoorsSteeringManager", "Update",
@@ -80,7 +77,4 @@ return function(namespace, options)
             stuckDataInstance.timer = stuckData[character].timer - 1
         end
     end, Hook.HookMethodType.Before)
-end,
-function()
-    util.ClearTable(stuckData)
 end

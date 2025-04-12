@@ -13,8 +13,42 @@ do
     LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 end
 
+do
+    local dataKey = {}
+
+    util.RoundEndTemp = {
+        [dataKey]={},
+        ---@param self table
+        ---@param name string
+        ---@param base? boolean
+        ---@return table
+        Add=function(self, name, base)
+            self[dataKey][name] = {}
+
+            return self[dataKey][name]
+        end,
+        ---@param self table
+        ---@param name string
+        Remove=function(self, name)
+            self[dataKey][name] = nil
+        end,
+        ---@param self table
+        ClearAll=function(self)
+            for k, t in pairs(self[dataKey]) do
+                print(k)
+                util.ClearTable(t)
+            end
+        end
+    }
+
+    Hook.Add("roundEnd", Constants.Acronym..".RoundEndReset",
+    function()
+        util.RoundEndTemp:ClearAll()
+    end)
+end
+
 ---@type table<string,Barotrauma.Item[]>
-util.ItemGroup = setmetatable({}, {
+util.ItemGroup = setmetatable(util.RoundEndTemp:Add("ItemGroup"), {
     __index = function(t, k)
         local name = Constants.Acronym..".ItemGroup."..k
         local isRegistered, table = pcall(Util.GetItemGroup, name)
@@ -44,12 +78,6 @@ util.ItemGroup = setmetatable({}, {
         -- return rawget(t, k)
     end
 })
-
--- needed since util.ItemGroup is reset at roundEnd
-Hook.Add("roundEnd", Constants.Acronym..".itemGroup.Reset",
-function()
-    util.ClearTable(util.ItemGroup)
-end)
 
 do
     local random = math.random
@@ -109,6 +137,7 @@ end
 ---@param t table
 function util.ClearTable(t)
     for k, _ in pairs(t) do
+        print(k)
         t[k] = nil
     end
 end

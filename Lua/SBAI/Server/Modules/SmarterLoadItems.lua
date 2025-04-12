@@ -7,12 +7,17 @@ do
 
     LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
+    ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
+
     descriptor = SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
     LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
     -- LuaUserData.MakePropertyAccessible(descriptor, "TargetCondition")
     -- LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
     -- descriptor = Descriptors["Barotrauma.AIObjective"]
     -- LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
+
+    ---@class Barotrauma.AIObjectiveLoadItems: Barotrauma.AIObjectiveLoop*1Barotrauma*Item
+    ---@field TargetContainerTags System.Collections.Immutable.ImmutableArray*1Barotrauma*Identifier
 
     descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
     LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
@@ -30,6 +35,15 @@ do
     LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
     -- LuaUserData.MakeFieldAccessible(descriptor, "itemIndex")
     LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
+
+    ---@class Barotrauma.AIObjectiveLoadItem: Barotrauma.AIObjective
+    ---@field IsValidContainable fun(item:Barotrauma.Item):System.Boolean
+    ---@field Container Barotrauma.Item
+    ---@field ItemContainer Barotrauma.Items.Components.ItemContainer
+    ---@field TargetContainerTags System.Collections.Immutable.ImmutableArray*1Barotrauma*Identifier
+    ---@field targetItem Barotrauma.Item
+    ---@field ignoredItems System.Collections.Generic.HashSet*1Barotrauma*Item
+
     -- LuaUserData.MakeFieldAccessible(descriptor, "subObjectives")
 
     -- descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
@@ -69,7 +83,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     namespace = namespace + loadType
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "IsValidContainable",
-    ---@param instance Barotrauma.AIObjective
+    ---@param instance Barotrauma.AIObjectiveLoadItem
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
         if instance.TargetContainerTags[1] == refillerTag then
@@ -111,7 +125,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     end, Hook.HookMethodType.Before)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "Act",
-    ---@param instance Barotrauma.AIObjective
+    ---@param instance Barotrauma.AIObjectiveLoadItem
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
         if instance.TargetContainerTags[1] == refillerTag then
