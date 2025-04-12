@@ -16,7 +16,7 @@ end
 ---@type table<string,Barotrauma.Item[]>
 util.ItemGroup = setmetatable({}, {
     __index = function(t, k)
-        local name = SBAI.namespace.base..".itemGroup."..k
+        local name = Constants.Acronym..".ItemGroup."..k
         local isRegistered, table = pcall(Util.GetItemGroup, name)
 
         if isRegistered then
@@ -46,7 +46,7 @@ util.ItemGroup = setmetatable({}, {
 })
 
 -- needed since util.ItemGroup is reset at roundEnd
-Hook.Add("roundEnd", SBAI.Constants.Acronym..".itemGroup.Reset",
+Hook.Add("roundEnd", Constants.Acronym..".itemGroup.Reset",
 function()
     util.ClearTable(util.ItemGroup)
 end)

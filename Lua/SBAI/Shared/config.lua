@@ -1,8 +1,7 @@
 local Constants = require("SBAI.Shared.constants")
 
 local Config = {data={}}
-local modConfigsDir = Game.SaveFolder.."/ModConfigs" --[[@type string]]
-local configPath = modConfigsDir.."/"..Constants.Acronym..".json" --[[@type string]]
+
 
 ---@enum OptionType
 Config.OPTION_TYPE = {
@@ -181,7 +180,7 @@ end
 
 if SERVER or Game.IsSingleplayer then
     function Config.Load()
-        Config.data = File.Exists(configPath) and json.parse(File.Read(configPath)) or {}
+        Config.data = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or {}
     
         ---@param option table
         ---@param optionName string
@@ -215,14 +214,10 @@ if SERVER or Game.IsSingleplayer then
         end
     end
 
-    function Config.Save(reactivate)
-        File.CreateDirectory(modConfigsDir)
-        File.Write(configPath, json.serialize(Config.data))
-        if reactivate == nil or reactivate then SBAI.Control.Reactivate() end
+    function Config.Save()
+        File.CreateDirectory(Constants.ModConfigsDirPath)
+        File.Write(Constants.ConfigPath, json.serialize(Config.data))
     end
-
-    Config.Load()
-    if not File.Exists(configPath) then Config.Save(false) end
 end
 
 if Game.IsMultiplayer then

@@ -1,4 +1,4 @@
-SBAI = require("SBAI")
+local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")

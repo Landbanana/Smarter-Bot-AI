@@ -1,5 +1,4 @@
-SBAI = require("SBAI")
-SBAI.GUI = {}
+local SBAI = require("SBAI")
 
 local ForceUpperCase = SBAI.LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
 

@@ -1,4 +1,4 @@
-SBAI = require("SBAI")
+local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 
 SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")

@@ -147,4 +147,16 @@ function SBAI.Control.Reactivate()
     SBAI.Control.Activate(modules)
 end
 
+if SERVER or Game.IsSingleplayer then
+    local oldSave = SBAI.Config.Save
+
+    SBAI.Config.Save = function(reactivate)
+        oldSave()
+        if reactivate == nil or reactivate then SBAI.Control.Reactivate() end
+    end
+
+    SBAI.Config.Load()
+    if not File.Exists(SBAI.Constants.ConfigPath) then SBAI.Config.Save(false) end
+end
+
 return SBAI
