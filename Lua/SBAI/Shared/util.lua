@@ -178,15 +178,15 @@ end
 function util.GetSpecificSlot(itemContainer, itemTag)
     if itemContainer then
         local i = 0
-        
+
         for s in itemContainer.slotRestrictions do
             for c in s.ContainableItems do
                 for t in c.Identifiers do
                     if t == itemTag then return i end
                 end
             end
+            i = i + 1
         end
-        i = i + 1
     end
 end
 
@@ -199,10 +199,9 @@ function util.IsSpecifiedContainer(container, itemTag)
 
     if type(itemTag) == "string" then
         return util.GetSpecificSlot(itemContainer, itemTag) ~= nil
-        
     end
     local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
-    
+
     return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
 end
 

@@ -60,6 +60,7 @@ do
 end
 
 local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+local AIObjectiveLoadItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItem")
 
 local function StaticFindItem(newItem)
     return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
@@ -88,39 +89,39 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(instance, ptable)
         if instance.TargetContainerTags[1] == refillerTag then
+
             ptable.PreventExecution = true
+
             return util.MatchItem(instance.character, ptable["item"], nil, nil,
             ---@param character Barotrauma.Character
             ---@param item Barotrauma.Item
             ---@return boolean
             function(character, item)
-                if util.ValsContain(instance.ignoredItems, item) or util.ParentItemsHaveDontTakeItemsTag(item) then
+                if  util.ValsContain(instance.ignoredItems, item) or
+                    util.ParentItemsHaveDontTakeItemsTag(item)
+                then
                     return false
                 end
 
                 --local destContainer = instance.Container
 
-                if not character.HasItem(item) and not instance.CanEquip(item, false) then
-                    local container = item.Container
+                local container = item.container
 
-                    return not item.IsFullCondition and
-                        not item.ConditionIncreasedRecently and
-                        not (
-                            container and
-                            container.HasTag(refillerTag) and
-                            util.PoweredItemHasNeededPower(container)
-                        )
-
-                    -- if item.IsFullCondition then
-                    --     return not destContainer.HasTag(refillerTag) and
-                    --         container.HasTag(refillerTag) and
-                    --         util.IsSpecifiedContainer(destContainer, containableTag)
-                    --         --maybe add something here to check if destContainer already has a full battery
-                    -- elseif item.ConditionPercentage <= minimumCondition then
-                    --     return destContainer.HasTag(refillerTag)
-                    -- end
+                if  container and
+                    container.HasTag(refillerTag) and
+                    util.PoweredItemHasNeededPower(container)
+                then
+                    return false
                 end
-                return true
+
+                if  not item.IsFullCondition and
+                    not item.ConditionIncreasedRecently and (
+                        character.HasItem(item) or
+                        instance.CanEquip(item, false)
+                    )
+                then
+                    return true
+                end
             end)
         end
     end, Hook.HookMethodType.Before)
@@ -160,7 +161,9 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 if item == nil then
                     instance.Abandon = true
                 end
+
                 instance.targetItem = item
+                instance.objectiveManager.GetObjective(AIObjectiveIdle).Wander(ptable["deltaTime"])
             end
         end
     end, Hook.HookMethodType.Before)
@@ -315,7 +318,8 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 then
                     local fullItem = util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
                     local targetContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
-
+                    
+                    
                     if fullItem and targetContainer then
                         ptable["targetContainer"] = targetContainer
                         ptable["targetItem"] = fullItem
@@ -327,23 +331,14 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
         end
     end, Hook.HookMethodType.Before)
 
-    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "GetPriority",
-    -- ---@param instance Barotrauma.AIObjective
-    -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    -- function(instance, ptable)
-    --     if instance.TargetContainerTags[1] == refillerTag then
-    --         local moveItemObjective = instance.moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
-
-    --         ptable["Contaienr"]
-    --     end
-    -- end, Hook.HookMethodType.Before)
-
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveContainItem", "Act",
     ---@param instance Barotrauma.AIObjectiveContainItem
     ---@param _ Barotrauma.LuaCsHook.ParameterTable
     function(instance, _)
         if  not instance.TargetSlot and
-            instance.RemoveExistingPredicate
+            instance.RemoveExistingPredicate and
+            instance.ItemToContain and
+            instance.ItemToContain.IsFullCondition
         then
             local sourceObjective = instance.SourceObjective
 
@@ -354,7 +349,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                     sourceObjective.Identifier == "load item" and
                     sourceObjective.TargetContainerTags[1] == refillerTag
                 then
-                    local index = util.GetSpecificSlot(instance.container.Item.GetComponent(Components.ItemContainer), containableTag)
+                    local index = util.GetSpecificSlot(instance.container, containableTag)
 
                     if index then
                         instance.TargetSlot = index
@@ -371,75 +366,15 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     ---@param _ Barotrauma.AIObjectiveLoadItems
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable
     function(_, ptable)
-        local item = ptable["item"]
-
+        local item = ptable["item"] --[[@type Barotrauma.Item]]
+        
         if item and item.HasTag(itemTag) then
-            local container = item.container
 
             ptable.PreventExecution = true
 
-            return item.Container ~= nil and
-                util.IsSpecifiedContainer(container, itemTag) and
-                not container.HasTag(refillerTag) and
-                item.ConditionPercentage >= minimumCondition or
-                item.IsFullCondition
+            return item.IsFullCondition
         end
     end, Hook.HookMethodType.Before)
-
-    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "GetPriority",
-    -- ---@param instance Barotrauma.AIObjective
-    -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    -- function(instance, ptable)
-    --     if instance.TargetContainerTags[1] == refillerTag then
-    --         if  not instance.IsAllowed then
-    --             instance.HandleDisallowed()
-    --             return Priority
-    --         elseif not AIObjectiveLoadItems.IsValidTarget(instance.Container, instance.character, nil, instance.TargetItemCondition) then
-    --             instance.Priority = 0
-    --         elseif instance.targetItem == nil then
-    --             instance.Priority = 0
-    --         else
-    --             local dist = 0.0
-    --             local function AddDistance(startPos, targetPos)
-    --                 local yDist = math.Abs(startPos.Y - targetPos.Y)
-                    
-    --                 if yDist > 100 then dist = yDist + yDist end
-    --                 dist = dist + math.Abs(instance.character.WorldPosition.X - targetPos.X)
-    --             end
-
-    --             local distanceFactor = instance.GetDistanceFactor(instance.targetItem.WorldPosition, nil, 5, 5000, 0.9, 0)
-
-    --             if instance.character.CurrentHull ~= instance.targetItem.CurrentHull then
-    --                 AddDistance(instance.character.WorldPosition, instance.targetItem.WorldPosition)
-    --             end
-
-    --             if instance.targetItem.CurrentHull ~= instance.Container.CurrentHull then
-    --                 AddDistance(instance.targetItem.WorldPosition, instance.Container.WorldPosition)
-    --             end
-    --                 local hasContainable = instance.character.HasItem(instance.targetItem)
-    --                 local devotion = (instance.CumulatedDevotion + (hasContainable and (100 - instance.MaxDevotion) or 0))/100
-    --                 local max = AIObjectiveManager.LowestOrderPriority - (hasContainable and 1 or 2)
-                    
-    --                 instance.Priority = math.lerp(0, max, math.clamp(devotion + (distanceFactor * instance.PriorityModifier), 0, 1))
-    --                 if instance.moveItemObjective and instance.targetItem.Container ~= instance.Container then
-    --                     if not instance.IsValidContainable(instance.targetItem) then
-    --                         instance.moveItemObjective.Abandon = true
-    --                     elseif not instance.ItemContainer.Inventory.CanBePut(instance.targetItem) then
-    --                         for item in instance.ItemContainer.Inventory.AllItems do
-    --                             --item.endNone instance.ItemMatchesTargetCondition(TargetItemCondition
-    --                         end
-    --                     end
-
-    --                     instance.moveItemObjective.Abandon = true
-
-    --                     if instance.ItemContainer.Inventory.IsFull() then
-    --                         Priority = Priority/4
-    --                     end
-    --                 end
-    --             return Priority
-    --         end
-    --     end
-    -- end, Hook.HookMethodType.Before)
 ::continue::
 end
 end
