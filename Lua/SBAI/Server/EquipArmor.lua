@@ -1,4 +1,5 @@
 SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 local startTimeBetween = SBAI.Config.defaults.START_TIME_BETWEEN
 
@@ -41,7 +42,7 @@ local function GenerateWearableArmorPredicate(slotTypes)
         end
 
         for slot in slotTypes do
-            if SBAI.util.ValsContain(item.AllowedSlots, slot) then
+            if util.ValsContain(item.AllowedSlots, slot) then
                 return true
             end
         end
@@ -61,7 +62,7 @@ return function(namespace, options)
         local character = instance.character --[[@type Barotrauma.Character]]
         
         if instanceData.timer <= 0 then
-            instanceData.timer = SBAI.util.AddNoise(timeBetween, 0.1)
+            instanceData.timer = util.AddNoise(timeBetween, 0.1)
             
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
             local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
@@ -74,7 +75,7 @@ return function(namespace, options)
             
             if #filteredClothesSlotTypes <= 0 then return end
 
-            local wearables = SBAI.util.FindItems(character, inventory.FindAllItems(nil, true), nil, nil, GenerateWearableArmorPredicate(filteredClothesSlotTypes))
+            local wearables = util.FindItems(character, inventory.FindAllItems(nil, true), nil, nil, GenerateWearableArmorPredicate(filteredClothesSlotTypes))
             
             for _, slotType in ipairs(filteredClothesSlotTypes) do
                 for _, item in ipairs(wearables) do
@@ -91,9 +92,9 @@ return function(namespace, options)
     -- hopefully prevent any memory leaks
     Hook.Add("roundEnd", namespace(),
     function()
-        SBAI.util.ClearTable(allInstanceData)
+        util.ClearTable(allInstanceData)
     end)
 end,
 function()
-    SBAI.util.ClearTable(allInstanceData)
+    util.ClearTable(allInstanceData)
 end

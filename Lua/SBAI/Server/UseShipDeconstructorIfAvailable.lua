@@ -1,4 +1,5 @@
 SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 SBAI.LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
 
@@ -35,7 +36,7 @@ return function(namespace, options)
         end
 
         if #playerSubmarineDeconstructors > 0 then
-            local closestDeconstructorItem = SBAI.util.GetClosest(character.WorldPosition, SBAI.util.FindItems(nil, playerSubmarineDeconstructors, nil, nil,
+            local closestDeconstructorItem = util.GetClosest(character.WorldPosition, util.FindItems(nil, playerSubmarineDeconstructors, nil, nil,
             function(_, i)
                 return i.GetComponent(Components.Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
                     i.HasAccess(character)

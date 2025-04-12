@@ -2,20 +2,18 @@
 <contentpackage name="Smarter Bot AI" modversion="1.3.2" corepackage="False" steamworkshopid="3343911734" gameversion="1.8.6.2">
   <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
-  <Other file="%ModDir%/Lua/SBAI/util.lua" />
-  <Other file="%ModDir%/Lua/SBAI/config.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Client/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/EquipArmor.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/IdleUseBed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/LadderFix.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/networking.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/PreventAttackingHandcuffed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/ReplenishInventory.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/SmarterLoadItems.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/UseShipDeconstructorIfAvailable.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Shared/networking.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Shared/config.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Shared/constants.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Shared/util.lua" />
   <UIStyle file="%ModDir%/Xml/UI/SettingsMenu.xml" />
   <Text file="%ModDir%/Xml/Text/English/Tooltips.xml" />
   <Other file="%ModDir%/Images/BigBrain.png" />

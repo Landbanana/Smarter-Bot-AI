@@ -1,4 +1,5 @@
 SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 
@@ -29,14 +30,14 @@ end
 
 return function(namespace, _)
     for prefab in GetLikelyBeds() do
-        SBAI.util.AddTagsToPrefab(prefab, "chair")
+        util.AddTagsToPrefab(prefab, "chair")
     end
 end,
 function()
     local likelyBeds = GetLikelyBeds()
 
     for prefab in likelyBeds do
-        SBAI.util.RemoveTagsFromPrefab(prefab, "chair")
+        util.RemoveTagsFromPrefab(prefab, "chair")
     end
     
     for _, item in ipairs(Item.ItemList) do

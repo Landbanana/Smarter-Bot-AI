@@ -1,8 +1,6 @@
 SBAI = require("SBAI")
 
 if SERVER or Game.IsSingleplayer then
-    require("SBAI.Server.networking")
-
     SBAI.Control.Activate()
 end
 

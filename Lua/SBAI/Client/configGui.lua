@@ -1,6 +1,4 @@
 SBAI = require("SBAI")
-local Config = require("SBAI.config")
-SBAI.Network = require("SBAI.Client.networking")
 SBAI.GUI = {}
 
 local ForceUpperCase = SBAI.LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
@@ -377,7 +375,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             xSpacing = xSpacing - 4*D_PADDING
         end
     }
-    LoadOptionsRecurse(Config.defaults.CONFIG[sectionName], sectionName, Config.data[sectionName])
+    LoadOptionsRecurse(SBAI.Config.defaults.CONFIG[sectionName], sectionName, SBAI.Config.data[sectionName])
 end
 
 ---@param sectionList Barotrauma.GUIListBox
@@ -405,11 +403,7 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
-        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
-            Config.Load()
-        else
-            SBAI.Network.RequestConfig()
-        end
+        SBAI.Config.Load()
         LoadConfigSectionsToGUI(sectionList)
     end)
     button.ToolTip = "Reload the saved config to GUI"
@@ -422,12 +416,7 @@ end
 local function AddSaveButton(parent, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
     function()
-        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
-            SBAI.Config.Save()
-            SBAI.Control.Reactivate()
-        else
-            SBAI.Network.SendConfig()
-        end
+        SBAI.Config.Save()
     end)
     
     button.ToolTip = "Save and apply config changes"
@@ -519,8 +508,8 @@ local function MakeSBAIMenu(parent)
 
     local availableTextWidth = bottomRightCut.Rect.Width/2 - 4*D_PADDING
 
-    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
-    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
 
     --combinedSettingsGroupH.AbsoluteSpacing = D_PADDING
 
@@ -555,11 +544,7 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        if Game.IsSingleplayer or Game.IsMultiplayer and Game.Client.MyClient.IsOwner then
-            Config.Load()
-        else
-            SBAI.Network.RequestConfig()
-        end
+        SBAI.Config.Load()
         return MakeSBAIMenu(parent)
     end
 end
@@ -572,7 +557,7 @@ return function(namespace, _)
             local pauseFrame = GUI.GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
             local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
 
-            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, SBAI.Name, "GUIButtonSmall", false,
+            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, SBAI.Constants.Name, "GUIButtonSmall", false,
             function()
                 return ShowSBAIMenu(GUI.GUI.PauseMenu)
             end)

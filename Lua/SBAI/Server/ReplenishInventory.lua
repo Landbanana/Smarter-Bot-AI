@@ -1,4 +1,5 @@
 SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
 LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
@@ -64,7 +65,7 @@ return function(namespace, options)
 
     ---@type table<string,fun(instance:Barotrauma.AIObjective):boolean>
     local specifierFunctions = {
-        ["Idle"]=SBAI.util.True,
+        ["Idle"]=util.True,
         ---@param instance Barotrauma.AIObjectiveGoTo
         ---@return boolean
         ["Wait"]=function(instance)
@@ -87,8 +88,8 @@ return function(namespace, options)
             hasSelectedReplenish = true
             selectedReplenish[replenishType]={
                 targetItemTag=targetItemTag,
-                targetContainableItemTag=SBAI.util.convert.ItemTagToContainableItemTag[targetItemTag],
-                refillerTag=SBAI.util.convert.ItemTagToRefillerTag[targetItemTag],
+                targetContainableItemTag=util.convert.ItemTagToContainableItemTag[targetItemTag],
+                refillerTag=util.convert.ItemTagToRefillerTag[targetItemTag],
                 minimumCondition=section["minimumCondition"],
                 MinimumEquippedConditionTest=GenerateEquippedConditionTest(section["minimumEquippedCondition"])
             }
@@ -106,7 +107,7 @@ return function(namespace, options)
         
         objectiveFullType = objectiveTypeToObjectiveFullType[objectiveType]
         specifierFunction = specifierFunctions[objectiveType]
-        onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"] and OnlyAtFriendlyOutposts or SBAI.util.True
+        onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"] and OnlyAtFriendlyOutposts or util.True
 
         LuaUserData.MakeFieldAccessible(Descriptors[objectiveFullType], "subObjectives")
         
@@ -122,7 +123,7 @@ return function(namespace, options)
                 local instanceData = allInstanceData[instance]
                 
                 if instanceData.timer <= 0 then
-                    instanceData.timer = SBAI.util.AddNoise(timeBetween, 0.1)
+                    instanceData.timer = util.AddNoise(timeBetween, 0.1)
                     
                     if  instanceData.moveItemObjective == nil and
                         specifierFunction(instance) and
@@ -135,13 +136,13 @@ return function(namespace, options)
                         local targetItem = nil --[[@type Barotrauma.Item]]
                         
                         for _, replenishData in pairs(selectedReplenish) do
-                            local potentialItem = SBAI.util.FindItem(character, itemList, replenishData.targetItemTag, {0, replenishData.minimumCondition}, replenishData.MinimumEquippedConditionTest)
+                            local potentialItem = util.FindItem(character, itemList, replenishData.targetItemTag, {0, replenishData.minimumCondition}, replenishData.MinimumEquippedConditionTest)
                             
                             if potentialItem ~= nil then
-                                local potentialContainer = SBAI.util.GetClosest(character.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
+                                local potentialContainer = util.GetClosest(character.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[replenishData.refillerTag], replenishData.targetContainableItemTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
                                 
                                 if potentialContainer ~= nil then
-                                    local potentialFullItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), replenishData.targetItemTag, 100) --[[@type Barotrauma.Item]]
+                                    local potentialFullItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), replenishData.targetItemTag, 100) --[[@type Barotrauma.Item]]
                                     
                                     if potentialFullItem ~= nil then
                                         i = i + 1
@@ -152,7 +153,7 @@ return function(namespace, options)
                             end
                         end
 
-                        local closestFullItem = SBAI.util.GetClosest(character.WorldPosition, potentialFullItems) --[[@type Barotrauma.Item]]
+                        local closestFullItem = util.GetClosest(character.WorldPosition, potentialFullItems) --[[@type Barotrauma.Item]]
                         
                         for n, item in ipairs(potentialFullItems) do
                             if closestFullItem == item then
@@ -224,7 +225,7 @@ return function(namespace, options)
                                         break
                                     end
                                 end
-                                _, AIObjectiveMoveItem = SBAI.util.TryAddSubObjective(instance, AIObjectiveMoveItem, constructor, onCompletedGenerator, onAbandonGenerator)
+                                _, AIObjectiveMoveItem = util.TryAddSubObjective(instance, AIObjectiveMoveItem, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
@@ -247,7 +248,7 @@ return function(namespace, options)
                     
                 for k, _ in pairs(allInstanceData) do
                     if k == baseObjective then
-                        local index = SBAI.util.GetSpecificSlot(instance.container.Item, instance.SourceObjective.TargetItem)
+                        local index = util.GetSpecificSlot(instance.container.Item, instance.SourceObjective.TargetItem)
 
                         if index then
                             instance.TargetSlot = index
@@ -266,10 +267,10 @@ return function(namespace, options)
     if hasSelectedObjectives and hasSelectedReplenish then
         SBAI.Hook.Add("roundEnd", namespace(),
         function()
-            SBAI.util.ClearTable(allInstanceData)
+            util.ClearTable(allInstanceData)
         end)
     end
 end,
 function()
-    SBAI.util.ClearTable(allInstanceData)
+    util.ClearTable(allInstanceData)
 end

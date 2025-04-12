@@ -1,5 +1,5 @@
 SBAI = require("SBAI")
-
+local util = require("SBAI.Shared.util")
 
 local LuaUserData = LuaUserData
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
@@ -20,7 +20,7 @@ return function(namespace, options)
 
     SBAI.Hook.Add("roundEnd", namespace(),
     function()
-        SBAI.util.ClearTable(stuckData)
+        util.ClearTable(stuckData)
     end)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.IndoorsSteeringManager", "Update",
@@ -82,5 +82,5 @@ return function(namespace, options)
     end, Hook.HookMethodType.Before)
 end,
 function()
-    SBAI.util.ClearTable(stuckData)
+    util.ClearTable(stuckData)
 end

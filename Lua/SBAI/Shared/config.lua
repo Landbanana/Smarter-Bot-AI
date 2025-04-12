@@ -1,6 +1,8 @@
+local Constants = require("SBAI.Shared.constants")
+
 local Config = {data={}}
 local modConfigsDir = Game.SaveFolder.."/ModConfigs" --[[@type string]]
-local configPath = modConfigsDir.."/SBAI.json" --[[@type string]]
+local configPath = modConfigsDir.."/"..Constants.Acronym..".json" --[[@type string]]
 
 ---@enum OptionType
 Config.OPTION_TYPE = {
@@ -177,47 +179,122 @@ function Config.Get(optionString)
     return config
 end
 
-function Config.Save()
-    File.CreateDirectory(modConfigsDir)
-	File.Write(configPath, json.serialize(Config.data))
-end
-
-function Config.Load()
-    Config.data = File.Exists(configPath) and json.parse(File.Read(configPath)) or {}
-
-    ---@param option table
-    ---@param optionName string
-    ---@param optionDefault ConfigOption|ConfigSection
-    local function LoadRecurse(option, optionName, optionDefault)
-        local optionValue = option[optionName]
-        
-        local optionType = type(optionDefault.value)
-        
-        if optionDefault.value ~= nil then --[[@cast optionDefault -ConfigSection]]
+if SERVER or Game.IsSingleplayer then
+    function Config.Load()
+        Config.data = File.Exists(configPath) and json.parse(File.Read(configPath)) or {}
+    
+        ---@param option table
+        ---@param optionName string
+        ---@param optionDefault ConfigOption|ConfigSection
+        local function LoadRecurse(option, optionName, optionDefault)
+            local optionValue = option[optionName]
             
-            if optionValue == nil or type(optionValue) ~= optionType then
-                option[optionName] = optionDefault.value
-            elseif optionType == "number" then
-                option[optionName] = math.clamp(optionValue, optionDefault.min, optionDefault.max)
-            end
-        else --[[@cast optionDefault -ConfigOption]]
+            local optionType = type(optionDefault.value)
             
-            if optionValue == nil then
-                option[optionName] = optionDefault:Flatten()
-            else
-                for k, v in pairs(optionDefault) do
-                    LoadRecurse(option[optionName], k, v)
+            if optionDefault.value ~= nil then --[[@cast optionDefault -ConfigSection]]
+                
+                if optionValue == nil or type(optionValue) ~= optionType then
+                    option[optionName] = optionDefault.value
+                elseif optionType == "number" then
+                    option[optionName] = math.clamp(optionValue, optionDefault.min, optionDefault.max)
+                end
+            else --[[@cast optionDefault -ConfigOption]]
+                
+                if optionValue == nil then
+                    option[optionName] = optionDefault:Flatten()
+                else
+                    for k, v in pairs(optionDefault) do
+                        LoadRecurse(option[optionName], k, v)
+                    end
                 end
             end
         end
+        
+        for k, v in pairs(Config.defaults.CONFIG) do
+            LoadRecurse(Config.data, k, v)
+        end
     end
-    
-    for k, v in pairs(Config.defaults.CONFIG) do
-        LoadRecurse(Config.data, k, v)
+
+    function Config.Save(reactivate)
+        File.CreateDirectory(modConfigsDir)
+        File.Write(configPath, json.serialize(Config.data))
+        if reactivate == nil or reactivate then SBAI.Control.Reactivate() end
     end
+
+    Config.Load()
+    if not File.Exists(configPath) then Config.Save(false) end
 end
 
-Config.Load()
-if not File.Exists(configPath) then Config.Save() end
+if Game.IsMultiplayer then
+    ---@enum NetworkMsg
+    local NETWORK_MSG = {
+        ConfigUpdate=Constants.Acronym..".ConfigUpdate",
+        ConfigRequest=Constants.Acronym..".ConfigRequest"
+    }
+
+    ---@return string
+    local function SerializeConfig()
+        return json.serialize(Config.data)
+    end
+
+    ---@param message Barotrauma.Networking.IReadMessage
+    local function UnserializeConfig(message)
+        Config.data = json.parse(message.ReadString())
+    end
+
+    if SERVER then
+        ---@param client Barotrauma.Networking.Client
+        local function SendConfig(client)
+            local message = Networking.Start(NETWORK_MSG.ConfigUpdate)
+    
+            message.WriteString(SerializeConfig())
+            return Networking.Send(message, client and client.Connection or nil)
+        end
+    
+        Networking.Receive(NETWORK_MSG.ConfigUpdate,
+        ---@param message Barotrauma.Networking.IReadMessage
+        ---@param client Barotrauma.Networking.Client
+        function(message, client)
+            if not client.HasPermission(ClientPermissions.ManageSettings) then return end
+    
+            UnserializeConfig(message)
+            return Config.Save()
+        end)
+    
+        Networking.Receive(NETWORK_MSG.ConfigRequest,
+        ---@param _ Barotrauma.Networking.IReadMessage
+        ---@param client Barotrauma.Networking.IReadMessage
+        function(_, client)
+            if not client then return end
+    
+            return SendConfig(client)
+        end)
+    else
+        local function SendConfig()
+            local message = Networking.Start(NETWORK_MSG.ConfigUpdate)
+
+            message.WriteString(SerializeConfig())
+            return Networking.Send(message)
+        end
+    
+        local function RequestConfig()
+            return Networking.Send(Networking.Start(NETWORK_MSG.ConfigRequest))
+        end
+
+        function Config.Load()
+            return RequestConfig()
+        end
+    
+        function Config.Save()
+            return SendConfig()
+        end
+    
+        Networking.Receive(NETWORK_MSG.ConfigUpdate,
+        ---@param message Barotrauma.Networking.IReadMessage
+        function(message)
+            return UnserializeConfig(message)
+        end)
+    end
+end
 
 return Config

@@ -88,27 +88,6 @@ function util.ClearTable(t)
     end
 end
 
----@generic V
----@param t V[]
----@return fun(t:V[], i?:integer):(integer, V)
----@return V[]
----@return integer i
-function util.ipairsFlexible(t)
-    if type(t) == "table" then return ipairs(t) end
-
-    local n = #t
-
-    local customIterator = function(enumerable, i)
-        i = i == nil and 1 or i + 1
-        
-        if i <= n then
-            return i, enumerable[i]
-        end
-    end
-
-    return customIterator, t, 0
-end
-
 ---@param t table<integer,any>[]
 ---@return fun()
 ---@nodiscard

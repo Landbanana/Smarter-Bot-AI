@@ -1,4 +1,5 @@
 SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 do
     local LuaUserData = LuaUserData
@@ -46,14 +47,14 @@ end
 local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
 
 local function StaticFindItem(newItem)
-    return  SBAI.util.ParentItemsHaveDontTakeItemsTag(newItem) or
+    return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
         newItem.ConditionIncreasedRecently
 end
 
 ---@param namespace Namespace
 ---@param options table<string,any>
 return function(namespace, options)
-for loadType, itemTag, containableTag, refillerTag in SBAI.util.Variator({
+for loadType, itemTag, containableTag, refillerTag in util.Variator({
             {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger"},
             {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
         })
@@ -73,12 +74,12 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     function(instance, ptable)
         if instance.TargetContainerTags[1] == refillerTag then
             ptable.PreventExecution = true
-            return SBAI.util.MatchItem(instance.character, ptable["item"], nil, nil,
+            return util.MatchItem(instance.character, ptable["item"], nil, nil,
             ---@param character Barotrauma.Character
             ---@param item Barotrauma.Item
             ---@return boolean
             function(character, item)
-                if SBAI.util.ValsContain(instance.ignoredItems, item) or SBAI.util.ParentItemsHaveDontTakeItemsTag(item) then
+                if util.ValsContain(instance.ignoredItems, item) or util.ParentItemsHaveDontTakeItemsTag(item) then
                     return false
                 end
 
@@ -92,13 +93,13 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                         not (
                             container and
                             container.HasTag(refillerTag) and
-                            SBAI.util.PoweredItemHasNeededPower(container)
+                            util.PoweredItemHasNeededPower(container)
                         )
 
                     -- if item.IsFullCondition then
                     --     return not destContainer.HasTag(refillerTag) and
                     --         container.HasTag(refillerTag) and
-                    --         SBAI.util.IsSpecifiedContainer(destContainer, containableTag)
+                    --         util.IsSpecifiedContainer(destContainer, containableTag)
                     --         --maybe add something here to check if destContainer already has a full battery
                     -- elseif item.ConditionPercentage <= minimumCondition then
                     --     return destContainer.HasTag(refillerTag)
@@ -120,12 +121,12 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             if item == nil then
                 ptable.PreventExecution = true
 
-                item = SBAI.util.FindItem(character, SBAI.itemGroup[itemTag], nil, {0, minimumCondition},
+                item = util.FindItem(character, SBAI.itemGroup[itemTag], nil, {0, minimumCondition},
                 ---@param _ Barotrauma.Character
                 ---@param newItem Barotrauma.Item
                 ---@return boolean
                 function(_, newItem)
-                    if  SBAI.util.ValsContain(instance.ignoredItems, newItem) or
+                    if  util.ValsContain(instance.ignoredItems, newItem) or
                         newItem.ConditionPercentage >= minimumCondition or
                         StaticFindItem(newItem)
                     then
@@ -137,7 +138,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                     return  not (
                             container and
                             container.HasTag(refillerTag) and
-                            SBAI.util.PoweredItemHasNeededPower(container)
+                            util.PoweredItemHasNeededPower(container)
                         )
                 end)
                 
@@ -153,17 +154,17 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 --     local targetContainer --[[@type Barotrauma.Item|Barotrauma.Items.Components.ItemContainer?]]
                 --     local container = item.Container --[[@type Barotrauma.Item?]]
                     
-                --     if container and SBAI.util.IsSpecifiedContainer(container, containableTag) then
-                --         local potentialContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
+                --     if container and util.IsSpecifiedContainer(container, containableTag) then
+                --         local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                         
                 --         if potentialContainer then
-                --             targetItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
+                --             targetItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
                 --             targetContainer = item.Container
                 --         end
                 --     else
                 --         targetItem = item
                 --         for hasEmptySlots in {true, false} do
-                --             targetContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
+                --             targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
                 --             if targetContainer then break end
                 --         end
                 --     end
@@ -218,7 +219,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             --                 instance.Reset()
             --             end
             --         end
-            --         _, instance.moveItemObjective = SBAI.util.TryAddSubObjective(instance, instance.moveItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
+            --         _, instance.moveItemObjective = util.TryAddSubObjective(instance, instance.moveItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
             --     end
             -- end
             
@@ -239,7 +240,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
 
     --             if  moveItemObjective then
     --                 if  not originalInventory.CanBePut(item) and
-    --                     not SBAI.util.FindItem(character, originalInventory.FindAllItems(nil, false), itemTag, 100)
+    --                     not util.FindItem(character, originalInventory.FindAllItems(nil, false), itemTag, 100)
     --                 then
     --                     moveItemObjective.Abandon = true
     --                 end
@@ -248,17 +249,17 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     --                 local targetItem --[[@type Barotrauma.Item?]]
     --                 local targetContainer --[[@type Barotrauma.Item|Barotrauma.Items.Components.ItemContainer?]]
                     
-    --                 if container and SBAI.util.IsSpecifiedContainer(container, containableTag) then
-    --                     local potentialContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
+    --                 if container and util.IsSpecifiedContainer(container, containableTag) then
+    --                     local potentialContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, 100, nil, true, RefillerPredicate)) --[[@type Barotrauma.Item]]
                         
     --                     if potentialContainer then
-    --                         targetItem = SBAI.util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
+    --                         targetItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
     --                         targetContainer = item.Container
     --                     end
     --                 else
     --                     targetItem = item
     --                     for hasEmptySlots in {true, false} do
-    --                         targetContainer = SBAI.util.GetClosest(item.WorldPosition, SBAI.util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
+    --                         targetContainer = util.GetClosest(item.WorldPosition, util.FindSpecificContainers(character, SBAI.itemGroup[refillerTag], containableTag, nil, nil, hasEmptySlots, true, RefillerPredicate))
     --                         if targetContainer then break end
     --                     end
     --                 end
@@ -295,9 +296,9 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                 
                 if  container and
                     not container.HasTag(refillerTag) and
-                    SBAI.util.IsSpecifiedContainer(container, containableTag)
+                    util.IsSpecifiedContainer(container, containableTag)
                 then
-                    local fullItem = SBAI.util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
+                    local fullItem = util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
                     local targetContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
 
                     if fullItem and targetContainer then
@@ -338,7 +339,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
                     sourceObjective.Identifier == "load item" and
                     sourceObjective.TargetContainerTags[1] == refillerTag
                 then
-                    local index = SBAI.util.GetSpecificSlot(instance.container.Item, containableTag)
+                    local index = util.GetSpecificSlot(instance.container.Item, containableTag)
 
                     if index then
                         instance.TargetSlot = index
@@ -363,7 +364,7 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
             ptable.PreventExecution = true
 
             return item.Container ~= nil and
-                SBAI.util.IsSpecifiedContainer(container, itemTag) and
+                util.IsSpecifiedContainer(container, itemTag) and
                 not container.HasTag(refillerTag) and
                 item.ConditionPercentage >= minimumCondition or
                 item.IsFullCondition
