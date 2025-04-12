@@ -102,7 +102,7 @@ do
     local defaults = ConfigSection:new()
     local section = defaults:CreateSection("EquipArmor")
     
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
@@ -131,6 +131,14 @@ do
     subsection = section:CreateSection("OxygenTanks")
     subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
     subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("WeldingFuel")
+    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("Ammunition")
+    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 

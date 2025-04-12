@@ -171,24 +171,32 @@ function util.Variator(t)
     end
 end
 
----@param container Barotrauma.Item
----@param itemTag Barotrauma.Item
----@return integer?
----@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):integer
-function util.GetSpecificSlot(container, itemTag)
-    local itemContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer|nil]]
+do
+    local D_COMMON_IDENTIFIERS = {"smallitem", "mediumitem"}
 
-    if itemContainer ~= nil then 
-        local i = 0
-        
-        for s in itemContainer.slotRestrictions do
-            for c in s.ContainableItems do
-                for t in c.Identifiers do
-                    if t == itemTag then return i end
+    ---@param container Barotrauma.Item
+    ---@param itemTag Barotrauma.Item
+    ---@return integer?
+    ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):integer
+    function util.GetSpecificSlot(container, itemTag)
+        local itemContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer|nil]]
+
+        if itemContainer then
+            local i = 0
+
+            if LuaUserData.IsTargetType(itemTag, "Barotrauma.Item") then
+                return itemContainer.ShouldBeContained(itemTag)
+            end
+            
+            for s in itemContainer.slotRestrictions do
+                for c in s.ContainableItems do
+                    for t in c.Identifiers do
+                        if t == itemTag then return i end
+                    end
                 end
             end
+            i = i + 1
         end
-        i = i + 1
     end
 end
 
@@ -262,7 +270,7 @@ function util.PoweredItemHasNeededPower(item)
     end
 end
 
----@param character Barotrauma.Character
+---@param character? Barotrauma.Character
 ---@param item Barotrauma.Item
 ---@param targetTag? Barotrauma.Identifier
 ---@param targetConditionPercentageRange? number|number[]
@@ -277,7 +285,7 @@ function util.MatchItem(character, item, targetTag, targetConditionPercentageRan
             (not predicate or predicate(character, item))
 end
 
----@param character Barotrauma.Character
+---@param character? Barotrauma.Character
 ---@param itemList Barotrauma.Item[]
 ---@param targetTag? Barotrauma.Identifier
 ---@param targetConditionPercentageRange? number|number[]

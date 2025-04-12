@@ -8,6 +8,36 @@ LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
 ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
 
+---@param itemTag Barotrauma.Identifier
+---@param refillerTag Barotrauma.Identifier
+---@return fun(_:Barotrauma.Character, item:Barotrauma.Item)
+local function generateFullItemPredicate(itemTag, refillerTag)
+    if refillerTag == "" then
+        return function(_, item)
+            if item.ConditionPercentage > 0 then
+                local container = item.Container
+                
+                return not container or
+                    not (
+                            (
+                                container.GetComponent(Components.Holdable) or
+                                container.GetComponent(Components.Wearable)
+                            ) and
+                        util.IsSpecifiedContainer(container, item)
+                    )
+            end
+        end
+    else
+        return function(_, item)
+            local container = item.Container
+
+            return item.IsFullCondition and
+                container and
+                container.HasTag(refillerTag)
+        end
+    end
+end
+
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
@@ -25,23 +55,37 @@ return function(namespace, options)
 
     local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
 
-    for loadType, itemTag, containableTag, refillerTag in util.Variator({
-        {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger"},
-        {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
+    for loadType, itemTag, refillerTag, isFungible in util.Variator({
+        {"BatteryCells", "mobilebattery", "batterycellrecharger", true},
+        {"OxygenTanks", "refillableoxygensource", "oxygentankrefiller", true},
+        {"WeldingFuel", "weldingtoolfuel", "", false},
+        {"Ammunition", "handheldammo", "", false}
     })
-    do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
+    do --[[@cast loadType string]] --[[@cast itemTag Barotrauma.Identifier]] --[[@cast refillerTag Barotrauma.Identifier]] --[[@cast isFungible boolean]]
         local section = options[loadType]
         local minimumCondition
-        local minimumEquippedConditionTest
+        local minimumEquippedCondition
+        local targetItemPredicate
+        local fullItemPredicate
     
         if not section.enable then goto continue1 end
 
         minimumCondition = section["minimumCondition"]
-        minimumEquippedConditionTest = function(character, item)
-            return  not item.Container or
-                    not character.HasEquippedItem(item.Container) or
-                    item.ConditionPercentage <= section["minimumCondition"]
+        minimumEquippedCondition = section["minimumEquippedCondition"]
+
+        ---@param character Barotrauma.Character
+        ---@param item Barotrauma.Item
+        ---@return boolean
+        targetItemPredicate = function(character, item)
+            local container = item.Container
+            
+            return  container and
+                    util.IsSpecifiedContainer(container, item) and (
+                        not character.HasEquippedItem(container) or
+                        item.ConditionPercentage <= minimumEquippedCondition
+                    )
         end
+        fullItemPredicate = generateFullItemPredicate(itemTag, refillerTag)
 
         namespace = namespace + loadType
 
@@ -49,7 +93,7 @@ return function(namespace, options)
             {"Idle", "Barotrauma.AIObjectiveIdle", util.True},
             {"Wait", "Barotrauma.AIObjectiveGoTo", function(instance) return instance.IsWaitOrder end}
         })
-        do --[[@cast objectiveType string]] --[[@cast fullObjectiveType string]] --[[@cast specifierFunction fun(instance:Barotrauma.AIObjective):boolean]]
+        do --[[@cast objectiveType string]] --[[@cast fullObjectiveType Barotrauma.Identifier]] --[[@cast specifierFunction fun(instance:Barotrauma.AIObjective):boolean]]
             section = options[objectiveType]
             local onlyAtFriendlyOutposts
             
@@ -81,100 +125,96 @@ return function(namespace, options)
                                 not character.IsFriendlyNPCTurnedHostile
                             )
                         then
-                            local itemList = character.Inventory.FindAllItems(nil, true) --[=[@type Barotrauma.Item[]]=]
-                            local i = 0 --[[@type integer]]
-                            local potentialItems = {} --[=[@type Barotrauma.Item[]]=]
-                            local potentialFullItems = {} --[=[@type Barotrauma.Item[]]=]
-                            local targetItem --[[@type Barotrauma.Item]]
-                            local potentialItem = util.FindItem(character, itemList, itemTag, {0, minimumCondition}, minimumEquippedConditionTest)
                             
-                            if potentialItem then
-                                local potentialContainer = util.GetClosest(character.WorldPosition, util.FindSpecificContainers(character, util.ItemGroup[refillerTag], containableTag, nil, 100, nil, true)) --[[@type Barotrauma.Item]]
-                                
-                                if potentialContainer then
-                                    local potentialFullItem = util.FindItem(character, potentialContainer.OwnInventory.FindAllItems(nil, false), itemTag, 100) --[[@type Barotrauma.Item]]
-                                    
-                                    if potentialFullItem then
-                                        i = i + 1
-                                        potentialItems[i] = potentialItem
-                                        potentialFullItems[i] = potentialFullItem
-                                    end
+                            local targetItem = util.FindItem(character, character.Inventory.FindAllItems(nil, true), itemTag, {0, minimumCondition}, targetItemPredicate)
+                            targetItem = targetItem or util.FindItem(character, character.Inventory.FindAllItems(nil, true), itemTag, {0, minimumCondition},
+                            function(c, i)
+                                if i.Container then
+                                    return targetItemPredicate(c, i)
                                 end
-                            end
+                                return true
+                            end)
 
-                            local closestFullItem = util.GetClosest(character.WorldPosition, potentialFullItems) --[[@type Barotrauma.Item]]
-                            
-                            for n, item in ipairs(potentialFullItems) do
-                                if closestFullItem == item then
-                                    targetItem = potentialItems[n]
+                            local targetContainer = targetItem and targetItem.Container or nil --[[@type Barotrauma.Item?]]
+                            local closestFullItem = targetItem and util.GetClosest(character.WorldPosition, util.FindItems(character, util.ItemGroup[itemTag], nil, nil,
+                            function(c, i)
+                                if  isFungible and (
+                                        targetContainer and
+                                        targetContainer.GetComponent(Components.ItemContainer).CanBeContained(i) or
+                                        not targetContainer
+                                    ) or
+                                    not isFungible and
+                                    i.Prefab.Identifier == targetItem.Prefab.Identifier
+                                then
+                                    return fullItemPredicate(c, i)
                                 end
-                            end
+                                    return false
+                            end)) or nil --[[@type Barotrauma.Item?]]
+
+                            -- print(targetItem)
+                            -- print(closestFullItem)
                             
-                            if targetItem and closestFullItem then
-                                local targetContainer = targetItem.Container --[[@type Barotrauma.Item]]
+                            if targetContainer and closestFullItem then
+                                local closestFullItemContainer = closestFullItem.Container
+                                local originalClosestFullItemContainer = closestFullItemContainer and closestFullItemContainer.GetComponent(Components.ItemContainer) or nil --[[@type Barotrauma.Items.Components.ItemContainer]]
                                 
                                 ptable.PreventExecution = true
 
-                                if not (closestFullItem and targetContainer) then
-                                    local hasMoveItemSubObjective = false
-
-                                    for objective in instance.subObjectives do
-                                        if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
-                                            hasMoveItemSubObjective = true
-                                            break
-                                        end
-                                    end
-                                    if not hasMoveItemSubObjective then return end
-                                end
-
-                                if closestFullItem and targetContainer then
-                                    local originalClosestFullItemContainer = closestFullItem.Container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+                                characterDataInstance["index"] = targetContainer.OwnInventory.FindIndex(targetItem)
+                                
+                                ---@return Barotrauma.AIObjectiveMoveItem
+                                ---@nodiscard
+                                local function constructor()
+                                    local objective = AIObjectiveMoveItem(character, closestFullItem, instance.objectiveManager, nil, targetContainer.GetComponent(Components.ItemContainer), instance.PriorityModifier)
                                     
-                                    ---@return Barotrauma.AIObjectiveMoveItem
-                                    ---@nodiscard
-                                    local function constructor()
-                                        local objective = AIObjectiveMoveItem(character, closestFullItem, instance.objectiveManager, nil, targetContainer.GetComponent(Components.ItemContainer), instance.PriorityModifier)
-                                        
-                                        objective.Equip = false
-                                        objective.RemoveExistingWhenNecessary = true
-                                        objective.RemoveExistingMax = 1
+                                    objective.Equip = false
+                                    objective.RemoveExistingWhenNecessary = true
+                                    objective.RemoveExistingMax = 1
 
-                                        return objective
-                                    end
-                                    ---@param objective Barotrauma.AIObjectiveMoveItem
-                                    ---@return fun()
-                                    local function onCompletedGenerator(objective)
-                                        ---@type fun()
-                                        local function onCompleted()
-                                            originalClosestFullItemContainer.Inventory.TryPutItem(targetItem, character, nil, true, true)
-
-                                            characterDataInstance["moveItemObjective"] = nil
-                                            instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
-                                        end
-                                        return onCompleted
-                                    end
-
-                                    ---@param objective Barotrauma.AIObjectiveMoveItem
-                                    ---@return fun()
-                                    local function onAbandonGenerator(objective)
-                                        ---@type fun()
-                                        local function onAbandon()
-                                            characterDataInstance["moveItemObjective"] = nil
-                                            instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
-                                        end
-                                        return onAbandon
-                                    end
-
-                                    local moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
-
-                                    for objective in instance.subObjectives do
-                                        if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
-                                            moveItemObjective = objective
-                                            break
-                                        end
-                                    end
-                                    _, characterDataInstance["moveItemObjective"] = util.TryAddSubObjective(instance, moveItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
+                                    return objective
                                 end
+                                ---@param objective Barotrauma.AIObjectiveMoveItem
+                                ---@return fun()
+                                local function onCompletedGenerator(objective)
+                                    ---@type fun()
+                                    local function onCompleted()
+                                        if  refillerTag == "" and
+                                            targetItem.ConditionPercentage > 0 and
+                                            not closestFullItem.IsFullCondition then
+                                            targetContainer.OwnInventory.TryPutItem(targetItem, characterDataInstance["index"], false, true, character, true, true)
+                                        end
+                                        if originalClosestFullItemContainer then
+                                            originalClosestFullItemContainer.Inventory.TryPutItem(targetItem, character, nil, true, false)
+                                        end
+
+                                        characterDataInstance["moveItemObjective"] = nil
+                                        characterDataInstance["index"] = nil
+                                        instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
+                                    end
+                                    return onCompleted
+                                end
+
+                                ---@param objective Barotrauma.AIObjectiveMoveItem
+                                ---@return fun()
+                                local function onAbandonGenerator(objective)
+                                    ---@type fun()
+                                    local function onAbandon()
+                                        characterDataInstance["moveItemObjective"] = nil
+                                        characterDataInstance["index"] = nil
+                                        instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
+                                    end
+                                    return onAbandon
+                                end
+
+                                local moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
+
+                                for objective in instance.subObjectives do
+                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
+                                        moveItemObjective = objective
+                                        break
+                                    end
+                                end
+                                _, characterDataInstance["moveItemObjective"] = util.TryAddSubObjective(instance, moveItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
@@ -194,7 +234,7 @@ return function(namespace, options)
                         
                     for k, _ in pairs(characterData) do
                         if k == character then
-                            local index = util.GetSpecificSlot(instance.container.Item, instance.SourceObjective.TargetItem)
+                            local index = characterData[character]["index"]
 
                             if index then
                                 instance.TargetSlot = index
