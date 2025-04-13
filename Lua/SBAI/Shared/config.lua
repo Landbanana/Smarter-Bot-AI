@@ -101,6 +101,7 @@ end
 do
     local defaults = ConfigSection:new()
     local section
+    local subsection
     
     defaults:CreateSection("CleanablePetItems")
 
