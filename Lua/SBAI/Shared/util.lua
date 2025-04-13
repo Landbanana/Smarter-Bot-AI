@@ -416,9 +416,18 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
-do
-    local LuaUserData = LuaUserData
+util.UnregisteredStaticDescriptor = setmetatable({}, {
+    __index=function(t, typeName)
+        t[typeName] = {
+            Descriptor=LuaUserData.RegisterType(typeName),
+            Static=LuaUserData.CreateStatic(typeName)
+        }
+        LuaUserData.UnregisterType(typeName)
+        return t[typeName]
+    end
+})
 
+do
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet")

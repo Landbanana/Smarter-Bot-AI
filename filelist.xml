@@ -6,7 +6,7 @@
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleanablePetItems.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Modules/IdleUseBed.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/IdleUseFurniture.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/PreventAttackingHandcuffed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/ReplenishInventory.lua" />
