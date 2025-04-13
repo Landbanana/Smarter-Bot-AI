@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
   <GUI.tooltips.cleanablepetitems>Pet items can now be picked up (specifically, poop, chitin chunks, and mucus balls). They will be placed in the same type of containers as pomegrenades (NOTE: A restart may be needed to disable)</GUI.tooltips.cleanablepetitems>
+  <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
+  <GUI.tooltips.idleusefurniture>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.idleusefurniture>
+  <GUI.tooltips.idleusefurniture.beds>Bots will use beds when they idle</GUI.tooltips.idleusefurniture.beds>
+  <GUI.tooltips.idleusefurniture.chairs>Bots will use chairs when they idle</GUI.tooltips.idleusefurniture.chairs>
+  <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
+  <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
   <GUI.tooltips.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.preventattackinghandcuffed>
-  <GUI.tooltips.useshipdeconstructorifavailable>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.useshipdeconstructorifavailable>
-  <GUI.tooltips.smarterloaditems>AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery</GUI.tooltips.smarterloaditems>
-  <GUI.tooltips.smarterloaditems.batterycells>Apply this setting to AI loading battery cells</GUI.tooltips.smarterloaditems.batterycells>
-  <GUI.tooltips.smarterloaditems.batterycells.minimumcondition>Minimum condition before AI ordered to load batteries will replace batteries</GUI.tooltips.smarterloaditems.batterycells.minimumcondition>
-  <GUI.tooltips.smarterloaditems.oxygentanks>Apply this setting to AI loading oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks>
-  <GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>
   <GUI.tooltips.replenishinventory>AI will refill some of their empty reloadables while idling/waiting</GUI.tooltips.replenishinventory>
   <GUI.tooltips.replenishinventory.idle>Allow an AI that has no active order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.idle>
   <GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while idling</GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>
@@ -28,10 +28,10 @@
   <GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>Minimum condition of welding fuel tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>
   <GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>Minimum condition of welding fuel tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>
   <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
-  <GUI.tooltips.idleusefurniture>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.idleusefurniture>
-  <GUI.tooltips.idleusefurniture.beds>Bots will use beds when they idle</GUI.tooltips.idleusefurniture.beds>
-  <GUI.tooltips.idleusefurniture.chairs>Bots will use chairs when they idle</GUI.tooltips.idleusefurniture.chairs>
-  <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
-  <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
-  <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
+  <GUI.tooltips.smarterloaditems>AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery</GUI.tooltips.smarterloaditems>
+  <GUI.tooltips.smarterloaditems.batterycells>Apply this setting to AI loading battery cells</GUI.tooltips.smarterloaditems.batterycells>
+  <GUI.tooltips.smarterloaditems.batterycells.minimumcondition>Minimum condition before AI ordered to load batteries will replace batteries</GUI.tooltips.smarterloaditems.batterycells.minimumcondition>
+  <GUI.tooltips.smarterloaditems.oxygentanks>Apply this setting to AI loading oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks>
+  <GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>
+  <GUI.tooltips.useshipdeconstructorifavailable>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.useshipdeconstructorifavailable>
 </infotexts>
