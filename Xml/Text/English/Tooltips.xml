@@ -28,7 +28,9 @@
   <GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>Minimum condition of welding fuel tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>
   <GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>Minimum condition of welding fuel tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>
   <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
-  <GUI.tooltips.idleusebed>Bots will use the bed when they idle, just like chairs (NOTE: Takes effect after the round ends)</GUI.tooltips.idleusebed>
+  <GUI.tooltips.idleusefurniture>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.idleusefurniture>
+  <GUI.tooltips.idleusefurniture.beds>Bots will use beds when they idle</GUI.tooltips.idleusefurniture.beds>
+  <GUI.tooltips.idleusefurniture.chairs>Bots will use chairs when they idle</GUI.tooltips.idleusefurniture.chairs>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
   <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>

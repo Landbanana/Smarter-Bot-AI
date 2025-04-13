@@ -416,6 +416,7 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
+---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
 util.UnregisteredStaticDescriptor = setmetatable({}, {
     __index=function(t, typeName)
         t[typeName] = {
