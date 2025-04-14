@@ -401,7 +401,7 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
 
         if util.ValsContain(instance.subObjectives, objective) then return false end
         if instance.AllowMultipleInstances then
-            objective.SourceObjective = this
+            objective.SourceObjective = instance
             instance.subObjectives.Add(objective)
         else
             instance.AddSubObjective(objective)

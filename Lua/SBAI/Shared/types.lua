@@ -41,3 +41,6 @@ function Types.Timer:Update(deltaTime)
 end
 
 return Types
+
+---@class Barotrauma.Item
+---@field public GetComponent fun(componentType:Barotrauma.Item.T):Barotrauma.Item.T

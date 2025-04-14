@@ -67,7 +67,7 @@ end
 ---@class (exact) ConfigSection: ConfigBase
 ---@field public new fun(self:ConfigSection):ConfigSection
 ---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
----@field public CreateSection fun(self:ConfigSection, name:string, description:string?):ConfigSection
+---@field public CreateSection fun(self:ConfigSection, name:string):ConfigSection
 ---@field public Flatten fun(self:ConfigSection):table
 local ConfigSection = {}
 
@@ -148,7 +148,7 @@ do
 
     section = defaults:CreateSection("SmarterLoadItems")
 
-    local subsection = section:CreateSection("BatteryCells")
+    subsection = section:CreateSection("BatteryCells")
     
     subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
