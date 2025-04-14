@@ -439,6 +439,72 @@ util.UnregisteredStaticDescriptors = setmetatable({}, {
     end
 })
 
+---@param ... string
+function util.RegisterAll(...)
+    local args = table.pack(...)
+
+    args.n = nil
+
+    for typeName in args do
+        local success, _ = pcall(LuaUserData.RegisterType, typeName)
+
+        if not success then
+            Logger.LogError("Can't register typeName: "..typeName)
+        end
+    end
+end
+
+---@param ... string
+function util.UnregisterAll(...)
+    local args = table.pack(...)
+
+    args.n = nil
+
+    for typeName in args do
+        local success, _ = pcall(LuaUserData.UnregisterType, typeName)
+
+        if not success then
+            Logger.LogError("Can't unregister typeName: "..typeName)
+        end
+    end
+end
+
+---@generic T:any...
+---@generic R:any...
+---@param typeNames string[]
+---@param func fun(args:T):R
+---@param ... T
+---@return R
+function util.DoWithTemporaryRegistrations(typeNames, func, ...)
+    util.RegisterAll(table.unpack(typeNames))
+
+    local out = table.pack(pcall(func, ...))
+
+    out.n = nil
+
+    util.UnregisterAll(table.unpack(typeNames))
+
+    local success = out[1]
+    local results = select(2, table.unpack(out))
+
+    if not success then
+        error(results, 2)
+    end
+    
+    return results
+end
+
+---@param ... string
+function util.LogErrors(...)
+    local args = table.pack(...)
+
+    args.n = nil
+
+    for s in args do
+        Logger.LogError(s)
+    end
+end
+
 do
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
