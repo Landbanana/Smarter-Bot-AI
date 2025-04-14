@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <contentpackage name="Smarter Bot AI" modversion="1.4.0" corepackage="False" steamworkshopid="3343911734" gameversion="1.8.6.2">
+  <Other file="%ModDir%/Images/BigBrain.png" />
   <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
@@ -16,7 +17,6 @@
   <Other file="%ModDir%/Lua/SBAI/Shared/constants.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/types.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/util.lua" />
-  <UIStyle file="%ModDir%/Xml/UI/SettingsMenu.xml" />
   <Text file="%ModDir%/Xml/Text/English/Tooltips.xml" />
-  <Other file="%ModDir%/Images/BigBrain.png" />
+  <UIStyle file="%ModDir%/Xml/UI/SettingsMenu.xml" />
 </contentpackage>
