@@ -13,13 +13,4 @@ return function(namespace, options)
     function(instance, ptable)
         return ptable.ReturnValue or (instance.character.IsOnPlayerTeam and instance.Enemy.IsHandcuffed)
     end, Hook.HookMethodType.Before)
-
-    -- -- Fight Intruders: Prevent attacking any handcuffed people, regardless of being knocked down
-    -- SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveFightIntruders", "IsValidTarget", {"Barotrauma.Character"},
-    -- ---@param _ Barotrauma.AIObjectiveFightIntruders
-    -- ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    -- ---@return boolean
-    -- function(_, ptable)
-    --     return ptable.ReturnValue and not ptable["target"].IsHandcuffed
-    -- end, Hook.HookMethodType.After)
 end
