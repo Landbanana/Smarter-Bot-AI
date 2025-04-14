@@ -1,6 +1,6 @@
 local util = require("SBAI.Shared.util")
 
-SBAI = {
+local SBAI = {
     Constants=require("SBAI.Shared.constants"),
     Config=require("SBAI.Shared.config")
 }
