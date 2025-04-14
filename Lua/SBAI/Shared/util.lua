@@ -416,6 +416,17 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
+do
+    local clock = os.clock
+
+    function util.Benchmark(func, ...)
+        local t1 = clock()
+        func(...)
+        local t2 = clock()
+        return os.difftime(t2, t1)
+    end
+end
+
 ---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
 util.UnregisteredStaticDescriptor = setmetatable({}, {
     __index=function(t, typeName)
