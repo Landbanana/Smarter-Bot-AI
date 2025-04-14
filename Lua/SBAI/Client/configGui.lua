@@ -173,7 +173,7 @@ end
 ---@param anchor? Barotrauma.Anchor
 ---@param pivot? Barotrauma.Pivot
 ---@param isHorizontal? boolean
----@param childAnchor?
+---@param childAnchor? Barotrauma.Anchor
 ---@return Barotrauma.GUILayoutGroup
 local function AddLayoutGroup(parent, size, anchor, pivot, isHorizontal, childAnchor)
     local group = GUI.LayoutGroup(
