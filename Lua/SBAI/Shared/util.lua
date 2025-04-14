@@ -428,7 +428,7 @@ do
 end
 
 ---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
-util.UnregisteredStaticDescriptor = setmetatable({}, {
+util.UnregisteredStaticDescriptors = setmetatable({}, {
     __index=function(t, typeName)
         t[typeName] = {
             Descriptor=LuaUserData.RegisterType(typeName),

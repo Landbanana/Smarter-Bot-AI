@@ -12,7 +12,7 @@ return function(namespace, options)
         __call=function(t)
             if not t.data then
                 do
-                    local ItemList = util.UnregisteredStaticDescriptor["System.Collections.Generic.List`1[[Barotrauma.Item]]"]
+                    local ItemList = util.UnregisteredStaticDescriptors["System.Collections.Generic.List`1[[Barotrauma.Item]]"]
 
                     t.data = LuaUserData.CreateUserDataFromDescriptor(ItemList.Static(Item, {}), ItemList.Descriptor)
                 end
