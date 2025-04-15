@@ -23,15 +23,20 @@ do
         itemRemoved={}
     }
 
+    ---@param t table
+    ---@param regBits number
     function util.RegisterClear(t, regBits)
         if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+
+        print(regBits)
 
         for flag,subRegistry in pairs({
             ROUND_END=registry.roundEnd,
             CHARACTER_DEATH=registry.characterDeath,
             ITEM_REMOVED=registry.itemRemoved
         }) do
-            if bit32.btest(flag, regBits) then
+            if bit32.btest(util.CLEAR_REG[flag], regBits) then
+                
                 table.insert(subRegistry, t)
             end
         end
