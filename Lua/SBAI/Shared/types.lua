@@ -1,4 +1,5 @@
 local Constants = require("SBAI.Shared.constants")
+local util = require("SBAI.Shared.util")
 
 local Types = {}
 
@@ -23,12 +24,8 @@ function Types.Timer:new(delay, noise)
     return t
 end
 
-do
-    local random = math.random
-
-    function Types.Timer:Reset()
-        self.time = self.delay*(1 + self.noise*(2*random() - 1))
-    end
+function Types.Timer:Reset()
+    self.time = util.AddNoise(self.delay, self.noise)
 end
 
 function Types.Timer:Update(deltaTime)
