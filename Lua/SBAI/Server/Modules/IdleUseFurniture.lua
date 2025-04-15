@@ -8,7 +8,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 return function(namespace, options)
     local identifiers = {} --[=[@type Barotrauma.Identifier[]]=]
 
-    local _chairItems = setmetatable(util.RoundEndTemp:Add(namespace()), {
+    local _chairItems = setmetatable({}, {
         __call=function(t)
             if not t.data then
                 do
@@ -30,6 +30,13 @@ return function(namespace, options)
         end
     })
 
+    util.RegisterClear(_chairItems, util.CLEAR_REG.ROUND_END)
+
+    SBAI.Hook.Add("roundStart", namespace(),
+    function()
+        return _chairItems()
+    end)
+
     SBAI.Hook.Patch(namespace(), "Barotrauma.Item", "get_ChairItems",
     function(instance, ptable)
 
@@ -37,11 +44,6 @@ return function(namespace, options)
 
         return _chairItems()
     end, Hook.HookMethodType.Before)
-
-    SBAI.Hook.Add("roundStart", namespace(),
-    function()
-        return _chairItems()
-    end)
 
     do
         local predicates = {} --[[@type table<string,(fun(prefab:Barotrauma.ItemPrefab):boolean)>]]

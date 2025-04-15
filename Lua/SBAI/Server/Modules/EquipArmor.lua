@@ -33,7 +33,7 @@ return function(namespace, options)
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
 
     ---@type table<Barotrauma.Character,Types.Timer>
-    local characterData = setmetatable(util.RoundEndTemp:Add(namespace()), {
+    local characterData = setmetatable({}, {
         ---@param t table<Barotrauma.Character,Types.Timer>
         ---@param k Barotrauma.Character
         __index = function(t, k)
@@ -42,7 +42,7 @@ return function(namespace, options)
         end
     })
 
-    util.ClearTableKeyOnCharacterDeath(characterData, namespace(), SBAI.Hook.Add)
+    util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
     
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveIdle", "Act",
     ---@param instance Barotrauma.AIObjectiveIdle

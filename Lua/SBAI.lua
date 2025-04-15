@@ -133,8 +133,6 @@ function SBAI.Control.Deactivate(modules)
         Hook.RemovePatch(k.identifier, k.className, k.methodName, k.parameterTypes, k.hookType)
     end
 
-    util.RoundEndTemp:ClearAll()
-
     for _, module in pairs(modules) do
         if module.Cleanup then module.Cleanup() end
     end

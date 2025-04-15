@@ -12,7 +12,7 @@ local Vector2 = Vector2
 ---@param options table
 return function(namespace, options)
     ---@type table<Barotrauma.Character,Types.Timer>
-    local characterData = setmetatable(util.RoundEndTemp:Add(namespace()), {
+    local characterData = setmetatable({}, {
         ---@param t table<Barotrauma.Character,Types.Timer>
         ---@param k Barotrauma.Character
         __index=function(t, k)
@@ -20,7 +20,7 @@ return function(namespace, options)
             return t[k]
         end})
 
-    util.ClearTableKeyOnCharacterDeath(characterData, namespace(), SBAI.Hook.Add)
+        util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.IndoorsSteeringManager", "Update",
     ---@param instance Barotrauma.IndoorsSteeringManager

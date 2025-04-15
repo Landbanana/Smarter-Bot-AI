@@ -3,51 +3,66 @@ local Constants = require("SBAI.Shared.constants")
 
 local LuaUserData = LuaUserData
 
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
+
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
+LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+
+---@enum util.CLEAR_REG
+util.CLEAR_REG = {
+    ROUND_END=2,
+    CHARACTER_DEATH=4,
+    ITEM_REMOVED=8
+}
+
 do
-    local Descriptors = Descriptors
-    
-    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
-
-    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
-    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
-    LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
-end
-
-do
-    local dataKey = {}
-
-    util.RoundEndTemp = {
-        [dataKey]={},
-        ---@param self table
-        ---@param name string
-        ---@param base? boolean
-        ---@return table
-        Add=function(self, name, base)
-            self[dataKey][name] = {}
-
-            return self[dataKey][name]
-        end,
-        ---@param self table
-        ---@param name string
-        Remove=function(self, name)
-            self[dataKey][name] = nil
-        end,
-        ---@param self table
-        ClearAll=function(self)
-            for k, t in pairs(self[dataKey]) do
-                util.ClearTable(t)
-            end
-        end
+    local registry = {
+        roundEnd={},
+        characterDeath={},
+        itemRemoved={}
     }
 
-    Hook.Add("roundEnd", Constants.Acronym..".RoundEndReset",
+    function util.RegisterClear(t, regBits)
+        if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+
+        for flag,subRegistry in pairs({
+            ROUND_END=registry.roundEnd,
+            CHARACTER_DEATH=registry.characterDeath,
+            ITEM_REMOVED=registry.itemRemoved
+        }) do
+            if bit32.btest(flag, regBits) then
+                table.insert(subRegistry, t)
+            end
+        end
+    end
+
+    Hook.Add("roundEnd", Constants.Acronym..".RoundEndClear",
     function()
-        util.RoundEndTemp:ClearAll()
+        for t in registry.roundEnd do --[[@cast t table]]
+            util.ClearTable(t)
+        end
+    end)
+
+    Hook.Add("character.death", Constants.Acronym..".CharacterDeathClear",
+    ---@param character Barotrauma.Character
+    function(character)
+        for t in registry.characterDeath do --[[@cast t table]]
+            t[character] = nil
+        end
+    end)
+
+    Hook.Add("item.removed", Constants.Acronym..".ItemRemovedClear",
+    ---@param item Barotrauma.Item
+    function(item)
+        for t in registry.itemRemoved do --[[@cast t table]]
+            t[item] = nil
+        end
     end)
 end
 
 ---@type table<string,Barotrauma.Item[]>
-util.ItemGroup = setmetatable(util.RoundEndTemp:Add("ItemGroup"), {
+util.ItemGroup = setmetatable({}, {
     __index = function(t, k)
         local name = Constants.Acronym..".ItemGroup."..k
         local isRegistered, table = pcall(Util.GetItemGroup, name)
@@ -61,22 +76,10 @@ util.ItemGroup = setmetatable(util.RoundEndTemp:Add("ItemGroup"), {
             t[k] = Util.GetItemGroup(name)
         end
         return t[k]
-
-        -- if rawget(t, k) == nil then
-        --     local isRegistered, table = pcall(Util.GetItemGroup, name)
-
-        --     if not isRegistered then
-        --         Util.RegisterItemGroup(name, function(item)
-        --             return item.HasTag(k)
-        --         end)
-        --         t[k] = Util.GetItemGroup(name)
-        --     elseif rawget(t, k) == nil then
-        --         t[k] = table
-        --     end
-        -- end
-        -- return rawget(t, k)
     end
 })
+
+util.RegisterClear(util.ItemGroup, util.CLEAR_REG.ROUND_END)
 
 do
     local clamp = math.clamp

@@ -9,7 +9,9 @@ LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
-    local deconstructorData = util.RoundEndTemp:Add(namespace()) --[=[@type Barotrauma.Item[]?]=]
+    local deconstructorData = {}
+
+    util.RegisterClear(deconstructorData, util.CLEAR_REG.ROUND_END)
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
     ---@param instance Barotrauma.AIObjectiveDeconstructItem
