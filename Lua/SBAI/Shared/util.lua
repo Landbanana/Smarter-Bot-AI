@@ -79,6 +79,17 @@ util.ItemGroup = setmetatable(util.RoundEndTemp:Add("ItemGroup"), {
 })
 
 do
+    local clamp = math.clamp
+
+    local function InverseLerp(min, max, v)
+        local diff = max - min;
+        
+        if (diff == 0) then return v >= max and 1 or 0 end
+        return clamp((v - min) / diff, 0, 1);
+    end
+end
+
+do
     local random = math.random
 
     ---@param value number
