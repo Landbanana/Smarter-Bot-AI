@@ -52,6 +52,8 @@ do
         if optionType == "number" and self.optionType == "float" or self.optionType == "int" then
             self.value = clamp(value, self.min, self.max)
         elseif optionType ~= self.optionType then
+            print(self.optionType)
+            print(optionType)
             error("incorrect option type provided (should be a "..self.optionType.." not a "..optionType..")", 2)
         else
             self.value = value
@@ -78,12 +80,12 @@ function ConfigSection.new()
 end
 
 function ConfigSection:CreateOption(name, default, optionType, min, max)
-    self[name] = ConfigOption:new(default, optionType, min, max)
+    self[name] = ConfigOption.new(default, optionType, min, max)
     return self[name]
 end
 
 function ConfigSection:CreateSection(name)
-    self[name] = ConfigSection:new()
+    self[name] = ConfigSection.new()
     self[name]:CreateOption("enable", true, "boolean")
     return self[name]
 end
@@ -98,7 +100,7 @@ function ConfigSection:Flatten()
 end
 
 do
-    local defaults = ConfigSection:new()
+    local defaults = ConfigSection.new()
     local section
     local subsection
     
