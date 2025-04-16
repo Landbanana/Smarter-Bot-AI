@@ -140,7 +140,7 @@ function util.KeysContain(dict, key)
     return false
 end
 
----@generic T
+---@generic T: table
 ---@param t T
 ---@return T
 function util.CopyTable(t)
