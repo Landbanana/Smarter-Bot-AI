@@ -51,6 +51,8 @@ for loadType, itemTag, containableTag, refillerTag in util.Variator({
             {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
         })
 do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
+    local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+
     local section = options[loadType]
     local minimumCondition
 
