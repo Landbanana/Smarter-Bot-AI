@@ -1,8 +1,7 @@
-local util = {Hook=Hook, LuaUserData=LuaUserData}
+local util = {}
 local Constants = require("SBAI.Shared.constants")
 
 local LuaUserData = LuaUserData
-local Components = Components
 local pack = table.pack
 local unpack = table.unpack
 
