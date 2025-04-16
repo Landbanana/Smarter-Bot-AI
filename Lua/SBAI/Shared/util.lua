@@ -1,5 +1,6 @@
-local util = {}
 local Constants = require("SBAI.Shared.constants")
+
+local util = {}
 
 local LuaUserData = LuaUserData
 local pack = table.pack
