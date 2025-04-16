@@ -2,7 +2,6 @@ local Constants = require("SBAI.Shared.constants")
 
 local Config = {data={}}
 
-
 ---@enum OptionType
 Config.OPTION_TYPE = {
     string="string",
@@ -18,24 +17,24 @@ Config.defaults = {
     CONFIG = {}
 }
 
----@class ConfigBase
----@field public new fun(self:ConfigBase, ...):ConfigBase
+---@class (exact) ConfigBase
+---@field public new fun(...):ConfigBase
 ---@field public Flatten fun(self:ConfigBase):string|boolean|number|table
 ---@field public __index ConfigBase
 
----@class (exact) ConfigOption: ConfigBase 
+---@class (exact) ConfigOption: ConfigBase
 ---@field public value string|boolean|number
 ---@field public optionType string|boolean|number
 ---@field public min? number
 ---@field public max? number
----@field public new fun(self:ConfigOption, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
+---@field public new fun(default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
 ---@field public Set fun(self:ConfigOption, value:string|boolean|number)
 ---@field public Flatten fun(self:ConfigOption):string|boolean|number
 local ConfigOption = {}
+ConfigOption.__index = ConfigOption
 
-function ConfigOption.new(self, default, optionType, min, max)
-    local t = setmetatable({}, self) ---@type ConfigOption
-    self.__index = self
+function ConfigOption.new(default, optionType, min, max)
+    local t = setmetatable({}, ConfigOption) ---@type ConfigOption
 
     t.optionType = optionType
     t.min = min
@@ -47,7 +46,7 @@ end
 do
     local clamp = math.clamp
 
-    function ConfigOption.Set(self, value)
+    function ConfigOption:Set(value)
         local optionType = type(value)
 
         if optionType == "number" and self.optionType == "float" or self.optionType == "int" then
@@ -60,36 +59,36 @@ do
     end
 end
 
-function ConfigOption.Flatten(self)
+function ConfigOption:Flatten()
     return self.value
 end
 
 ---@class (exact) ConfigSection: ConfigBase
----@field public new fun(self:ConfigSection):ConfigSection
+---@field public new fun():ConfigSection
 ---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
 ---@field public CreateSection fun(self:ConfigSection, name:string):ConfigSection
 ---@field public Flatten fun(self:ConfigSection):table
+---@field public [string] ConfigSection|ConfigOption
 local ConfigSection = {}
+ConfigSection.__index = ConfigSection
 
-function ConfigSection.new(self)
-    local t = setmetatable({}, self) ---@type ConfigSection
-    self.__index = self
-
+function ConfigSection.new()
+    local t = setmetatable({}, ConfigSection) ---@type ConfigSection
     return t
 end
 
-function ConfigSection.CreateOption(self, name, default, optionType, min, max)
+function ConfigSection:CreateOption(name, default, optionType, min, max)
     self[name] = ConfigOption:new(default, optionType, min, max)
     return self[name]
 end
 
-function ConfigSection.CreateSection(self, name)
+function ConfigSection:CreateSection(name)
     self[name] = ConfigSection:new()
     self[name]:CreateOption("enable", true, "boolean")
     return self[name]
 end
 
-function ConfigSection.Flatten(self)
+function ConfigSection:Flatten()
     local t = {}
     
     for k, v in pairs(self) do --[[@cast k string]]  --[[@cast v ConfigBase]]

@@ -13,7 +13,7 @@ return function(namespace, options)
         ---@param t table<Barotrauma.Character,Types.Timer>
         ---@param k Barotrauma.Character
         __index=function(t, k)
-            t[k] = Types.Timer:new(options["timeBetween"], 0)
+            t[k] = Types.Timer.new(options["timeBetween"], 0)
             return t[k]
         end}
     )

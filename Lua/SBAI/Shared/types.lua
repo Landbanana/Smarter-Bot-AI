@@ -11,14 +11,14 @@ local Types = {}
 ---@field public Update fun(self:Types.Timer, deltaTime:number):boolean
 ---@field public Reset fun(self:Types.Timer)
 Types.Timer = {}
+Types.Timer.__index = Types.Timer
 
-function Types.Timer:new(delay, noise)
+function Types.Timer.new(delay, noise)
     local t = {
         delay=delay,
         noise=noise or Constants.D_TIMER_NOISE
     }
-    setmetatable(t, self)
-    self.__index = self
+    setmetatable(t, Types.Timer)
 
     t:Reset()
     return t
