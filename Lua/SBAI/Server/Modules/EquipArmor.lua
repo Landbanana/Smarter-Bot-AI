@@ -2,31 +2,6 @@ local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
----@param slotTypes InvSlotType[]
----@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
-local function GenerateWearableArmorPredicate(slotTypes)
-    ---@param character? Barotrauma.Character
-    ---@param item? Barotrauma.Item
-    ---@return boolean
-    return function(character, item)
-        local wearable = item.GetComponent(Components.Wearable)
-        
-        if  wearable == nil or
-            item.HasTag("lightdiving") or
-            item.HasTag("deepdiving")
-        then
-            return false
-        end
-
-        for slot in slotTypes do
-            if util.ValsContain(item.AllowedSlots, slot) then
-                return true
-            end
-        end
-        return false
-    end
-end
-
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
@@ -43,6 +18,31 @@ return function(namespace, options)
     })
 
     util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
+
+    ---@param slotTypes InvSlotType[]
+    ---@return fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
+    local function GenerateWearableArmorPredicate(slotTypes)
+        ---@param character? Barotrauma.Character
+        ---@param item? Barotrauma.Item
+        ---@return boolean
+        return function(character, item)
+            local wearable = item.GetComponent(Components.Wearable)
+            
+            if  wearable == nil or
+                item.HasTag("lightdiving") or
+                item.HasTag("deepdiving")
+            then
+                return false
+            end
+
+            for slot in slotTypes do
+                if util.ValsContain(item.AllowedSlots, slot) then
+                    return true
+                end
+            end
+            return false
+        end
+    end
     
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveIdle", "Act",
     ---@param instance Barotrauma.AIObjectiveIdle

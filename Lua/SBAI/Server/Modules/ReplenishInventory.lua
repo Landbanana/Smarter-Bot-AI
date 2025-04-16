@@ -3,36 +3,10 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
+
 LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
 ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
-
----@param itemTag Barotrauma.Identifier
----@param refillerTag Barotrauma.Identifier
----@return fun(_:Barotrauma.Character, item:Barotrauma.Item)
-local function generateFullItemPredicate(itemTag, refillerTag)
-    if refillerTag == "" then
-        return function(_, item)
-            if item.ConditionPercentage > 0 then
-                local container = item.Container
-                
-                return not container or
-                    not (
-                        container.GetComponent(Components.Pickable) and
-                        util.IsSpecifiedContainer(container, item)
-                    )
-            end
-        end
-    else
-        return function(_, item)
-            local container = item.Container
-
-            return item.IsFullCondition and
-                container and
-                container.HasTag(refillerTag)
-        end
-    end
-end
 
 ---@param namespace Namespace
 ---@param options table
@@ -50,6 +24,33 @@ return function(namespace, options)
     })
 
     util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
+
+    ---@param itemTag Barotrauma.Identifier
+    ---@param refillerTag Barotrauma.Identifier
+    ---@return fun(_:Barotrauma.Character, item:Barotrauma.Item)
+    local function generateFullItemPredicate(itemTag, refillerTag)
+        if refillerTag == "" then
+            return function(_, item)
+                if item.ConditionPercentage > 0 then
+                    local container = item.Container
+                    
+                    return not container or
+                        not (
+                            container.GetComponent(Components.Pickable) and
+                            util.IsSpecifiedContainer(container, item)
+                        )
+                end
+            end
+        else
+            return function(_, item)
+                local container = item.Container
+
+                return item.IsFullCondition and
+                    container and
+                    container.HasTag(refillerTag)
+            end
+        end
+    end
 
     for loadType, itemTag, containableTag, refillerTag, isFungible in util.Variator({
         {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger", true},

@@ -36,16 +36,16 @@ do
     ---@field ignoredItems System.Collections.Generic.HashSet*1Barotrauma*Item
 end
 
-local function StaticFindItem(newItem)
-    return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
-        newItem.ConditionIncreasedRecently
-end
-
-local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
-
 ---@param namespace Namespace
 ---@param options table<string,any>
 return function(namespace, options)
+    local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+
+    local function StaticFindItem(newItem)
+        return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
+            newItem.ConditionIncreasedRecently
+    end
+
 for loadType, itemTag, containableTag, refillerTag in util.Variator({
             {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger"},
             {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}

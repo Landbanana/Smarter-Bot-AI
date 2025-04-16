@@ -1,4 +1,5 @@
 local util = require("SBAI.Shared.util")
+local Constants = require("SBAI.Shared.constants")
 
 LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "PreferredContainers")
 
@@ -7,8 +8,6 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 local petItemIdentifiers = {"poop", "mucusball", "chitin"}
 
 return function(namespace, options)
-    local D_TEMPLATE_IDENTIFIER = "creepingorange"
-
     return util.DoWithTemporaryRegistrations({
         "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
@@ -18,7 +17,7 @@ return function(namespace, options)
             local prefab = ItemPrefab.GetItemPrefab(t)
     
             if #prefab.PreferredContainers <= 0 then
-                prefab.PreferredContainers = ItemPrefab.GetItemPrefab(D_TEMPLATE_IDENTIFIER).PreferredContainers
+                prefab.PreferredContainers = ItemPrefab.GetItemPrefab(Constants.D_PETITEM_TEMPLATE).PreferredContainers
             end
         end
 
