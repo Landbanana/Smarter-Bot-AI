@@ -1,4 +1,5 @@
 local util = require("SBAI.Shared.util")
+local Constants = require("SBAI.Shared.constants")
 
 local SBAI = {
     Constants=require("SBAI.Shared.constants"),
@@ -114,9 +115,13 @@ function SBAI.Control.Activate(modules)
     for postfix, module in pairs(GetModules()) do
         local namespace = SBAI.namespace + postfix
         local options = SBAI.Config.data[postfix]
-
+        
         if  options.enable then
-            module.Activate(namespace, options)
+            local success, errMsg = pcall(module.Activate, namespace, options)
+
+            if not success then
+                Logger.LogError(namespace()..".Activate: "..errMsg)
+            end
         end
     end
 end
@@ -133,8 +138,14 @@ function SBAI.Control.Deactivate(modules)
         Hook.RemovePatch(k.identifier, k.className, k.methodName, k.parameterTypes, k.hookType)
     end
 
-    for _, module in pairs(modules) do
-        if module.Cleanup then module.Cleanup() end
+    for postfix, module in pairs(modules) do
+        if module.Cleanup then
+            local success, errMsg = pcall(module.Cleanup)
+
+            if not success then
+                Logger.LogError(Constants.Acronym.."."..postfix..".Cleanup: "..errMsg)
+            end
+        end
     end
 end
 
