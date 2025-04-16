@@ -522,17 +522,6 @@ function util.DoWithTemporaryRegistrations(typeNames, func, ...)
     return results
 end
 
----@param ... string
-function util.LogErrors(...)
-    local args = pack(...)
-
-    args.n = nil
-
-    for s in args do
-        Logger.LogError(s)
-    end
-end
-
 do
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
     LuaUserData.RegisterType("System.Collections.Immutable.ImmutableHashSet`1")
