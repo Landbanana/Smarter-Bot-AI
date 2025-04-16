@@ -445,13 +445,13 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
 end
 
 do
-    local clock = os.clock
+    local clock, difftime = os.clock, os.difftime
 
     function util.Benchmark(func, ...)
         local t1 = clock()
         func(...)
         local t2 = clock()
-        return os.difftime(t2, t1)
+        return difftime(t2, t1)
     end
 end
 
