@@ -110,8 +110,6 @@ do
     section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("EvacuationFix")
-
     section = defaults:CreateSection("IdleUseFurniture")
     section:CreateOption("Beds", true, Config.OPTION_TYPE.boolean)
     section:CreateOption("Chairs", true, Config.OPTION_TYPE.boolean)
