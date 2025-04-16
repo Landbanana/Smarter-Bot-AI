@@ -28,8 +28,6 @@ do
     function util.RegisterClear(t, regBits)
         if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
 
-        print(regBits)
-
         for flag,subRegistry in pairs({
             ROUND_END=registry.roundEnd,
             CHARACTER_DEATH=registry.characterDeath,
@@ -276,14 +274,11 @@ end
 ---@param item Barotrauma.Item
 ---@return boolean
 function util.PoweredItemHasNeededPower(item)
-    local poweredComponent = item.GetComponent(Components.Powered)
+    local poweredComponent = item.GetComponent(Components.Powered) --[[@type Barotrauma.Items.Components.Powered]]
 
-    if  not poweredComponent or
-        not (poweredComponent.PowerConsumption > 0 and
-        poweredComponent.HasPower == false)
-    then
-        return false
-    end
+    return not poweredComponent or
+        poweredComponent.PowerConsumption <= 0 or
+        poweredComponent.HasPower == true
 end
 
 ---@param character? Barotrauma.Character

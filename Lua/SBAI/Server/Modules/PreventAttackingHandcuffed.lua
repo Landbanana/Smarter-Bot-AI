@@ -1,11 +1,10 @@
 local SBAI = require("SBAI")
 
+LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
+
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
-    LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
-
-    -- Operate Weapons: Prevent attacking handcuffed people
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveCombat", "get_TargetEliminated",
     ---@param instance Barotrauma.AIObjectiveCombat
     ---@param ptable Barotrauma.LuaCsHook.ParameterTable

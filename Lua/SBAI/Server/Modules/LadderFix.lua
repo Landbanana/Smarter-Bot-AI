@@ -2,11 +2,8 @@ local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-local LuaUserData = LuaUserData
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"], "host")
-
-local Vector2 = Vector2
 
 ---@param namespace Namespace
 ---@param options table
@@ -18,9 +15,12 @@ return function(namespace, options)
         __index=function(t, k)
             t[k] = Types.Timer:new(options["timeBetween"], 0)
             return t[k]
-        end})
+        end}
+    )
 
-        util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
+    util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
+
+    local Distance = Vector2.Distance
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.IndoorsSteeringManager", "Update",
     ---@param instance Barotrauma.IndoorsSteeringManager
@@ -41,7 +41,7 @@ return function(namespace, options)
                 local simPos = controller.SimPosition --[[@type Microsoft.Xna.Framework.Vector2]]
 
                 if oldSimPos then
-                    if Vector2.Distance(simPos, oldSimPos) < 0.01 then
+                    if Distance(simPos, oldSimPos) < 0.01 then
                         local currentPath = instance.CurrentPath
                 
                         if  currentPath and

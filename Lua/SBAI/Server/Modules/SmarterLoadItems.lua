@@ -25,6 +25,9 @@ do
     LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
     LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
 
+
+    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "item")
+
     ---@class Barotrauma.AIObjectiveLoadItem: Barotrauma.AIObjective
     ---@field IsValidContainable fun(item:Barotrauma.Item):System.Boolean
     ---@field Container Barotrauma.Item
@@ -33,8 +36,6 @@ do
     ---@field targetItem Barotrauma.Item
     ---@field ignoredItems System.Collections.Generic.HashSet*1Barotrauma*Item
 end
-
-local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
 
 local function StaticFindItem(newItem)
     return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
@@ -49,6 +50,8 @@ for loadType, itemTag, containableTag, refillerTag in util.Variator({
             {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
         })
 do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
+    local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+
     local section = options[loadType]
     local minimumCondition
 
@@ -186,16 +189,15 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
     function(instance, _)
         if  not instance.TargetSlot and
             instance.RemoveExistingPredicate and
-            instance.ItemToContain and
-            instance.ItemToContain.IsFullCondition
+            instance.item and
+            instance.item.IsFullCondition
         then
             local sourceObjective = instance.SourceObjective
 
             if sourceObjective then
-                sourceObjective = sourceObjective.SourceObjective
-                
+                sourceObjective = sourceObjective.SourceObjective --[[@cast sourceObjective Barotrauma.AIObjective]]
                 if  sourceObjective and
-                    sourceObjective.Identifier == "load item" and
+                    sourceObjective.Identifier.Equals("load item") and
                     sourceObjective.TargetContainerTags[1] == refillerTag
                 then
                     local index = util.GetSpecificSlot(instance.container, containableTag)

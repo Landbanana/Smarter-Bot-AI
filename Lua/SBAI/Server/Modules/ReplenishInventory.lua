@@ -1,7 +1,6 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
-local LuaUserData = LuaUserData
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
 LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
@@ -38,6 +37,8 @@ end
 ---@param namespace Namespace
 ---@param options table
 return function(namespace, options)
+    local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
+
     ---@type table<Barotrauma.Character,Types.Timer>
     local characterData = setmetatable({}, {
         ---@param t table<Barotrauma.Character,Types.Timer>
@@ -49,8 +50,6 @@ return function(namespace, options)
     })
 
     util.RegisterClear(characterData, util.CLEAR_REG.ROUND_END + util.CLEAR_REG.CHARACTER_DEATH)
-
-    local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
 
     for loadType, itemTag, containableTag, refillerTag, isFungible in util.Variator({
         {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger", true},
@@ -84,16 +83,18 @@ return function(namespace, options)
                     item.ConditionPercentage <= minimumEquippedCondition
                 )
         end
+
         fullItemPredicate = generateFullItemPredicate(itemTag, refillerTag)
 
         namespace = namespace + loadType
 
-        for objectiveType, fullObjectiveType, specifierFunction in util.Variator({
-            {"Idle", "Barotrauma.AIObjectiveIdle", util.True},
-            {"Wait", "Barotrauma.AIObjectiveGoTo", function(instance) return instance.IsWaitOrder end}
+        for objectiveType, fullObjectiveType, objId, specifierFunction in util.Variator({
+            {"Idle", "Barotrauma.AIObjectiveIdle", "idle", util.True},
+            {"Wait", "Barotrauma.AIObjectiveGoTo", "go to", function(instance) return instance.IsWaitOrder end}
         })
         do --[[@cast objectiveType string]] --[[@cast fullObjectiveType Barotrauma.Identifier]] --[[@cast specifierFunction fun(instance:Barotrauma.AIObjective):boolean]]
             section = options[objectiveType]
+
             local onlyAtFriendlyOutposts
             
             if not section.enable then goto continue2 end
@@ -204,8 +205,8 @@ return function(namespace, options)
 
                                 local moveItemObjective --[[@type Barotrauma.AIObjectiveMoveItem]]
 
-                                for objective in instance.subObjectives do
-                                    if LuaUserData.IsTargetType(objective, "Barotrauma.AIObjectiveMoveItem") then
+                                for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
+                                    if objective.Identifier.Equals("move item") then
                                         moveItemObjective = objective
                                         break
                                     end
@@ -224,7 +225,7 @@ return function(namespace, options)
                 if  not instance.TargetSlot and
                     instance.SourceObjective and
                     instance.SourceObjective.SourceObjective and
-                    LuaUserData.IsTargetType(instance.SourceObjective.SourceObjective, fullObjectiveType)
+                    instance.SourceObjective.SourceObjective.Identifier.Equals(objId)
                 then
                     local character = instance.SourceObjective.SourceObjective.character
                         
