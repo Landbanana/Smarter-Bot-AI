@@ -385,7 +385,6 @@ end
 ---@param ... Barotrauma.ISpatialEntity[]
 ---@return Barotrauma.ISpatialEntity
 function util.GetClosest(startPosition, ...)
-    local arg = {...}
     local closest = nil
     local bestDistanceFactor = 0.0
 
@@ -399,7 +398,7 @@ function util.GetClosest(startPosition, ...)
         end
     end
 
-    for items in arg do
+    for items in {...} do
         if type(items) == "table" then --[=[@cast items Barotrauma.ISpatialEntity[]]=]
             for item in items do --[[@cast item Barotrauma.ISpatialEntity]]
                 testClosest(item)
@@ -469,11 +468,7 @@ util.UnregisteredStaticDescriptors = setmetatable({}, {
 
 ---@param ... string
 function util.RegisterAll(...)
-    local args = pack(...)
-
-    args.n = nil
-
-    for typeName in args do
+    for typeName in {...} do
         local success, _ = pcall(LuaUserData.RegisterType, typeName)
 
         if not success then
@@ -484,11 +479,7 @@ end
 
 ---@param ... string
 function util.UnregisterAll(...)
-    local args = pack(...)
-
-    args.n = nil
-
-    for typeName in args do
+    for typeName in {...} do
         local success, _ = pcall(LuaUserData.UnregisterType, typeName)
 
         if not success then
