@@ -142,43 +142,47 @@ do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableT
         end
     end, Hook.HookMethodType.Before)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveMoveItem", ".ctor", {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
-    ---@param instance Barotrauma.AIObjectiveMoveItem
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    function(instance, ptable)
-        local destContainer = ptable["targetContainer"] --[[@type Barotrauma.Items.Components.ItemContainer?]]
-        
-        if  not ptable["sourceContainer"] and
-            destContainer
-        then
-            local character = ptable["character"] --[[@type Barotrauma.Character]]
-            local humanAIController = character.AIController
-            local loadItemsOrder = humanAIController.ObjectiveManager.GetOrder(AIObjectiveLoadItems) --[[@type Barotrauma.AIObjectiveLoadItems?]]
+    do
+        local ItemContainer = Components.ItemContainer
 
-            if  loadItemsOrder and
-                loadItemsOrder.TargetContainerTags[1] == refillerTag
-            then --[[@cast destContainer -nil]]
-                local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
-                local container = item.Container
-                
-                if  container and
-                    not container.HasTag(refillerTag) and
-                    util.IsSpecifiedContainer(container, containableTag)
-                then
-                    local fullItem = util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
-                    local targetContainer = container.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+        SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveMoveItem", ".ctor", {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
+        ---@param instance Barotrauma.AIObjectiveMoveItem
+        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+        function(instance, ptable)
+            local destContainer = ptable["targetContainer"] --[[@type Barotrauma.Items.Components.ItemContainer?]]
+            
+            if  not ptable["sourceContainer"] and
+                destContainer
+            then
+                local character = ptable["character"] --[[@type Barotrauma.Character]]
+                local humanAIController = character.AIController
+                local loadItemsOrder = humanAIController.ObjectiveManager.GetOrder(AIObjectiveLoadItems) --[[@type Barotrauma.AIObjectiveLoadItems?]]
+
+                if  loadItemsOrder and
+                    loadItemsOrder.TargetContainerTags[1] == refillerTag
+                then --[[@cast destContainer -nil]]
+                    local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
+                    local container = item.Container
                     
-                    
-                    if fullItem and targetContainer then
-                        ptable["targetContainer"] = targetContainer
-                        ptable["targetItem"] = fullItem
-                    else
-                        instance.Abandon = true
+                    if  container and
+                        not container.HasTag(refillerTag) and
+                        util.IsSpecifiedContainer(container, containableTag)
+                    then
+                        local fullItem = util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
+                        local targetContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+                        
+                        
+                        if fullItem and targetContainer then
+                            ptable["targetContainer"] = targetContainer
+                            ptable["targetItem"] = fullItem
+                        else
+                            instance.Abandon = true
+                        end
                     end
                 end
             end
-        end
-    end, Hook.HookMethodType.Before)
+        end, Hook.HookMethodType.Before)
+    end
 
     SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveContainItem", "Act",
     ---@param instance Barotrauma.AIObjectiveContainItem
