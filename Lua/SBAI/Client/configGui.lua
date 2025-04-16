@@ -551,8 +551,7 @@ local function ShowSBAIMenu(parent)
 end
 
 ---@param namespace Namespace
----@param _ table
-return function(namespace, _)
+return function(namespace)
     Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {}, function(instance, ptable)
         if GUI.GUI.PauseMenuOpen then
             local pauseFrame = GUI.GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
