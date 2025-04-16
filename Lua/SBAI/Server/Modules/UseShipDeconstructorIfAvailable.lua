@@ -34,16 +34,17 @@ return function(namespace, options)
                 end
             end
         end
-
+        
         if #deconstructorData["playerSubmarineDeconstructors"] > 0 then
             local closestDeconstructorItem = util.GetClosest(character.WorldPosition, util.FindItems(nil, deconstructorData["playerSubmarineDeconstructors"], nil, nil,
             function(_, i)
                 return i.GetComponent(Components.Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
-                    i.HasAccess(character)
+                    i.HasAccess(character) and
+                    util.PoweredItemHasNeededPower(i)
             end))
 
             ptable.PreventExecution = true
-
+            
             return closestDeconstructorItem and closestDeconstructorItem.GetComponent(Components.Deconstructor) or nil
         end
     end, Hook.HookMethodType.Before)

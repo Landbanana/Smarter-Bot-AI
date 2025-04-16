@@ -2,6 +2,9 @@ local util = {Hook=Hook, LuaUserData=LuaUserData}
 local Constants = require("SBAI.Shared.constants")
 
 local LuaUserData = LuaUserData
+local Components = Components
+local pack = table.pack
+local unpack = table.unpack
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
 
@@ -28,15 +31,12 @@ do
     function util.RegisterClear(t, regBits)
         if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
 
-        print(regBits)
-
         for flag,subRegistry in pairs({
             ROUND_END=registry.roundEnd,
             CHARACTER_DEATH=registry.characterDeath,
             ITEM_REMOVED=registry.itemRemoved
         }) do
             if bit32.btest(util.CLEAR_REG[flag], regBits) then
-                
                 table.insert(subRegistry, t)
             end
         end
@@ -185,11 +185,10 @@ function util.Variator(t)
 
         if i <= n then
         if #t[i] ~= ni then error("table sizes must be the same", 2) end
-            return table.unpack(t[i])
+            return unpack(t[i])
         end
     end
 end
-
 
 ---@param itemContainer Barotrauma.Items.Components.ItemContainer
 ---@param itemTag Barotrauma.Identifier
@@ -276,14 +275,11 @@ end
 ---@param item Barotrauma.Item
 ---@return boolean
 function util.PoweredItemHasNeededPower(item)
-    local poweredComponent = item.GetComponent(Components.Powered)
+    local poweredComponent = item.GetComponent(Components.Powered) --[[@type Barotrauma.Items.Components.Powered]]
 
-    if  not poweredComponent or
-        not (poweredComponent.PowerConsumption > 0 and
-        poweredComponent.HasPower == false)
-    then
-        return false
-    end
+    return not poweredComponent or
+        poweredComponent.PowerConsumption <= 0 or
+        poweredComponent.HasPower == true
 end
 
 ---@param character? Barotrauma.Character
@@ -366,7 +362,7 @@ function util.FindSpecificContainers(character, containerList, targetContainable
                 (not predicate or predicate(character, container))
     end
     -- if not containerList then error("containerList must be provided", 2) end
-    for _, container in ipairs(containerList) do --[[@cast container Barotrauma.Item]]
+    for container in containerList do --[[@cast container Barotrauma.Item]]
         if util.MatchItem(character, container, targetContainerTag, nil, not isSpecifiedAlready and containerPredicate or predicate) then
             local inventory = container.OwnInventory
 
@@ -381,25 +377,48 @@ function util.FindSpecificContainers(character, containerList, targetContainable
     return containers
 end
 
----@param startPosition Microsoft.Xna.Framework.Vector
----@param ... Barotrauma.Item[]
----@return Barotrauma.Item item
+do
+    local AIObjective = AIObjective
+    
+    ---@param startPosition Microsoft.Xna.Framework.Vector2
+    ---@param endPosition Microsoft.Xna.Framework.Vector2
+    ---@param maxDistanceFactor number
+    ---@param verticalDistanceFactor? number
+    ---@param maxDistance? number
+    ---@param minDistanceFactor? number
+    function util.GetDistanceFactor(startPosition, endPosition, maxDistanceFactor, verticalDistanceFactor, maxDistance, minDistanceFactor)
+        return AIObjective.GetDistanceFactor(startPosition, endPosition, maxDistanceFactor, verticalDistanceFactor, maxDistance, minDistanceFactor)
+    end
+end
+
+---@param startPosition Microsoft.Xna.Framework.Vector2
+---@param ... Barotrauma.ISpatialEntity[]
+---@return Barotrauma.ISpatialEntity
 function util.GetClosest(startPosition, ...)
     local arg = {...}
-    local closestItem = nil
+    local closest = nil
     local bestDistanceFactor = 0.0
 
-    for _, items in ipairs(arg) do
-        for _, item in ipairs(items) do
-            local distanceFactor = AIObjective.GetDistanceFactor(startPosition, item.WorldPosition, 0.2)
+    ---@param item Barotrauma.ISpatialEntity
+    local function testClosest(item)
+        local distanceFactor = util.GetDistanceFactor(startPosition, item.WorldPosition, 0.2)
 
-            if distanceFactor > bestDistanceFactor then
-                closestItem = item
-                bestDistanceFactor = distanceFactor
-            end
+        if distanceFactor > bestDistanceFactor then
+            closest = item
+            bestDistanceFactor = distanceFactor
         end
     end
-    return closestItem
+
+    for items in arg do
+        if type(items) == "table" then --[=[@cast items Barotrauma.ISpatialEntity[]]=]
+            for item in items do --[[@cast item Barotrauma.ISpatialEntity]]
+                testClosest(item)
+            end
+        else --[[@cast items Barotrauma.ISpatialEntity]]
+            testClosest(items)
+        end
+    end
+    return closest
 end
 
 ---@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
@@ -460,7 +479,7 @@ util.UnregisteredStaticDescriptors = setmetatable({}, {
 
 ---@param ... string
 function util.RegisterAll(...)
-    local args = table.pack(...)
+    local args = pack(...)
 
     args.n = nil
 
@@ -475,7 +494,7 @@ end
 
 ---@param ... string
 function util.UnregisterAll(...)
-    local args = table.pack(...)
+    local args = pack(...)
 
     args.n = nil
 
@@ -495,16 +514,16 @@ end
 ---@param ... T
 ---@return R
 function util.DoWithTemporaryRegistrations(typeNames, func, ...)
-    util.RegisterAll(table.unpack(typeNames))
+    util.RegisterAll(unpack(typeNames))
 
-    local out = table.pack(pcall(func, ...))
+    local out = pack(pcall(func, ...))
 
     out.n = nil
 
-    util.UnregisterAll(table.unpack(typeNames))
+    util.UnregisterAll(unpack(typeNames))
 
     local success = out[1]
-    local results = select(2, table.unpack(out))
+    local results = select(2, unpack(out))
 
     if not success then
         error(results, 2)
@@ -515,7 +534,7 @@ end
 
 ---@param ... string
 function util.LogErrors(...)
-    local args = table.pack(...)
+    local args = pack(...)
 
     args.n = nil
 
@@ -540,7 +559,7 @@ do
     ---@param ... Barotrauma.Identifier-arr
     function util.AddTagsToPrefab(prefab, ...)
         local builder = ImmutableHashSet.CreateBuilder(Identifier)
-        local newTags = table.pack(...)
+        local newTags = pack(...)
 
         for i=1,newTags.n do
             builder.Add(newTags[i])
@@ -556,7 +575,7 @@ do
     ---@param ... Barotrauma.Identifier-arr
     function util.RemoveTagsFromPrefab(prefab, ...)
         local builder = ImmutableHashSet.CreateBuilder(Identifier)
-        local badTags = table.pack(...)
+        local badTags = pack(...)
 
         local temp = {}
 

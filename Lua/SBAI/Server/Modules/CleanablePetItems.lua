@@ -4,11 +4,11 @@ LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "Prefer
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems")
 
-local D_TEMPLATE_IDENTIFIER = "creepingorange"
-
 local petItemIdentifiers = {"poop", "mucusball", "chitin"}
 
 return function(namespace, options)
+    local D_TEMPLATE_IDENTIFIER = "creepingorange"
+
     return util.DoWithTemporaryRegistrations({
         "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
