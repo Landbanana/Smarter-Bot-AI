@@ -159,16 +159,6 @@ function util.ClearTable(t)
     end
 end
 
----@param t table<Barotrauma.Character,any>
----@param identifier string
----@param hookAddFunc fun(name:string, identifier:string, func?:fun(...))
-function util.ClearTableKeyOnCharacterDeath(t, identifier, hookAddFunc)
-    (hookAddFunc or Hook.Add)("character.death", identifier,
-    function(character)
-        t[character] = nil
-    end)
-end
-
 ---@param t table<integer,any>[]
 ---@return fun()
 ---@nodiscard
