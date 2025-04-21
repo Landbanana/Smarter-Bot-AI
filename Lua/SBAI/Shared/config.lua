@@ -120,8 +120,6 @@ do
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
-    defaults:CreateSection("UseShipDeconstructorIfAvailable")
-
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")
     subsection:CreateOption("OnlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean)
@@ -155,6 +153,8 @@ do
 
     subsection = section:CreateSection("OxygenTanks")
     subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("UseTalents")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
