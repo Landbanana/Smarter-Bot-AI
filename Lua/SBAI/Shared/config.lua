@@ -167,7 +167,7 @@ do
     -- subsubsection:CreateOption("Guitar", true, Config.OPTION_TYPE.boolean)
     -- subsubsection:CreateOption("Harmonica", true, Config.OPTION_TYPE.boolean)
     
-    subsection:CreateOption("ChonkyHonks", true, Config.OPTION_TYPE.boolean)
+    -- subsection:CreateOption("ChonkyHonks", true, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Captain")
     subsubsection = subsection:CreateSection("SteadyTune")
