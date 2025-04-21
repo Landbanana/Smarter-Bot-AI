@@ -34,4 +34,12 @@
   <GUI.tooltips.smarterloaditems.oxygentanks>Apply this setting to AI loading oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks>
   <GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>
   <GUI.tooltips.useshipdeconstructorifavailable>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.useshipdeconstructorifavailable>
+  <GUI.tooltips.usetalents>Lets the AI utilize some talents that they previously couldn't</GUI.tooltips.usetalents>
+  <GUI.tooltips.usetalents.timebetween>How long the AI should wait before checking if crewmates have a buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.timebetween>
+  <GUI.tooltips.usetalents.assistant>Assistant talents</GUI.tooltips.usetalents.assistant>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes>AI assistants with the "Inspiring Tunes" talent will play instruments in their inventory periodically. NOTE: All instruments (NOT just the bikehorn) work with this talent (even in vanilla!)</GUI.tooltips.usetalents.assistant.inspiringtunes>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range. instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed> 
+  <GUI.tooltips.usetalents.captain>Captain talents</GUI.tooltips.usetalents.captain>
+  <GUI.tooltips.usetalents.captain.steadytune>AI captains will now play the harmonica when idling, providing psychosis resistance</GUI.tooltips.usetalents.captain.steadytune>
+  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range. instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed> 
 </infotexts>
