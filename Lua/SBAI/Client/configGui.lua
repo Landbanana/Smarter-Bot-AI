@@ -305,22 +305,46 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             nil,
             GUI.Alignment.Left
         )
-        
+
+        local forcedDefault = false
+
         if optionType == SBAI.Config.OPTION_TYPE.float then
             numberInput.MinValueFloat = defaults.min
             numberInput.MaxValueFloat = defaults.max
             numberInput.FloatValue = value
+
+            ---@param numberIn Barotrauma.GUINumberInput
+            numberInput.OnValueEntered = function(numberIn)
+                if forcedDefault then
+                    forcedDefault = false
+                    numberIn.FloatValue = defaults.value
+                end
+
+                configRef[key] = numberIn.FloatValue
+            end
+
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueChanged = function(numberIn)
-                configRef[key] = numberIn.FloatValue
+                forcedDefault = forcedDefault or numberIn.IntValue == 0
             end
         else
             numberInput.MinValueInt = defaults.min
             numberInput.MaxValueInt = defaults.max
             numberInput.IntValue = value
+            
+            ---@param numberIn Barotrauma.GUINumberInput
+            numberInput.OnValueEntered = function(numberIn)
+                if forcedDefault then
+                    forcedDefault = false
+                    numberIn.IntValue = defaults.value
+                end
+
+                configRef[key] = numberIn.IntValue
+            end
+
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueChanged = function(numberIn)
-                configRef[key] = numberIn.IntValue
+                forcedDefault = forcedDefault or numberIn.IntValue == 0
             end
         end
         

@@ -12,7 +12,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjec
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
----@enum util.CLEAR_REG
+---@enum (key) util.CLEAR_REG
 util.CLEAR_REG = {
     ROUND_END=2,
     CHARACTER_DEATH=4,
@@ -20,31 +20,54 @@ util.CLEAR_REG = {
 }
 
 do
-    local registry = {
-        roundEnd={},
-        characterDeath={},
-        itemRemoved={}
-    }
+    local btest = bit32.btest
+    local insert = table.insert
+    local remove = table.remove
+
+    local roundEnd = {}
+    local characterDeath = {}
+    local itemRemoved = {}
 
     ---@param t table
-    ---@param regBits number
-    function util.RegisterClear(t, regBits)
+    ---@param flags number
+    function util.RegisterTable(t, flags)
         if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
 
-        for flag,subRegistry in pairs({
-            ROUND_END=registry.roundEnd,
-            CHARACTER_DEATH=registry.characterDeath,
-            ITEM_REMOVED=registry.itemRemoved
+        for flag, subRegistry in pairs({
+            ROUND_END=roundEnd,
+            CHARACTER_DEATH=characterDeath,
+            ITEM_REMOVED=itemRemoved
         }) do
-            if bit32.btest(util.CLEAR_REG[flag], regBits) then
-                table.insert(subRegistry, t)
+            if btest(util.CLEAR_REG[flag], flags) then
+                insert(subRegistry, t)
+            end
+        end
+    end
+
+    ---@param t table
+    ---@param flags number
+    function util.UnregisterTable(t, flags)
+        if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+
+        for flag, subRegistry in pairs({
+            ROUND_END=roundEnd,
+            CHARACTER_DEATH=characterDeath,
+            ITEM_REMOVED=itemRemoved
+        }) do
+            if btest(util.CLEAR_REG[flag], flags) then
+                for i, v in ipairs(subRegistry) do
+                    if v == t then
+                        remove(subRegistry, i)
+                        break
+                    end
+                end
             end
         end
     end
 
     Hook.Add("roundEnd", Constants.Acronym..".RoundEndClear",
     function()
-        for t in registry.roundEnd do --[[@cast t table]]
+        for t in roundEnd do --[[@cast t table]]
             util.ClearTable(t)
         end
     end)
@@ -52,7 +75,7 @@ do
     Hook.Add("character.death", Constants.Acronym..".CharacterDeathClear",
     ---@param character Barotrauma.Character
     function(character)
-        for t in registry.characterDeath do --[[@cast t table]]
+        for t in characterDeath do --[[@cast t table]]
             t[character] = nil
         end
     end)
@@ -60,7 +83,7 @@ do
     Hook.Add("item.removed", Constants.Acronym..".ItemRemovedClear",
     ---@param item Barotrauma.Item
     function(item)
-        for t in registry.itemRemoved do --[[@cast t table]]
+        for t in itemRemoved do --[[@cast t table]]
             t[item] = nil
         end
     end)
@@ -84,7 +107,7 @@ util.ItemGroup = setmetatable({}, {
     end
 })
 
-util.RegisterClear(util.ItemGroup, util.CLEAR_REG.ROUND_END)
+util.RegisterTable(util.ItemGroup, util.CLEAR_REG.ROUND_END)
 
 do
     local clamp = math.clamp
@@ -320,6 +343,16 @@ function util.FindItems(character, itemList, targetTag, targetConditionPercentag
     end
 
     return items
+end
+
+---@param ids string[]
+---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
+function util.GenerateIdPredicate(ids)
+    ---@param character Barotrauma.Character
+    ---@param item Barotrauma.Item
+    return function(character, item)
+        return util.ValsContain(ids, item.Prefab.Identifier.Value)
+    end
 end
 
 ---@param item Barotrauma.Item
@@ -561,6 +594,14 @@ do
             ::continue::
         end
         prefab.tags = builder.ToImmutable()
+    end
+end
+
+do
+    local upper = string.upper
+
+    function util.CapFirstLetter(str)
+        return str:gsub("^%l", upper)
     end
 end
 

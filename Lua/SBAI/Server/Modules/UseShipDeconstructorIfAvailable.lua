@@ -1,51 +1,55 @@
-local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
+local Types = require("SBAI.Shared.types")
 
 LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
 
 ---@class Barotrauma.AIObjectiveDeconstructItem: Barotrauma.AIObjective
 ---@field Item Barotrauma.Item
 
----@param namespace Namespace
----@param options table
-return function(namespace, options)
-    local deconstructorData = {}
+---@param self Types.Module
+local function activate(self)
+    local Deconstructor = Components.Deconstructor
 
-    util.RegisterClear(deconstructorData, util.CLEAR_REG.ROUND_END)
+    local GetClosest = util.GetClosest
+    local FindItems = util.FindItems
+    local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor",
-    ---@param instance Barotrauma.AIObjectiveDeconstructItem
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    ---@return Barotrauma.Item
+    local deconData = setmetatable(self:RegisterTable("ROUND_END"), {
+        ---@param t table
+        ---@return Barotrauma.Item[]
+        __call=function(t)
+            if not t.data then
+                t.data = FindItems(nil, Item.ItemList, nil, nil,
+                function(_, i)
+                    return i.InPlayerSubmarine and
+                        i.GetComponent(Deconstructor) ~= nil
+                end)
+            end
+            return t.data
+        end
+    })
+    
+    self:AddPatch("Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor", nil,
     function(instance, ptable)
         local character = instance.character
-
-        if not deconstructorData["playerSubmarineDeconstructors"] then
-            deconstructorData["playerSubmarineDeconstructors"] = {}
-            local i = 0
-
-            for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-                if  item ~= nil and
-                    item.GetComponent(Components.Deconstructor) ~= nil and
-                    item.InPlayerSubmarine
-                then
-                    i = i + 1
-                    deconstructorData["playerSubmarineDeconstructors"][i] = item
-                end
-            end
-        end
+        local playerSubDecons = deconData() --[=[@type Barotrauma.Item[]]=]
         
-        if #deconstructorData["playerSubmarineDeconstructors"] > 0 then
-            local closestDeconstructorItem = util.GetClosest(character.WorldPosition, util.FindItems(nil, deconstructorData["playerSubmarineDeconstructors"], nil, nil,
+        if  #playerSubDecons > 0 and
+            character.IsOnPlayerTeam
+        then
+            ---@type Barotrauma.Item
+            local closestDeconItem = GetClosest(character.WorldPosition, FindItems(nil, playerSubDecons, nil, nil,
             function(_, i)
-                return i.GetComponent(Components.Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
+                return i.GetComponent(Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
                     i.HasAccess(character) and
-                    util.PoweredItemHasNeededPower(i)
-            end))
+                    PoweredItemHasNeededPower(i)
+            end)) 
 
             ptable.PreventExecution = true
             
-            return closestDeconstructorItem and closestDeconstructorItem.GetComponent(Components.Deconstructor) or nil
+            return closestDeconItem and closestDeconItem.GetComponent(Deconstructor) or nil
         end
     end, Hook.HookMethodType.Before)
 end
+
+return Types.Module.new(activate)

@@ -1,4 +1,5 @@
 local Constants = require("SBAI.Shared.constants")
+local Types = require("SBAI.Shared.types")
 
 local Config = {data={}}
 
@@ -52,8 +53,6 @@ do
         if optionType == "number" and self.optionType == "float" or self.optionType == "int" then
             self.value = clamp(value, self.min, self.max)
         elseif optionType ~= self.optionType then
-            print(self.optionType)
-            print(optionType)
             error("incorrect option type provided (should be a "..self.optionType.." not a "..optionType..")", 2)
         else
             self.value = value
@@ -103,6 +102,7 @@ do
     local defaults = ConfigSection.new()
     local section
     local subsection
+    local subsubsection
     
     defaults:CreateSection("CleanablePetItems")
 
@@ -116,7 +116,7 @@ do
     section:CreateOption("Chairs", true, Config.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("LadderFix")
-    section:CreateOption("timeBetween", 1000, Config.OPTION_TYPE.float, 10, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
@@ -130,20 +130,20 @@ do
     subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Ammunition")
-    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("BatteryCells")
-    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("WeldingFuel")
-    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
+    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
@@ -151,10 +151,31 @@ do
 
     subsection = section:CreateSection("BatteryCells")
     
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.float, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    section = defaults:CreateSection("UseTalents")
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+
+    subsection = section:CreateSection("Assistant")
+    subsubsection = subsection:CreateSection("InspiringTunes")
+    subsubsection:CreateOption("StopAfterBuffed", false, Config.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Accordion", true, Config.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Bikehorn", true, Config.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Guitar", true, Config.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Harmonica", true, Config.OPTION_TYPE.boolean)
+    
+    subsection:CreateOption("ChonkyHonks", true, Config.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("Captain")
+    subsubsection = subsection:CreateSection("SteadyTune")
+    subsubsection:CreateOption("StopAfterBuffed", false, Config.OPTION_TYPE.boolean)
+
+    -- subsection = section:CreateSection("Engineer")
+    -- subsubsection = subsection:CreateSection("MelodicRespite")
+    -- subsubsection:CreateOption("StopAfterBuffed", false, Config.OPTION_TYPE.boolean)
 
     Config.defaults.CONFIG = defaults
 end
@@ -195,24 +216,21 @@ end
 if SERVER or Game.IsSingleplayer then
     function Config.Load()
         Config.data = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or {}
-    
+        
         ---@param option table
         ---@param optionName string
         ---@param optionDefault ConfigOption|ConfigSection
         local function LoadRecurse(option, optionName, optionDefault)
             local optionValue = option[optionName]
-            
             local optionType = type(optionDefault.value)
             
             if optionDefault.value ~= nil then --[[@cast optionDefault -ConfigSection]]
-                
                 if optionValue == nil or type(optionValue) ~= optionType then
                     option[optionName] = optionDefault.value
                 elseif optionType == "number" then
                     option[optionName] = math.clamp(optionValue, optionDefault.min, optionDefault.max)
                 end
             else --[[@cast optionDefault -ConfigOption]]
-                
                 if optionValue == nil then
                     option[optionName] = optionDefault:Flatten()
                 else
@@ -222,9 +240,14 @@ if SERVER or Game.IsSingleplayer then
                 end
             end
         end
-        
+
         for k, v in pairs(Config.defaults.CONFIG) do
-            LoadRecurse(Config.data, k, v)
+            local success, errMsg = pcall(LoadRecurse, Config.data, k, v)
+
+            if not success then
+                Logger.LogError("SBAI.Config.Load: "..errMsg)
+                Config.data[k] = v:Flatten()
+            end
         end
     end
 

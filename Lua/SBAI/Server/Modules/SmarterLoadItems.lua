@@ -1,7 +1,5 @@
-local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
-
-local LuaUserData = LuaUserData
+local Types = require("SBAI.Shared.types")
 
 do
     local descriptor --[[@type MoonSharp.Interpreter.Interop.IUserDataDescriptor]]
@@ -36,197 +34,257 @@ do
     ---@field ignoredItems System.Collections.Generic.HashSet*1Barotrauma*Item
 end
 
----@param namespace Namespace
----@param options table<string,any>
-return function(namespace, options)
-    local AIObjectiveLoadItems = LuaUserData.CreateStatic("Barotrauma.AIObjectiveLoadItems")
+local allSections = {
+    ["BatteryCells"]={"mobilebattery", "mobilebattery", "batterycellrecharger"},
+    ["OxygenTanks"]={"refillableoxygensource", "oxygensource", "oxygentankrefiller"}
+}
 
-    local function StaticFindItem(newItem)
-        return  util.ParentItemsHaveDontTakeItemsTag(newItem) or
-            newItem.ConditionIncreasedRecently
+---@param options any
+---@return {[1]:string, [2]:string, [3]:string, [4]:number}[]
+local function getSections(options)
+    local sections = {}
+    local i = 0
+
+    for loadType, loadData in pairs(allSections) do
+        local section = options[loadType]
+        
+        if section.enable then
+            local itemTag, containableTag, refillerTag = table.unpack(loadData)
+            local minCon = section["minimumCondition"]
+
+            i = i + 1
+            sections[i] = {itemTag, containableTag, refillerTag, minCon}
+        end
+    end
+    return sections
+end
+
+local generateIsValidContainablePredicate
+local generateLoadItemActPredicate
+
+do
+    local ParentItemsHaveDontTakeItemsTag = util.ParentItemsHaveDontTakeItemsTag
+    local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
+    local ValsContain = util.ValsContain
+
+    ---@param instance Barotrauma.AIObjectiveLoadItem
+    ---@param refillerTag string
+    ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
+    function generateIsValidContainablePredicate(instance, refillerTag)
+        return function(character, item)
+            if  ValsContain(instance.ignoredItems, item) or
+                ParentItemsHaveDontTakeItemsTag(item)
+            then
+                return false
+            end
+
+            local container = item.container
+
+            if  container and
+                container.HasTag(refillerTag) and
+                PoweredItemHasNeededPower(container)
+            then
+                return false
+            end
+
+            if  not item.IsFullCondition and
+                not item.ConditionIncreasedRecently and (
+                    character.HasItem(item) or
+                    instance.CanEquip(item, false)
+                )
+            then
+                return true
+            end
+            return false
+        end
     end
 
-for loadType, itemTag, containableTag, refillerTag in util.Variator({
-            {"BatteryCells", "mobilebattery", "mobilebattery", "batterycellrecharger"},
-            {"OxygenTanks", "refillableoxygensource", "oxygensource", "oxygentankrefiller"}
-        })
-do --[[@cast loadType string]] --[[@cast itemTag string]] --[[@cast containableTag string]] --[[@cast refillerTag string]]
-    local section = options[loadType]
-    local minimumCondition
-
-    if not section.enable then goto continue end
-
-    minimumCondition = section["minimumCondition"]
-
-    namespace = namespace + loadType
-
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "IsValidContainable",
     ---@param instance Barotrauma.AIObjectiveLoadItem
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    function(instance, ptable)
-        if instance.TargetContainerTags[1] == refillerTag then
+    ---@param refillerTag string
+    ---@param minCon number
+    ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
+    function generateLoadItemActPredicate(instance, refillerTag, minCon)
+        ---@param character Barotrauma.Character
+        ---@param item Barotrauma.Item
+        ---@return boolean
+        return function(character, item)
+            if  ValsContain(instance.ignoredItems, item) or
+                item.ConditionPercentage >= minCon or
+                ParentItemsHaveDontTakeItemsTag(item) or
+                item.ConditionIncreasedRecently
+            then
+                return false
+            end
 
-            ptable.PreventExecution = true
+            local container = item.Container
 
-            return util.MatchItem(instance.character, ptable["item"], nil, nil,
-            ---@param character Barotrauma.Character
-            ---@param item Barotrauma.Item
-            ---@return boolean
-            function(character, item)
-                if  util.ValsContain(instance.ignoredItems, item) or
-                    util.ParentItemsHaveDontTakeItemsTag(item)
-                then
-                    return false
-                end
-
-                local container = item.container
-
-                if  container and
+            return  not (
+                    container and
                     container.HasTag(refillerTag) and
-                    util.PoweredItemHasNeededPower(container)
-                then
-                    return false
-                end
+                    PoweredItemHasNeededPower(container)
+                )
+        end
+    end
+end
 
-                if  not item.IsFullCondition and
-                    not item.ConditionIncreasedRecently and (
-                        character.HasItem(item) or
-                        instance.CanEquip(item, false)
-                    )
-                then
-                    return true
-                end
-            end)
+---@param self Types.Module
+local function activate(self)
+    local allLoadData = getSections(self.options)
+
+    if #allLoadData <= 0 then return end
+
+    local ItemContainer = Components.ItemContainer
+
+    local unpack = table.unpack
+    local FindItem = util.FindItem
+    local IsSpecifiedContainer = util.IsSpecifiedContainer
+    local MatchItem = util.MatchItem
+    local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
+    local ValsContain = util.ValsContain
+
+    self:AddPatch("Barotrauma.AIObjectiveLoadItem", "IsValidContainable", nil,
+    function(instance, ptable)
+        for loadData in allLoadData do
+            local refillerTag = loadData[3]
+
+            if ValsContain(instance.TargetContainerTags, refillerTag) then
+
+                ptable.PreventExecution = true
+
+                return MatchItem(instance.character, ptable["item"], nil, nil, generateIsValidContainablePredicate(instance, refillerTag))
+            end
         end
     end, Hook.HookMethodType.Before)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItem", "Act",
-    ---@param instance Barotrauma.AIObjectiveLoadItem
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+    self:AddPatch("Barotrauma.AIObjectiveLoadItem", "Act", nil,
     function(instance, ptable)
-        if instance.TargetContainerTags[1] == refillerTag then
-            local character = instance.character --[[@type Barotrauma.Character]]
-            local item = instance.targetItem --[[@type Barotrauma.Item]]
-            
-            if item == nil then
-                ptable.PreventExecution = true
+        for loadData in allLoadData do
+            local itemTag, _, refillerTag, minCon = unpack(loadData)
 
-                item = util.FindItem(character, util.ItemGroup[itemTag], nil, {0, minimumCondition},
-                ---@param _ Barotrauma.Character
-                ---@param newItem Barotrauma.Item
-                ---@return boolean
-                function(_, newItem)
-                    if  util.ValsContain(instance.ignoredItems, newItem) or
-                        newItem.ConditionPercentage >= minimumCondition or
-                        StaticFindItem(newItem)
-                    then
-                        return false
-                    end
-
-                    local container = newItem.Container
-
-                    return  not (
-                            container and
-                            container.HasTag(refillerTag) and
-                            util.PoweredItemHasNeededPower(container)
-                        )
-                end)
+            if ValsContain(instance.TargetContainerTags, refillerTag) then
+                local character = instance.character --[[@type Barotrauma.Character]]
+                local item = instance.targetItem --[[@type Barotrauma.Item]]
                 
                 if item == nil then
-                    instance.Abandon = true
-                end
+                    ptable.PreventExecution = true
 
-                instance.targetItem = item
-                instance.objectiveManager.GetObjective(AIObjectiveIdle).Wander(ptable["deltaTime"])
+                    item = FindItem(character, util.ItemGroup[itemTag], nil, {0, minCon}, generateLoadItemActPredicate(instance, refillerTag, minCon))
+                    
+                    if item == nil then
+                        instance.Abandon = true
+                    end
+
+                    instance.targetItem = item
+                    instance.objectiveManager.GetObjective(AIObjectiveIdle).Wander(ptable["deltaTime"])
+                end
+                break
+            end
+        end
+    end, Hook.HookMethodType.Before)
+
+    self:AddPatch("Barotrauma.AIObjectiveMoveItem", ".ctor",
+    {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
+    function(instance, ptable)
+        local destContainer = ptable["targetContainer"] --[[@type Barotrauma.Items.Components.ItemContainer?]]
+        
+        if  not ptable["sourceContainer"] and
+            destContainer
+        then
+            local curObj = ptable["objectiveManager"].CurrentObjective --[[@type Barotrauma.AIObjective?]]
+
+            if  curObj and
+                curObj.Identifier.Equals("loaditems")
+            then --[[@cast curObj Barotrauma.AIObjectiveLoadItems]]
+                
+            
+                for loadData in allLoadData do
+                    local itemTag, containableTag, refillerTag, _ = unpack(loadData)
+
+                    if ValsContain(curObj.TargetContainerTags, refillerTag) then --[[@cast destContainer -nil]]
+                        local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
+                        local container = item.Container
+                        
+                        if  container and
+                            not container.HasTag(refillerTag) and
+                            IsSpecifiedContainer(container, containableTag)
+                        then
+                            local fullItem = FindItem(ptable["character"], destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
+                            local targetContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+                            
+                            if fullItem and targetContainer then
+                                ptable["targetContainer"] = targetContainer
+                                ptable["targetItem"] = fullItem
+                            else
+                                instance.Abandon = true
+                            end
+                        end
+                        break
+                    end
+                end
             end
         end
     end, Hook.HookMethodType.Before)
 
     do
-        local ItemContainer = Components.ItemContainer
+        local GetSpecificSlot = util.GetSpecificSlot
 
-        SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveMoveItem", ".ctor", {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.AIObjectiveManager", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.Items.Components.ItemContainer", "System.Single"},
-        ---@param instance Barotrauma.AIObjectiveMoveItem
-        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+        self:AddPatch("Barotrauma.AIObjectiveContainItem", ".ctor",
+        {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.AIObjectiveManager", "System.Single"},
         function(instance, ptable)
-            local destContainer = ptable["targetContainer"] --[[@type Barotrauma.Items.Components.ItemContainer?]]
-            
-            if  not ptable["sourceContainer"] and
-                destContainer
-            then
-                local character = ptable["character"] --[[@type Barotrauma.Character]]
-                local humanAIController = character.AIController
-                local loadItemsOrder = humanAIController.ObjectiveManager.GetOrder(AIObjectiveLoadItems) --[[@type Barotrauma.AIObjectiveLoadItems?]]
+            local curObj = ptable["objectiveManager"].CurrentObjective --[[@type Barotrauma.AIObjective?]]
 
-                if  loadItemsOrder and
-                    loadItemsOrder.TargetContainerTags[1] == refillerTag
-                then --[[@cast destContainer -nil]]
-                    local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
-                    local container = item.Container
-                    
-                    if  container and
-                        not container.HasTag(refillerTag) and
-                        util.IsSpecifiedContainer(container, containableTag)
-                    then
-                        local fullItem = util.FindItem(character, destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
-                        local targetContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
-                        
-                        
-                        if fullItem and targetContainer then
-                            ptable["targetContainer"] = targetContainer
-                            ptable["targetItem"] = fullItem
-                        else
-                            instance.Abandon = true
+            if  curObj and
+                curObj.Identifier.Equals("loaditems")
+            then --[[@cast curObj Barotrauma.AIObjectiveLoadItems]]
+                if ptable["item"].IsFullCondition then
+                    for loadData in allLoadData do
+                        local _, containableTag, refillerTag, _ = unpack(loadData)
+
+                        if ValsContain(curObj.TargetContainerTags, refillerTag) then
+                            local index = GetSpecificSlot(ptable["container"], containableTag)
+
+                            if index then
+                                instance.TargetSlot = index
+                                instance.RemoveExistingPredicate = nil
+                                instance.AllowDangerousPressure = false
+                                instance.AllowToFindDivingGear = false
+                            end
+                            break
                         end
                     end
                 end
             end
-        end, Hook.HookMethodType.Before)
+        end, Hook.HookMethodType.After)
     end
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveContainItem", "Act",
-    ---@param instance Barotrauma.AIObjectiveContainItem
-    ---@param _ Barotrauma.LuaCsHook.ParameterTable
-    function(instance, _)
-        if  not instance.TargetSlot and
-            instance.RemoveExistingPredicate and
-            instance.item and
-            instance.item.IsFullCondition
-        then
-            local sourceObjective = instance.SourceObjective
+    self:AddPatch("Barotrauma.AIObjectiveLoadItems", "ItemMatchesTargetCondition", nil,
+    function(instance, ptable)
+        local item = ptable["item"] --[[@type Barotrauma.Item]]
 
-            if sourceObjective then
-                sourceObjective = sourceObjective.SourceObjective --[[@cast sourceObjective Barotrauma.AIObjective]]
-                if  sourceObjective and
-                    sourceObjective.Identifier.Equals("load item") and
-                    sourceObjective.TargetContainerTags[1] == refillerTag
-                then
-                    local index = util.GetSpecificSlot(instance.container, containableTag)
+        if item then
+            for loadData in allLoadData do
+                local itemTag, _, refillerTag, _ = unpack(loadData)
+            
+                if item.HasTag(itemTag) then
+                    local container = item.Container
 
-                    if index then
-                        instance.TargetSlot = index
-                        instance.RemoveExistingPredicate = nil
-                        instance.AllowDangerousPressure = false
-                        instance.AllowToFindDivingGear = false
+                    ptable.PreventExecution = true
+
+                    if container then
+                        if  container.HasTag(refillerTag) and
+                            PoweredItemHasNeededPower(container)
+                        then
+                            return item.IsFullCondition
+                        else
+                            return not item.IsFullCondition
+                        end
+                    else
+                        return item.IsFullCondition
                     end
                 end
             end
         end
     end, Hook.HookMethodType.Before)
-
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveLoadItems", "ItemMatchesTargetCondition",
-    ---@param _ Barotrauma.AIObjectiveLoadItems
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    function(_, ptable)
-        local item = ptable["item"] --[[@type Barotrauma.Item]]
-        
-        if item and item.HasTag(itemTag) then
-
-            ptable.PreventExecution = true
-
-            return item.IsFullCondition
-        end
-    end, Hook.HookMethodType.Before)
-::continue::
 end
-end
+
+return Types.Module.new(activate)

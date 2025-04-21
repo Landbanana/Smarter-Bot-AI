@@ -6,8 +6,6 @@ local SBAI = {
     Config=require("SBAI.Shared.config")
 }
 
----@class Set<T>: {[T]:true}[]
-
 ---@class Namespace
 ---@field public i integer
 ---@field public base string
@@ -61,99 +59,88 @@ local Namespace_mt = {
     end
 }
 
-SBAI.namespace=setmetatable({i=0, base=SBAI.Constants.Acronym, stack={}}, Namespace_mt) --[[@type Namespace]]
+local namespace = setmetatable({i=0, base=SBAI.Constants.Acronym, stack={}}, Namespace_mt) --[[@type Namespace]]
+local modules = {} --[[@type table<string,Types.Module>]]
 
----@alias ModuleFuncs {Activate:fun(namespace:Namespace, options:table), Cleanup:fun()?}
-
-SBAI.Hook = setmetatable({
-    list={
-        add={}, --[[@type Set<{name:string, identifier:string}>]]
-        patch={}--[[@type Set<{identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}>]]
-    },
-    ---@param name string
-    ---@param identifier string
-    ---@param func fun(...):...
-    Add=function(name, identifier, func)
-        SBAI.Hook.list.add[{name=name, identifier=identifier}] = true
-        Hook.Add(name, identifier, func)
-    end,
-    ---@param identifier string
-    ---@param className string
-    ---@param methodName string
-    ---@param parameterTypes? string[]
-    ---@param patch fun(instance:any, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
-    ---@param hookType Barotrauma.LuaCsHook.HookMethodType
-    Patch=function(identifier, className, methodName, parameterTypes, patch, hookType)
-        if not hookType then
-            hookType = patch
-            patch = parameterTypes
-            parameterTypes = nil
-        end
-        SBAI.Hook.list.patch[{identifier=identifier, className=className, methodName=methodName, parameterTypes=parameterTypes, hookType=hookType}] = true
-        Hook.Patch(identifier, className, methodName, parameterTypes, patch, hookType)
-    end
-}, {__index=Hook})
-
-local function GetModules()
-    local modules = {} --[[@type table<string,ModuleFuncs>]]
-
-    for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
-        local Activate, Cleanup = require("SBAI.Server.Modules."..k)
-        
-        modules[k] = {Activate=Activate, Cleanup=Cleanup}
-    end
-
-    return modules
+for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+    modules[k] = require("SBAI.Server.Modules."..k)
 end
 
+SBAI.namespace = namespace
 SBAI.Control = {}
 
----@param modules? table<string,ModuleFuncs>
-function SBAI.Control.Activate(modules)
-    modules = modules or GetModules()
-    
-    for postfix, module in pairs(GetModules()) do
-        local namespace = SBAI.namespace + postfix
-        local options = SBAI.Config.data[postfix]
+do
+    local allOrderData
+
+    local function saveAllOrderData()
+        if allOrderData then error("allOrderData must not be set", 2) end
+
+        allOrderData = {}
+
+        for character in Character.CharacterList do --[[@cast character Barotrauma.Character?]]
+            if  character and
+                character.IsBot
+            then
+                local info = character.Info
+
+                if info then
+                    local orderData = XElement.__new("orders")
+                    
+                    CharacterInfo.SaveOrderData(info, orderData)
+                    allOrderData[character] = orderData
+                end
+            end
+        end
+    end
+
+    local function loadAllOrderData()
+        if not allOrderData then error("allOrderData must be set first", 2) end
+
+        for character in Character.CharacterList do --[[@cast character Barotrauma.Character?]]
+            if  character and
+                character.IsBot
+            then
+                local orderData = allOrderData[character]
+
+                if orderData then
+                    local info = character.Info
+
+                    if info then
+                        CharacterInfo.ApplyOrderData(character, orderData)
+                    end
+                end
+            end
+        end
+
+        allOrderData = nil
+    end
+
+    function SBAI.Control.Activate()
+        saveAllOrderData()
         
-        if  options.enable then
-            local success, errMsg = pcall(module.Activate, namespace, options)
-
-            if not success then
-                Logger.LogError(namespace()..".Activate: "..errMsg)
-            end
+        for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+            modules[k]:Activate(namespace + k, SBAI.Config.data[k])
         end
-    end
-end
 
----@param modules? table<string,ModuleFuncs>
-function SBAI.Control.Deactivate(modules)
-    modules = modules or GetModules()
-
-    for k, _ in pairs(SBAI.Hook.list.add) do
-        Hook.Remove(k.name, k.identifier)
-    end
-    
-    for k, _ in pairs(SBAI.Hook.list.patch) do
-        Hook.RemovePatch(k.identifier, k.className, k.methodName, k.parameterTypes, k.hookType)
+        loadAllOrderData()
     end
 
-    for postfix, module in pairs(modules) do
-        if module.Cleanup then
-            local success, errMsg = pcall(module.Cleanup)
+    function SBAI.Control.Deactivate()
+        local loadOrders
 
-            if not success then
-                Logger.LogError(Constants.Acronym.."."..postfix..".Cleanup: "..errMsg)
-            end
+        if allOrderData then
+            loadOrders = false
+        else
+            saveAllOrderData()
+            loadOrders = true
         end
+
+        for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+            modules[k]:Deactivate()
+        end
+
+        if loadOrders then loadAllOrderData() end
     end
-end
-
-function SBAI.Control.Reactivate()
-    local modules = GetModules()
-
-    SBAI.Control.Deactivate(modules)
-    SBAI.Control.Activate(modules)
 end
 
 if SERVER or Game.IsSingleplayer then
@@ -161,7 +148,7 @@ if SERVER or Game.IsSingleplayer then
 
     SBAI.Config.Save = function(reactivate)
         oldSave()
-        if reactivate == nil or reactivate then SBAI.Control.Reactivate() end
+        if reactivate == nil or reactivate then SBAI.Control.Activate() end
     end
 
     SBAI.Config.Load()

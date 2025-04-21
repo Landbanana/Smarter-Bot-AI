@@ -1,15 +1,13 @@
-local SBAI = require("SBAI")
+local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
 
----@param namespace Namespace
----@param options table
-return function(namespace, options)
-    SBAI.Hook.Patch(namespace(), "Barotrauma.AIObjectiveCombat", "get_TargetEliminated",
-    ---@param instance Barotrauma.AIObjectiveCombat
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    ---@return integer
+---@param self Types.Module
+local function activate(self)
+    self:AddPatch("Barotrauma.AIObjectiveCombat", "get_TargetEliminated", nil,
     function(instance, ptable)
         return ptable.ReturnValue or (instance.character.IsOnPlayerTeam and instance.Enemy.IsHandcuffed)
     end, Hook.HookMethodType.Before)
 end
+
+return Types.Module.new(activate)

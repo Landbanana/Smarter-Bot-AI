@@ -1,14 +1,13 @@
-local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
+local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 
----@param namespace Namespace
----@param options table
-return function(namespace, options)
-    local identifiers = {} --[=[@type Barotrauma.Identifier[]]=]
+---@param self Types.Module
+local function activate(self)
+    local ids = {} --[=[@type {[System.Int32]:true}]=]
 
-    local _chairItems = setmetatable({}, {
+    local _chairItems = setmetatable(self:RegisterTable("ROUND_END"), {
         __call=function(t)
             if not t.data then
                 do
@@ -18,11 +17,8 @@ return function(namespace, options)
                 end
 
                 for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-                    for id in identifiers do --[[@cast id Barotrauma.Identifier]]
-                        if item.Prefab.Identifier == id then
-                            t.data.Add(item)
-                            break
-                        end
+                    if ids[item.Prefab.Identifier.HashCode] then
+                        t.data.Add(item)
                     end
                 end
             end
@@ -30,16 +26,13 @@ return function(namespace, options)
         end
     })
 
-    util.RegisterClear(_chairItems, util.CLEAR_REG.ROUND_END)
-
-    SBAI.Hook.Add("roundStart", namespace(),
+    self:AddHook("roundStart",
     function()
         return _chairItems()
     end)
 
-    SBAI.Hook.Patch(namespace(), "Barotrauma.Item", "get_ChairItems",
+    self:AddPatch("Barotrauma.Item", "get_ChairItems", nil,
     function(instance, ptable)
-
         ptable.PreventExecution = true
 
         return _chairItems()
@@ -51,14 +44,18 @@ return function(namespace, options)
         ---@param name string
         ---@param predicate fun(prefab:Barotrauma.ItemPrefab):boolean
         local function addPredicate(name, predicate)
-            if options[name] then
+            if self.options[name] then
                 predicates[name] = predicate
             end
         end
 
-        addPredicate("Chairs", function(prefab)
-            return util.ValsContain(prefab.Tags, "chair")
-        end)
+        do
+            local ValsContain = util.ValsContain
+
+            addPredicate("Chairs", function(prefab)
+                return ValsContain(prefab.Tags, "chair")
+            end)
+        end
 
         addPredicate("Beds", function(prefab)
             if prefab.Category == 2 then
@@ -75,17 +72,15 @@ return function(namespace, options)
             end
         end)
         
-        do
-            local i = 0
-
+        for prefab in ItemPrefab.Prefabs do
             for func in predicates do --[[@cast func fun(prefab:Barotrauma.ItemPrefab):boolean]]
-                for prefab in ItemPrefab.Prefabs do
-                    if func(prefab) then
-                        i = i + 1
-                        identifiers[i] = prefab.Identifier
-                    end
+                if func(prefab) then
+                    ids[prefab.Identifier.HashCode] = true
+                    break
                 end
             end
         end
     end
 end
+
+return Types.Module.new(activate)
