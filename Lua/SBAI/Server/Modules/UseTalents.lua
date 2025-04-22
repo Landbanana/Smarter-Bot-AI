@@ -4,9 +4,9 @@ local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
 
----@type table<string,number>
+---@type table<string,{maxDistance:number, allowSelf:boolean}>
 local talentRanges = setmetatable({}, {
-    ---@param t table<string,number>
+    ---@param t table<string,{maxDistance:number, allowSelf:boolean}>
     ---@param k string
     ---@return number
     __index=function(t, k)
@@ -25,7 +25,10 @@ local talentRanges = setmetatable({}, {
                         local applyStatusEffectsAllies = abilities.GetChildElement("CharacterAbilityApplyStatusEffectsToAllies")
                         
                         if applyStatusEffectsAllies then
-                            t[k] = applyStatusEffectsAllies.GetAttributeFloat("maxdistance", Single(util.UnregisteredStaticDescriptors["System.Single"].Static.MaxValue))
+                            t[k] = {
+                                maxDistance=applyStatusEffectsAllies.GetAttributeFloat("maxdistance", Single(util.UnregisteredStaticDescriptors["System.Single"].Static.MaxValue)),
+                                allowSelf=applyStatusEffectsAllies.GetAttributeBool("allowself", true)
+                            }
                             return t[k]
                         end
                     end
@@ -107,12 +110,12 @@ do
     end
 end
 
-local generateWanderPatch
+local generatePatch
 
 do
     local Distance = Vector2.Distance
 
-    function generateWanderPatch(self, talentId, stopAfterBuffed)
+    function generatePatch(self, talentId, stopAfterBuffed)
         if stopAfterBuffed then
             anyStopAfterBuffed = true
 
@@ -123,18 +126,33 @@ do
                 local characterData = allCharacterData[character]
 
                 if character.HasTalent(talentId) then
-                    if characterData.timer:Update(ptable["deltaTime"]) then
+                    if characterData.timer:UpdateClock() then
                         local startPos = character.WorldPosition
-                        local range = talentRanges[talentId]
                         local foundUnbuffed = false
+                        local maxDistance
+                        local allowSelf
+                        
+                        do
+                            local range = talentRanges[talentId]
+
+                            maxDistance = range.maxDistance
+                            allowSelf = range.allowSelf
+                        end
 
                         for crewmate in Character.GetFriendlyCrew(character) do
-                            if not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
-                                Distance(startPos, crewmate.WorldPosition) <= range
+                            if  not allowSelf and
+                                crewmate == character
+                            then
+                                goto continue
+                            end
+
+                            if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
+                                Distance(startPos, crewmate.WorldPosition) <= maxDistance
                             then
                                 foundUnbuffed = true
                                 break
                             end
+                            ::continue::
                         end
                         if foundUnbuffed then
                             characterData.isPlaying = true
@@ -186,8 +204,8 @@ local function activateAssistant(self, options)
 
         -- if #instrumentTalentData[talentId].validInstruments <= 0 then return end
 
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
-        generateWanderPatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
+        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
+        generatePatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
     end
 end
 
@@ -200,8 +218,8 @@ local function activateCaptain(self, options)
     if suboptions.enable then
         instrumentTalentEnabled = true
 
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
-        generateWanderPatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
+        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
+        generatePatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
     end
 end
 
