@@ -306,6 +306,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             GUI.Alignment.Left
         )
 
+        local zeroCheck = false
         local forcedDefault = false
 
         if optionType == SBAI.Config.OPTION_TYPE.float then
@@ -316,8 +317,8 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueEntered = function(numberIn)
                 if forcedDefault then
-                    forcedDefault = false
                     numberIn.FloatValue = defaults.value
+                    forcedDefault = false
                 end
 
                 configRef[key] = numberIn.FloatValue
@@ -325,7 +326,10 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
 
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueChanged = function(numberIn)
-                forcedDefault = forcedDefault or numberIn.IntValue == 0
+                local oldZeroCheck = zeroCheck
+                
+                zeroCheck = numberIn.FloatValue == 0
+                forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
             end
         else
             numberInput.MinValueInt = defaults.min
@@ -335,8 +339,8 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueEntered = function(numberIn)
                 if forcedDefault then
-                    forcedDefault = false
                     numberIn.IntValue = defaults.value
+                    forcedDefault = false
                 end
 
                 configRef[key] = numberIn.IntValue
@@ -344,7 +348,10 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
 
             ---@param numberIn Barotrauma.GUINumberInput
             numberInput.OnValueChanged = function(numberIn)
-                forcedDefault = forcedDefault or numberIn.IntValue == 0
+                local oldZeroCheck = zeroCheck
+
+                zeroCheck = numberIn.IntValue == 0
+                forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
             end
         end
         
