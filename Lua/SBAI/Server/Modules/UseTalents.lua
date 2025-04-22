@@ -126,7 +126,7 @@ do
                 local characterData = allCharacterData[character]
 
                 if character.HasTalent(talentId) then
-                    if characterData.timer:UpdateClock() then
+                    if characterData.timer:Update(ptable["deltaTime"]) then
                         local startPos = character.WorldPosition
                         local foundUnbuffed = false
                         local maxDistance
