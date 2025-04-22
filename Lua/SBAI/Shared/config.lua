@@ -162,6 +162,9 @@ do
     subsection = section:CreateSection("Assistant")
     subsubsection = subsection:CreateSection("InspiringTunes")
     subsubsection:CreateOption("StopAfterBuffed", false, Config.OPTION_TYPE.boolean)
+
+    subsubsection = subsection:CreateSection("NonThreatening")
+    subsubsection:CreateOption("ragdollHealthPercent", 75.0, Config.OPTION_TYPE.float, 10, 90) 
     -- subsubsection:CreateOption("Accordion", true, Config.OPTION_TYPE.boolean)
     -- subsubsection:CreateOption("Bikehorn", true, Config.OPTION_TYPE.boolean)
     -- subsubsection:CreateOption("Guitar", true, Config.OPTION_TYPE.boolean)

@@ -2,7 +2,18 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
+do
+    local descriptor = Descriptors["Barotrauma.Inventory"]
+
+    LuaUserData.MakeFieldAccessible(descriptor, "slots")
+
+    descriptor = Descriptors["Barotrauma.AIObjectiveCombat"]
+    LuaUserData.MakeFieldAccessible(descriptor, "CloseDistance")
+    
+
+    ---@class Barotrauma.AIObjectiveCombat
+    ---@field CloseDistance System.Single
+end
 
 ---@type table<string,{maxDistance:number, allowSelf:boolean}>
 local talentRanges = setmetatable({}, {
@@ -59,7 +70,6 @@ local instrumentTalentData = {
     }
 }
 local instrumentTalentEnabled = false
-local anyStopAfterBuffed = false
 local playInstruments
 
 do
@@ -105,74 +115,72 @@ do
             character.SetInput(Aim, false, true)
             character.SetInput(Shoot, false, true)
         else
-            characterData.isPlaying = false
+            characterData:Reset()
         end
     end
 end
 
-local generatePatch
+local function generatePatch(self, talentId, stopAfterBuffed)
+    if stopAfterBuffed then
+        local Distance = Vector2.Distance
 
-do
-    local Distance = Vector2.Distance
+        ---@param instance Barotrauma.AIObjectiveIdle
+        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+        return function(instance, ptable)
+            local character = instance.character
 
-    function generatePatch(self, talentId, stopAfterBuffed)
-        if stopAfterBuffed then
-            anyStopAfterBuffed = true
-
-            ---@param instance Barotrauma.AIObjectiveIdle
-            ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-            return function(instance, ptable)
-                local character = instance.character
+            if character.HasTalent(talentId) then
                 local characterData = allCharacterData[character]
 
-                if character.HasTalent(talentId) then
-                    if characterData.timer:Update(ptable["deltaTime"]) then
-                        local startPos = character.WorldPosition
-                        local foundUnbuffed = false
-                        local maxDistance
-                        local allowSelf
-                        
-                        do
-                            local range = talentRanges[talentId]
+                if characterData.timer:Update(ptable["deltaTime"]) then
+                    local startPos = character.WorldPosition
+                    local foundUnbuffed = false
+                    local maxDistance
+                    local allowSelf
+                    
+                    do
+                        local range = talentRanges[talentId]
 
-                            maxDistance = range.maxDistance
-                            allowSelf = range.allowSelf
-                        end
-
-                        for crewmate in Character.GetFriendlyCrew(character) do
-                            if  not allowSelf and
-                                crewmate == character
-                            then
-                                goto continue
-                            end
-
-                            if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
-                                Distance(startPos, crewmate.WorldPosition) <= maxDistance
-                            then
-                                foundUnbuffed = true
-                                break
-                            end
-                            ::continue::
-                        end
-                        if foundUnbuffed then
-                            characterData.isPlaying = true
-                        else
-                            characterData:Reset()
-                        end
+                        maxDistance = range.maxDistance
+                        allowSelf = range.allowSelf
                     end
-                    if characterData.isPlaying then
-                        playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
+
+                    for crewmate in Character.GetFriendlyCrew(character) do
+                        if  not allowSelf and
+                            crewmate == character
+                        then
+                            goto continue
+                        end
+
+                        if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
+                            Distance(startPos, crewmate.WorldPosition) <= maxDistance
+                        then
+                            foundUnbuffed = true
+                            break
+                        end
+                        ::continue::
+                    end
+                    if foundUnbuffed then
+                        characterData.isPlaying = true
+                    else
+                        characterData:Reset()
                     end
                 end
+                if characterData.isPlaying then
+                    playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
+                end
             end
-        else
-            ---@param instance Barotrauma.AIObjectiveIdle
-            ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-            return function(instance, ptable)
-                local character = instance.character
+        end
+    else
+        ---@param instance Barotrauma.AIObjectiveIdle
+        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+        return function(instance, ptable)
+            local character = instance.character
+            
+            if character.HasTalent(talentId) then
                 local characterData = allCharacterData[character]
-        
-                if character.HasTalent(talentId) then
+
+                if characterData.timer:Update(ptable["deltaTime"]) then
                     characterData.isPlaying = true
                     playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
                 end
@@ -206,6 +214,42 @@ local function activateAssistant(self, options)
 
         self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
         generatePatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
+    end
+
+    talentId = "NonThreatening"
+    suboptions = options[talentId]
+    talentId = talentId:lower()
+
+    if suboptions.enable then
+        local ragdollHealthPercent = suboptions["ragdollHealthPercent"] --[[@type number]]
+        local appliedStun = Constants.D_NONTHREATENING_STUN
+        
+
+        self:AddPatch("Barotrauma.AIObjectiveCombat", "Act", nil,
+        function(instance, ptable)
+            local character = instance.character
+
+            if  character.HasTalent(talentId) and
+                not (character.Stun > 0) and
+                not character.Params.Health.StunImmunity and
+                instance.IsEnemyClose(instance.CloseDistance) and
+                character.HealthPercentage < ragdollHealthPercent
+            then
+                local controller = character.AIController --[[@type Barotrauma.HumanAIController]]
+                local curHull = character.CurrentHull
+                local needsDivingGear, needsSuit = controller.NeedsDivingGear(curHull, controller.objectiveManager) --[[@type boolean, boolean]]
+
+                if  (not needsDivingGear or
+                    controller.HasDivingSuit(character, 0, true, true) or
+                    not needsSuit and
+                    controller.HasDivingGear(character, 0, true)) and
+                    curHull.FireCount <= 0
+                then
+                    ptable.PreventExecution = true
+                    character.Stun = appliedStun
+                end
+            end
+        end, Hook.HookMethodType.Before)
     end
 end
 
@@ -251,43 +295,31 @@ local function activate(self)
     end
 
     if instrumentTalentEnabled then
-        ---@param t table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}>
-        ---@param k Barotrauma.Character
-        ---@return table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}>
-        local function characterDataIndex(t, k)
-            t[k] = {
-                isPlaying=false,
-                ---@public
-                Reset=function(self)
-                    self.isPlaying = false
-                    self.lastObjective = nil
-                end
-            }
-            return t[k]
-        end
+        local buffCheckDelay = self.options["timeBetween"] --[[@type number]]
 
-        if anyStopAfterBuffed then
-            local baseCharacterDataIndex = characterDataIndex
-            local buffCheckDelay = self.options["timeBetween"] --[[@type number]]
-
-            local Timer = Types.Timer
-            
-            ---@param t table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
-            ---@param k Barotrauma.Character
-            ---@return table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
-            characterDataIndex = function(t, k)
-                t[k] = baseCharacterDataIndex(t, k)
-
-                t[k].timer = Timer.new(buffCheckDelay)
-                return t[k]
-            end
-
-            
-        end
+        local Timer = Types.Timer
+        local Aim = InputType.Aim
+        local Shoot = InputType.Shoot
 
         ---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer?}>
         allCharacterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
-            __index = characterDataIndex
+        ---@param t table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
+        ---@param k Barotrauma.Character
+        ---@return table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
+            __index = function(t, k)
+                t[k] = {
+                    isPlaying=false,
+                    ---@public
+                    Reset=function(self)
+                        self.isPlaying = false
+                        self.lastObjective = nil
+                        k.ClearInput(Aim)
+                        k.ClearInput(Shoot)
+                    end,
+                    timer=Timer.new(buffCheckDelay)
+                }
+                return t[k]
+            end
         })
 
         self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
