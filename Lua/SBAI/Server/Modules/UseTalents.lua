@@ -296,9 +296,7 @@ local function activate(self)
             local characterData = rawget(allCharacterData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
 
             if characterData then
-                local instrument = characterData.instrument
-
-                if  instrument and
+                if  characterData.instrument and
                     characterData.isPlaying
                 then
                     ptable.PreventExecution = true

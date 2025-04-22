@@ -132,9 +132,9 @@ local function activate(self)
     local TryAddSubObjective = util.TryAddSubObjective
     local Variator = util.Variator
 
-    for objectiveType, fullObjectiveType, objId, specifierFunction in Variator({
-        {"Idle", "Barotrauma.AIObjectiveIdle", "idle", True},
-        {"Wait", "Barotrauma.AIObjectiveGoTo", "wait", function(instance) return instance.IsWaitOrder end}
+    for objectiveType, fullObjectiveType, specifierFunction in Variator({
+        {"Idle", "Barotrauma.AIObjectiveIdle", True},
+        {"Wait", "Barotrauma.AIObjectiveGoTo", function(instance) return instance.IsWaitOrder end}
     }) do
         local section = self.options[objectiveType]
         local onlyAtFriendlyOutposts
