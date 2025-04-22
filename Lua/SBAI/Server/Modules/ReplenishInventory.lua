@@ -129,12 +129,13 @@ local function activate(self)
     local FindItems = util.FindItems
     local GetClosest = util.GetClosest
     local True = util.True
+    local IsWaitObjective = util.IsWaitObjective
     local TryAddSubObjective = util.TryAddSubObjective
     local Variator = util.Variator
 
     for objectiveType, fullObjectiveType, specifierFunction in Variator({
         {"Idle", "Barotrauma.AIObjectiveIdle", True},
-        {"Wait", "Barotrauma.AIObjectiveGoTo", function(instance) return instance.IsWaitOrder end}
+        {"Wait", "Barotrauma.AIObjectiveGoTo", IsWaitObjective}
     }) do
         local section = self.options[objectiveType]
         local onlyAtFriendlyOutposts

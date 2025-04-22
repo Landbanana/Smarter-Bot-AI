@@ -127,6 +127,8 @@ do
     subsection = section:CreateSection("Wait")
     subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+
     subsection = section:CreateSection("Ammunition")
     subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
     subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
@@ -143,8 +145,6 @@ do
     subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
     subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
 
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
-
     section = defaults:CreateSection("SmarterLoadItems")
 
     subsection = section:CreateSection("BatteryCells")
@@ -157,6 +157,8 @@ do
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("UseTalents")
+    section:CreateOption("Idle", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("Wait", true, Config.OPTION_TYPE.boolean)
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Assistant")

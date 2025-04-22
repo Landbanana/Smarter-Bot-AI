@@ -69,8 +69,26 @@ local instrumentTalentData = {
 
     }
 }
+
 local instrumentTalentEnabled = false
 local playInstruments
+local allObjData
+
+do
+    local True = util.True
+    local IsWaitObjective = util.IsWaitObjective
+
+    allObjData = {
+        ["Idle"]={
+            fullTypeName="Barotrauma.AIObjectiveIdle",
+            prePatch=True
+        },
+        ["Wait"]={
+            fullTypeName="Barotrauma.AIObjectiveGoTo",
+            prePatch=IsWaitObjective
+        }
+    }
+end
 
 do
     local Aim = InputType.Aim
@@ -120,59 +138,17 @@ do
     end
 end
 
-local function generatePatch(self, talentId, stopAfterBuffed)
-    if stopAfterBuffed then
-        local Distance = Vector2.Distance
+local generatePatch
 
-        ---@param instance Barotrauma.AIObjectiveIdle
-        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-        return function(instance, ptable)
-            local character = instance.character
-
-            if character.HasTalent(talentId) then
-                local characterData = allCharacterData[character]
-
-                if characterData.timer:Update(ptable["deltaTime"]) then
-                    local startPos = character.WorldPosition
-                    local foundUnbuffed = false
-                    local maxDistance
-                    local allowSelf
-                    
-                    do
-                        local range = talentRanges[talentId]
-
-                        maxDistance = range.maxDistance
-                        allowSelf = range.allowSelf
-                    end
-
-                    for crewmate in Character.GetFriendlyCrew(character) do
-                        if  not allowSelf and
-                            crewmate == character
-                        then
-                            goto continue
-                        end
-
-                        if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
-                            Distance(startPos, crewmate.WorldPosition) <= maxDistance
-                        then
-                            foundUnbuffed = true
-                            break
-                        end
-                        ::continue::
-                    end
-                    if foundUnbuffed then
-                        characterData.isPlaying = true
-                    else
-                        characterData:Reset()
-                    end
-                end
-                if characterData.isPlaying then
-                    playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
-                end
-            end
-        end
-    else
-        ---@param instance Barotrauma.AIObjectiveIdle
+do
+    ---@generic T:Barotrauma.AIObjective
+    ---@param self Types.Module
+    ---@param talentId string
+    ---@param patch fun(character:Barotrauma.Character, characterData:{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    ---@param prePatch fun(instance:T)
+    ---@return fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
+    local function prePatcher(self, talentId, patch, prePatch)
+        ---@param instance Barotrauma.AIObjective
         ---@param ptable Barotrauma.LuaCsHook.ParameterTable
         return function(instance, ptable)
             local character = instance.character
@@ -181,10 +157,74 @@ local function generatePatch(self, talentId, stopAfterBuffed)
                 local characterData = allCharacterData[character]
 
                 if characterData.timer:Update(ptable["deltaTime"]) then
-                    characterData.isPlaying = true
+                    if  not prePatch or
+                        prePatch(instance)
+                    then
+                        return patch(character, characterData)
+                    end
+                end
+                if characterData.isPlaying then
                     playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
                 end
             end
+        end
+    end
+
+    ---@generic T:Barotrauma.AIObjective
+    ---@param self Types.Module
+    ---@param talentId string
+    ---@param stopAfterBuffed boolean
+    ---@param prePatch fun(instance:T)
+    ---@return fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
+    function generatePatch(self, talentId, stopAfterBuffed, prePatch)
+        if stopAfterBuffed then
+            
+            local Distance = Vector2.Distance
+
+            return prePatcher(self, talentId,
+            ---@param character Barotrauma.Character
+            ---@param characterData {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}
+            function(character, characterData)
+                local startPos = character.WorldPosition
+                local foundUnbuffed = false
+                local maxDistance
+                local allowSelf
+                
+                do
+                    local range = talentRanges[talentId]
+
+                    maxDistance = range.maxDistance
+                    allowSelf = range.allowSelf
+                end
+                
+                for crewmate in Character.GetFriendlyCrew(character) do
+                    if  not allowSelf and
+                        crewmate == character
+                    then
+                        goto continue
+                    end
+
+                    if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
+                        Distance(startPos, crewmate.WorldPosition) <= maxDistance
+                    then
+                        foundUnbuffed = true
+                        break
+                    end
+                    ::continue::
+                end
+                if foundUnbuffed then
+                    characterData.isPlaying = true
+                else
+                    characterData:Reset()
+                end
+            end, prePatch)
+        else
+            return prePatcher(self, talentId,
+            ---@param character Barotrauma.Character
+            ---@param characterData {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}
+            function(character, characterData)
+                characterData.isPlaying = true
+            end, prePatch)
         end
     end
 end
@@ -196,8 +236,15 @@ local function activateAssistant(self, options)
     local suboptions = options[talentId]
 
     if suboptions.enable then
-        instrumentTalentEnabled = true
-        
+        self.namespace = self.namespace + talentId
+        for objData in allObjData do
+            instrumentTalentEnabled = true
+
+            self:AddPatch(objData.fullTypeName, "Act", nil,
+            generatePatch(self, talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+        end
+        self.namespace = -self.namespace
+    end
         -- do
         --     local i = 0
 
@@ -211,19 +258,17 @@ local function activateAssistant(self, options)
         -- end
 
         -- if #instrumentTalentData[talentId].validInstruments <= 0 then return end
-
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
-        generatePatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
-    end
-
+    
     talentId = "NonThreatening"
     suboptions = options[talentId]
-    talentId = talentId:lower()
 
     if suboptions.enable then
         local ragdollHealthPercent = suboptions["ragdollHealthPercent"] --[[@type number]]
         local appliedStun = Constants.D_NONTHREATENING_STUN
         
+        self.namespace = self.namespace + talentId
+        
+        talentId = talentId:lower()
 
         self:AddPatch("Barotrauma.AIObjectiveCombat", "Act", nil,
         function(instance, ptable)
@@ -250,6 +295,7 @@ local function activateAssistant(self, options)
                 end
             end
         end, Hook.HookMethodType.Before)
+        self.namespace = -self.namespace
     end
 end
 
@@ -260,10 +306,14 @@ local function activateCaptain(self, options)
     local suboptions = options[talentId]
     
     if suboptions.enable then
-        instrumentTalentEnabled = true
-
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
-        generatePatch(self, talentId, suboptions["StopAfterBuffed"]), Hook.HookMethodType.Before)
+        self.namespace = self.namespace + talentId
+        for objData in allObjData do
+            instrumentTalentEnabled = true
+                
+            self:AddPatch(objData.fullTypeName, "Act", nil,
+            generatePatch(self, talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+        end
+        self.namespace = -self.namespace
     end
 end
 
@@ -275,14 +325,27 @@ end
 
 ---@param self Types.Module
 local function activate(self)
-    
-
-    ---@type table<string,fun(self:Types.Module, options:table)>
     local jobMap = {
         Assistant=activateAssistant,
         Captain=activateCaptain--,
         -- Engineer=activateEngineer
     }
+
+    do
+        local toRemove = {}
+        local i = 0
+
+        for k, _ in pairs(allObjData) do
+            if not self.options[k] then
+                i = i + 1
+                toRemove[i] = k
+            end
+        end
+
+        for k in toRemove do
+            allObjData[k] = nil
+        end
+    end
 
     for job, jobActivate in pairs(jobMap) do
         local sectionOptions = self.options[job]
@@ -301,7 +364,7 @@ local function activate(self)
         local Aim = InputType.Aim
         local Shoot = InputType.Shoot
 
-        ---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer?}>
+        ---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
         allCharacterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
         ---@param t table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
         ---@param k Barotrauma.Character

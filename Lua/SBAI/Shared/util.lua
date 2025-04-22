@@ -137,6 +137,12 @@ function util.True()
     return true
 end
 
+---@param instance Barotrauma.AIObjectiveGoTo
+---@return boolean
+function util.IsWaitObjective(instance)
+    return instance.IsWaitOrder
+end
+
 ---@generic T
 ---@param list T[]
 ---@param value T
