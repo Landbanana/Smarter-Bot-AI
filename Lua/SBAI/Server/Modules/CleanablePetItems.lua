@@ -8,9 +8,13 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 
 local petItemIds = {"poop", "mucusball", "chitin"}
 
+local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+local ValsContain = util.ValsContain
+local sort = table.sort
+
 ---@param self Types.Module
 local function activate(self)
-    return util.DoWithTemporaryRegistrations({
+    return DoWithTemporaryRegistrations({
         "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
     },
@@ -28,7 +32,7 @@ local function activate(self)
         local cleanableItems = Item._cleanableItems --[[@type System.Collections.Generic.List*1Barotrauma*Item]]
 
         for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-            if  util.ValsContain(petItemIds, item.Prefab.Identifier.Value) and
+            if  ValsContain(petItemIds, item.Prefab.Identifier.Value) and
                 not cleanableItems.Contains(item)
             then
                 Item._cleanableItems.Add(item)
@@ -39,7 +43,7 @@ end
 
 ---@param self Types.Module
 local function deactivate(self)
-    return util.DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]"},
+    return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]"},
     function()
         for t in petItemIds do
             local prefab = ItemPrefab.GetItemPrefab(t)
@@ -52,19 +56,19 @@ local function deactivate(self)
 
         local cleanableList = Item._cleanableItems --[=[@type Barotrauma.Item[]]=]
 
-        return util.DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
+        return DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
         function()
             local numIndices = 0
             local removeIndices = {} --[=[@type number[]]=]
 
             for i, item in ipairs(cleanableList) do
-                if util.ValsContain(petItemIds, item.Prefab.Identifier.Value) then
+                if ValsContain(petItemIds, item.Prefab.Identifier.Value) then
                     numIndices = numIndices + 1
                     removeIndices[numIndices] = i - 1
                 end
             end
 
-            table.sort(removeIndices, function(i1, i2) return i1 > i2 end)
+            sort(removeIndices, function(i1, i2) return i1 > i2 end)
 
             for i in removeIndices do --[[@cast i number]]
                 Item._cleanableItems.RemoveAt(i)
