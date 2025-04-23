@@ -542,15 +542,24 @@ function util.TryAddSubObjective(instance, objective, constructor, onCompletedGe
     end
 end
 
-do
+---@generic T:any
+---@param n number
+---@param func fun(...:T):any
+---@param ... T
+---@return number
+function util.Benchmark(n, func, ...)
     local clock, difftime = os.clock, os.difftime
+    local timeTotal = 0
 
-    function util.Benchmark(func, ...)
+    n = (n >= 1) and n or 100
+    for _=1,n,1 do
         local t1 = clock()
         func(...)
         local t2 = clock()
-        return difftime(t2, t1)
+
+        timeTotal = timeTotal + difftime(t2, t1)
     end
+    return timeTotal/n
 end
 
 ---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
