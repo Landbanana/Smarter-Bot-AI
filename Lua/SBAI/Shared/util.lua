@@ -171,6 +171,8 @@ function util.itertools.KeysContain(dict, key)
     return false
 end
 
+---@param ... any[]
+---@return fun():any
 function util.itertools.Chain(...)
     local tableList = {...}
     local tableIdx = 0
@@ -192,13 +194,38 @@ function util.itertools.Chain(...)
     end
 end
 
+---@generic T
+---@param t table<T,any>
+---@param ... T
+function util.itertools.RemoveKeys(t, ...)
+    for k in {...} do
+        t[k] = nil
+    end
+end
+
+do
+    local RemoveKeys = util.itertools.RemoveKeys
+    local unpack = table.unpack
+
+    ---@generic T
+    ---@param t table<T,any>
+    ---@param predicate fun(obj:T):boolean
+    function util.itertools.RemoveSpecifiedKeys(t, predicate)
+        for k in next, t do
+            if predicate(k) then
+                t[k] = nil
+            end
+        end
+    end
+end
+
 ---@generic T: table
 ---@param t T
 ---@return T
 function util.CopyTable(t)
     local tNew = {}
 
-    for k, v in pairs(t) do
+    for k, v in next, t do
         tNew[k] = v
     end
     return tNew
