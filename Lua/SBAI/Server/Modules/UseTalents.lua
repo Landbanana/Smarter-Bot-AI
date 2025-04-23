@@ -9,100 +9,200 @@ do
 
     descriptor = Descriptors["Barotrauma.AIObjectiveCombat"]
     LuaUserData.MakeFieldAccessible(descriptor, "CloseDistance")
-    
 
     ---@class Barotrauma.AIObjectiveCombat
     ---@field CloseDistance System.Single
 end
 
----@type table<string,{maxDistance:number, allowSelf:boolean}>
-local talentRanges = setmetatable({}, {
-    ---@param t table<string,{maxDistance:number, allowSelf:boolean}>
-    ---@param k string
-    ---@return number
-    __index=function(t, k)
-        local prefab = TalentPrefab.TalentPrefabs[Identifier(k)]
+local allTalentRanges
 
-        if prefab then
-            local configElement = prefab.ConfigElement
-            
-            for abilityGroupEffect in configElement.GetChildElements("AbilityGroupEffect") do
+do
+    local MaxValueSingle = Single(util.UnregisteredStaticDescriptors["System.Single"].Static.MaxValue)
+
+    ---@type table<string,{maxDistance:number, allowSelf:boolean}>
+    allTalentRanges = setmetatable({}, {
+        ---@param t table<string,{maxDistance:number, allowSelf:boolean}>
+        ---@param k string
+        ---@return number
+        __index=function(t, k)
+            local prefab = TalentPrefab.TalentPrefabs[k]
+
+            if prefab then
+                local configElement = prefab.ConfigElement
                 
-                if  abilityGroupEffect and
-                    abilityGroupEffect.GetAttributeString("abilityeffecttype") == "OnUseRangedWeapon"
-                then
-                    local abilities = abilityGroupEffect.GetChildElement("Abilities")
-                    if abilities then
-                        local applyStatusEffectsAllies = abilities.GetChildElement("CharacterAbilityApplyStatusEffectsToAllies")
-                        
-                        if applyStatusEffectsAllies then
+                for abilityGroupEffect in configElement.GetChildElements("AbilityGroupEffect") do
+                    if abilityGroupEffect.GetAttributeString("abilityeffecttype") == "OnUseRangedWeapon" then
+                        for applyStatusEffect in abilityGroupEffect.Element.Descendants("CharacterAbilityApplyStatusEffectsToAllies") do
                             t[k] = {
-                                maxDistance=applyStatusEffectsAllies.GetAttributeFloat("maxdistance", Single(util.UnregisteredStaticDescriptors["System.Single"].Static.MaxValue)),
-                                allowSelf=applyStatusEffectsAllies.GetAttributeBool("allowself", true)
+                                maxDistance=applyStatusEffect.GetAttributeFloat("maxdistance", MaxValueSingle),
+                                allowSelf=applyStatusEffect.GetAttributeBool("allowself", true)
                             }
                             return t[k]
                         end
+                        
+                    end
+                end
+            end
+            error("Unable to find talent: "..k, 2)
+        end
+    })
+end
+
+---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), timer:Types.Timer?}>
+local allCharacterData
+local allInstrumentTalentData
+
+local ---@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
+instrumentData = setmetatable({}, {
+    ---@param t {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
+    ---@param k string
+    __index=function(t, k)
+        local prefab = ItemPrefab.Prefabs[k]
+
+        if prefab then
+            local holdable = prefab.ConfigElement.GetChildElement("Holdable")
+        
+            if holdable then
+                local slotString = holdable.GetAttributeString("slots")
+                
+                if slotString then
+                    local allowedSlots = {}
+                    local i = 0
+        
+                    for slotCombination in slotString:gmatch("([^,]+),?") do
+                        if slotCombination:lower() ~= "any" then
+                            local slots = 0
+        
+                            i = i + 1
+                            for specSlotString in slotCombination:gmatch("([^%+]+)%+?") do
+                                specSlotString = specSlotString:match("(%a+)")
+                                
+                                if specSlotString:lower() == "bothhands" then
+                                    slots = InvSlotType.LeftHand + InvSlotType.RightHand
+                                end
+        
+                                slots = slots + InvSlotType[specSlotString]
+                            end
+                            allowedSlots[i] = slots
+                        end
+                    end
+                    if i > 0 then
+                        t[k] = {slotTypes=allowedSlots}
+                        return t[k]
                     end
                 end
             end
         end
-        error("Unable to find maxdistance for talent: "..k, 2)
+        error("Unable to find instrument: "..k, 2)
     end
 })
 
----@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), timer:Types.Timer?}>
-local allCharacterData
-local instrumentData = {
-    ["accordion"]={InvSlotType.LeftHand+InvSlotType.RightHand},
-    ["bikehorn"]={InvSlotType.LeftHand, InvSlotType.RightHand},
-    ["guitar"]={InvSlotType.LeftHand+InvSlotType.RightHand},
-    ["harmonica"]={InvSlotType.LeftHand+InvSlotType.RightHand}
-}
-local instrumentTalentData = {
-    SteadyTune={
-        afflictionId="psychosisimmunity",
-        validInstruments={"harmonica"}
-    },
-    InspiringTunes={
-        afflictionId="inspiringtunes",
-        validInstruments={"accordion", "bikehorn", "guitar", "harmonica"},
+do
+    local ValsContain = util.itertools.ValsContain
+    local ItemPrefab = ItemPrefab
 
-    }
-}
+    ---@type {[string]:{afflictionId:Barotrauma.Identifier, validInstruments:Barotrauma.Identifier[]}}
+    allInstrumentTalentData = setmetatable({}, {
+        ---@param t {[string]:{afflictionId:Barotrauma.Identifier, validInstruments:Barotrauma.Identifier[]}}
+        ---@param k string
+        __index=function(t, k)
+            local prefab = TalentPrefab.TalentPrefabs[k]
+
+            if prefab then
+                local configElement = prefab.ConfigElement
+                
+                for abilityGroupEffect in configElement.GetChildElements("AbilityGroupEffect") do
+                    if abilityGroupEffect.GetAttributeString("abilityeffecttype") == "OnUseRangedWeapon" then
+                        local validInstruments
+
+                        for itemCondition in abilityGroupEffect.Element.Descendants("AbilityConditionItem") do
+                            validInstruments = itemCondition.GetAttributeIdentifierArray("identifiers")
+
+                            if not validInstruments then
+                                local tags = itemCondition.GetAttributeIdentifierArray("tags")
+
+                                if tags then
+                                    local i = 0
+
+                                    validInstruments = {}
+                                    for itemPrefab in ItemPrefab.Prefabs do
+                                        local prefabTags = itemPrefab.Tags
+
+                                        if not ValsContain(prefabTags, "traitormissionitem") then
+                                            for tag in tags do
+                                                if ValsContain(prefabTags, tag) then
+                                                    i = i + 1
+                                                    validInstruments[i] = itemPrefab.Identifier
+                                                    break
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                        
+                        if #validInstruments > 0 then
+                            for id in validInstruments do --[[@cast id Barotrauma.Identifier]]
+                                local _ = instrumentData[id.Value]
+                            end
+                            for applyStatusEffect in abilityGroupEffect.Element.Descendants("CharacterAbilityApplyStatusEffectsToAllies") do
+                                if applyStatusEffect then
+                                    for statusEffect in applyStatusEffect.Descendants("StatusEffect") do
+                                        if statusEffect then
+                                            local affliction = statusEffect.Element("Affliction")
+
+                                            if affliction then
+                                                local id = affliction.GetAttributeIdentifier("identifier")
+
+                                                if id then
+                                                    t[k] = {
+                                                        afflictionId=id,
+                                                        validInstruments=validInstruments
+                                                    }
+                                                    return t[k]
+                                                end
+                                            end
+                                        end
+                                    end
+
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            error("Unable to find talent: "..k, 2)
+        end
+    })
+end
 
 local instrumentTalentEnabled = false
 local playInstruments
-local allObjData
-
-do
-    local True = util.True
-    local IsWaitObjective = util.IsWaitObjective
-
-    allObjData = {
-        ["Idle"]={
-            fullTypeName="Barotrauma.AIObjectiveIdle",
-            prePatch=True
-        },
-        ["Wait"]={
-            fullTypeName="Barotrauma.AIObjectiveGoTo",
-            prePatch=IsWaitObjective
-        }
+local allObjData = {
+    ["Idle"]={
+        fullTypeName="Barotrauma.AIObjectiveIdle",
+        prePatch=util.True
+    },
+    ["Wait"]={
+        fullTypeName="Barotrauma.AIObjectiveGoTo",
+        prePatch=util.IsWaitObjective
     }
-end
+}
 
 do
+    local RangedWeapon = Components.RangedWeapon
     local Aim = InputType.Aim
     local Shoot = InputType.Shoot
 
     local FindItem = util.FindItem
     local GenerateIdPredicate = util.GenerateIdPredicate
     local HasSimpleAccess = util.HasSimpleAccess
-    local ValsContain = util.ValsContain
+    local ValsContain = util.itertools.ValsContain
 
-    ---@param self Types.Module
     ---@param character Barotrauma.Character
     ---@param instrumentIds string[]
-    function playInstruments(self, character, instrumentIds)
+    function playInstruments(character, instrumentIds)
         local characterData = allCharacterData[character]
         local instance = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
 
@@ -123,17 +223,25 @@ do
             )
         then
             characterData.instrument = FindItem(character, inventory.FindAllItems(), nil, nil, GenerateIdPredicate(instrumentIds))
+            instrument = characterData.instrument
         end
 
         if  instrument and (
                 ValsContain(character.HeldItems, instrument) or
-                inventory.TryPutItem(instrument, character, instrumentData[instrument.Prefab.Identifier.Value], true, false)
+                inventory.TryPutItem(instrument, character, instrumentData[instrument.Prefab.Identifier.Value].slotTypes, true, false)
             )
         then
+            if  instrument.HasTag("hornitem") and
+                instrument.GetComponent(RangedWeapon).WasUsed
+            then
+                return characterData:Reset()
+            end
+
+            characterData.isPlaying = true
             character.SetInput(Aim, false, true)
             character.SetInput(Shoot, false, true)
         else
-            characterData:Reset()
+            return characterData:Reset()
         end
     end
 end
@@ -142,12 +250,13 @@ local generatePatch
 
 do
     ---@generic T:Barotrauma.AIObjective
-    ---@param self Types.Module
     ---@param talentId string
     ---@param patch fun(character:Barotrauma.Character, characterData:{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}, ptable:Barotrauma.LuaCsHook.ParameterTable)
     ---@param prePatch fun(instance:T)
     ---@return fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
-    local function prePatcher(self, talentId, patch, prePatch)
+    local function prePatcher(talentId, patch, prePatch)
+        local validInstruments = allInstrumentTalentData[talentId].validInstruments
+
         ---@param instance Barotrauma.AIObjective
         ---@param ptable Barotrauma.LuaCsHook.ParameterTable
         return function(instance, ptable)
@@ -164,24 +273,33 @@ do
                     end
                 end
                 if characterData.isPlaying then
-                    playInstruments(self, character, instrumentTalentData[talentId].validInstruments)
+                    playInstruments(character, validInstruments)
                 end
             end
         end
     end
 
     ---@generic T:Barotrauma.AIObjective
-    ---@param self Types.Module
     ---@param talentId string
     ---@param stopAfterBuffed boolean
     ---@param prePatch fun(instance:T)
     ---@return fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable):MoonSharp.Interpreter.DynValue
-    function generatePatch(self, talentId, stopAfterBuffed, prePatch)
+    function generatePatch(talentId, stopAfterBuffed, prePatch)
+        local afflictionID
+        local validInstruments
+
+        do
+            local instrumentTalentData = allInstrumentTalentData[talentId]
+
+            afflictionID = instrumentTalentData.afflictionId
+            validInstruments = instrumentTalentData.validInstruments
+        end
+        
         if stopAfterBuffed then
             
             local Distance = Vector2.Distance
 
-            return prePatcher(self, talentId,
+            return prePatcher(talentId,
             ---@param character Barotrauma.Character
             ---@param characterData {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}
             function(character, characterData)
@@ -191,7 +309,7 @@ do
                 local allowSelf
                 
                 do
-                    local range = talentRanges[talentId]
+                    local range = allTalentRanges[talentId]
 
                     maxDistance = range.maxDistance
                     allowSelf = range.allowSelf
@@ -204,7 +322,7 @@ do
                         goto continue
                     end
 
-                    if  not crewmate.CharacterHealth.GetAffliction(instrumentTalentData[talentId].afflictionId, false) and
+                    if  not crewmate.CharacterHealth.GetAffliction(afflictionID, false) and
                         Distance(startPos, crewmate.WorldPosition) <= maxDistance
                     then
                         foundUnbuffed = true
@@ -213,17 +331,17 @@ do
                     ::continue::
                 end
                 if foundUnbuffed then
-                    characterData.isPlaying = true
+                    return playInstruments(character, validInstruments)
                 else
-                    characterData:Reset()
+                    return characterData:Reset()
                 end
             end, prePatch)
         else
-            return prePatcher(self, talentId,
+            return prePatcher(talentId,
             ---@param character Barotrauma.Character
             ---@param characterData {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}
             function(character, characterData)
-                characterData.isPlaying = true
+                return playInstruments(character, validInstruments)
             end, prePatch)
         end
     end
@@ -241,7 +359,7 @@ local function activateAssistant(self, options)
             instrumentTalentEnabled = true
 
             self:AddPatch(objData.fullTypeName, "Act", nil,
-            generatePatch(self, talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+            generatePatch(talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
         end
         self.namespace = -self.namespace
     end
@@ -311,7 +429,7 @@ local function activateCaptain(self, options)
             instrumentTalentEnabled = true
                 
             self:AddPatch(objData.fullTypeName, "Act", nil,
-            generatePatch(self, talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+            generatePatch(talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
         end
         self.namespace = -self.namespace
     end
@@ -378,6 +496,7 @@ local function activate(self)
                         self.lastObjective = nil
                         k.ClearInput(Aim)
                         k.ClearInput(Shoot)
+                        k.TryPutItemInAnySlot(self.instrument)
                     end,
                     timer=Timer.new(buffCheckDelay)
                 }
@@ -391,9 +510,7 @@ local function activate(self)
             local characterData = rawget(allCharacterData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
 
             if characterData then
-                if  characterData.instrument and
-                    characterData.isPlaying
-                then
+                if characterData.isPlaying then
                     ptable.PreventExecution = true
                     return false
                 end

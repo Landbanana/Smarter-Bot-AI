@@ -384,7 +384,7 @@ function util.FindItems(character, itemList, targetTag, targetConditionPercentag
     return items
 end
 
----@param ids string[]
+---@param ids Barotrauma.Identifier[]
 ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
 function util.GenerateIdPredicate(ids)
     ---@param character Barotrauma.Character
