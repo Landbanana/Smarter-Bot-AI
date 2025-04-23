@@ -32,13 +32,20 @@ do
     ---@return boolean
     function bedPredicate(prefab)
         if prefab.Category == MapEntityCategoryDecorative then
-            for element in prefab.ConfigElement.Elements() do
-                if  element.Name.ToString():lower() == "controller" and
-                    element.GetAttribute("canbeselected") then
-                    for subElement in element.Elements() do
-                        return subElement.Name.ToString():lower() == "requireditem" and
-                            subElement.GetAttribute("items").value == "deepdivinglarge" and
-                            subElement.GetAttribute("requireempty").Value == "true"
+            for controller in prefab.ConfigElement.Element.Elements("Controller") do
+                if  controller.GetAttributeBool("canbeselected", false) and
+                    controller.GetAttributeBool("drawuserbehind", false)
+                then
+                    for requiredItem in controller.Elements("RequiredItem") do
+                        local itemsArray = requiredItem.GetAttributeIdentifierArray("items")
+
+                        if  itemsArray and
+                            #itemsArray == 1 and
+                            itemsArray[1] == "deepdivinglarge" and
+                            requiredItem.GetAttributeBool("requireempty", false)
+                        then
+                            return true
+                        end
                     end
                 end
             end
