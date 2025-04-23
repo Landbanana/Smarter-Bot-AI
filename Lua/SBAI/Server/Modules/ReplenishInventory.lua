@@ -131,7 +131,7 @@ local function activate(self)
     local True = util.True
     local IsWaitObjective = util.IsWaitObjective
     local TryAddSubObjective = util.TryAddSubObjective
-    local Variator = util.Variator
+    local Variator = util.itertools.Variator
 
     for objectiveType, fullObjectiveType, specifierFunction in Variator({
         {"Idle", "Barotrauma.AIObjectiveIdle", True},

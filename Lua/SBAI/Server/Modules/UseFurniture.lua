@@ -16,12 +16,12 @@ local bedPredicate
 local chairPredicate
 
 do
-    local ValsContain = util.itertools.ValsContain
+    local Contains = util.itertools.Contains
 
     ---@param prefab Barotrauma.ItemPrefab
     ---@return boolean
     function chairPredicate(prefab)
-        return ValsContain(prefab.Tags, "chair")
+        return Contains(prefab.Tags, "chair")
     end
 end
 

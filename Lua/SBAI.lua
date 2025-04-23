@@ -22,10 +22,10 @@ local Namespace_mt = {
     __add=function(obj1, obj2)
         local t, s
         if type(obj1) == "table" and type(obj2) == "string" then
-            t = setmetatable({i=obj1.i, base=obj1.base, stack=util.CopyTable(obj1.stack)}, getmetatable(obj1))
+            t = setmetatable({i=obj1.i, base=obj1.base, stack=util.itertools.CopyTable(obj1.stack)}, getmetatable(obj1))
             s = obj2
         elseif type(obj1) == "string" and type(obj2) == "table" then
-            t = setmetatable({i=obj2.i, base=obj2.base, stack=util.CopyTable(obj2.stack)}, getmetatable(obj2))
+            t = setmetatable({i=obj2.i, base=obj2.base, stack=util.itertools.CopyTable(obj2.stack)}, getmetatable(obj2))
             s = obj1
         else
             error("can only add strings to a Namespace", 2)
@@ -38,7 +38,7 @@ local Namespace_mt = {
     ---@param t Namespace
     ---@return string
     __unm=function(t)
-        local tNew = setmetatable({i=t.i, base=t.base, stack=util.CopyTable(t.stack)}, getmetatable(t))
+        local tNew = setmetatable({i=t.i, base=t.base, stack=util.itertools.CopyTable(t.stack)}, getmetatable(t))
         
         if tNew.i > 0 then
             

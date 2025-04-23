@@ -2,18 +2,18 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 local Wearable = Components.Wearable
-local ValsContain = util.itertools.ValsContain
+local Contains = util.itertools.Contains
 
 local function staticPredicate(character, item)
     return item.GetComponent(Wearable) == nil or
         item.HasTag("lightdiving") or
         item.HasTag("deepdiving") or
-        ValsContain(character.HeldItems, item)
+        Contains(character.HeldItems, item)
 end
 
 local function checkSlots(item, slotTypes)
     for slot in slotTypes do --[[@cast slot Barotrauma.InvSlotType]]
-        if ValsContain(item.AllowedSlots, slot) then
+        if Contains(item.AllowedSlots, slot) then
             return true
         end
     end

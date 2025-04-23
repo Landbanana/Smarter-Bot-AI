@@ -117,7 +117,7 @@ local instrumentData = setmetatable({}, {
 })
 
 do
-    local ValsContain = util.itertools.ValsContain
+    local Contains = util.itertools.Contains
     local ItemPrefab = ItemPrefab
 
     ---@type {[string]:{afflictionId:Barotrauma.Identifier, validInstruments:Barotrauma.Identifier[]}}
@@ -147,9 +147,9 @@ do
                                     for itemPrefab in ItemPrefab.Prefabs do
                                         local prefabTags = itemPrefab.Tags
 
-                                        if not ValsContain(prefabTags, "traitormissionitem") then
+                                        if not Contains(prefabTags, "traitormissionitem") then
                                             for tag in tags do
-                                                if ValsContain(prefabTags, tag) then
+                                                if Contains(prefabTags, tag) then
                                                     i = i + 1
                                                     validInstruments[i] = itemPrefab.Identifier
                                                     break
@@ -217,7 +217,7 @@ do
     local FindItem = util.FindItem
     local GenerateIdPredicate = util.GenerateIdPredicate
     local HasSimpleAccess = util.HasSimpleAccess
-    local ValsContain = util.itertools.ValsContain
+    local Contains = util.itertools.Contains
 
     ---@param character Barotrauma.Character
     ---@param instrumentIds string[]
@@ -246,7 +246,7 @@ do
         end
 
         if  instrument and (
-                ValsContain(character.HeldItems, instrument) or
+                Contains(character.HeldItems, instrument) or
                 inventory.TryPutItem(instrument, character, instrumentData[instrument.Prefab.Identifier.Value].slotTypes, true, false)
             )
         then
@@ -442,8 +442,9 @@ local function activateAssistant(self, options)
         self.namespace = self.namespace + talentId
 
         local untouchedContainers = self:RegisterTable("ROUND_END") --[[@type {n:number, set:table<Barotrauma.Item,true>}]]
-        local allCharacterTimers = self:RegisterTable("ROUND_END", "CHARACTER_DEATH") --[[@type table<Barotrauma.Character,Types.Timer>]]
+        local allCharacterData = self:RegisterTable("ROUND_END", "CHARACTER_DEATH") --[[@type table<Barotrauma.Character,{goToObj:Barotrauma.AIObjectiveGoTo?, timer:Types.Timer}>]]
         local maxStackCheckDelay = suboptions["timeBetween"] --[[@type number]]
+        local hasTargets = true
 
         local containerNotTouched
         local anyJengaMasters
@@ -468,7 +469,7 @@ local function activateAssistant(self, options)
                         character.IsOnPlayerTeam and
                         character.HasTalent("JengaMaster")
                     then
-                        return untouchedContainers.n
+                        hasTargets = untouchedContainers.n > 0
                     end
                 end
             end
@@ -477,11 +478,13 @@ local function activateAssistant(self, options)
         do
             local Timer = Types.Timer
 
-            setmetatable(allCharacterTimers, {
-                ---@param t table<Barotrauma.Character,Types.Timer>
+            setmetatable(allCharacterData, {
+                ---@param t table<Barotrauma.Character,{goToObj:Barotrauma.AIObjectiveGoTo?, timer:Types.Timer}>
                 ---@param k any
                 __index=function(t, k)
-                    t[k] = Timer.new(maxStackCheckDelay)
+                    t[k] = {
+                        timer=Timer.new(maxStackCheckDelay)
+                    }
                     return t[k]
                 end
             })
@@ -492,6 +495,8 @@ local function activateAssistant(self, options)
             local ItemContainer = Components.ItemContainer
             local Wearable = Components.Wearable
             local Submarine = Submarine
+
+            local FindItems = util.FindItems
 
             setmetatable(untouchedContainers, {
                 ---@param t table
@@ -515,7 +520,7 @@ local function activateAssistant(self, options)
                         local set = {}
                         local i = 0
             
-                        for containerItem in util.FindItems(nil, Submarine.MainSub.GetItems(true), "Container", nil,
+                        for containerItem in FindItems(nil, Submarine.MainSub.GetItems(true), "Container", nil,
                         function (_, item)
                             if not item.GetComponent(Holdable) and
                                 not item.GetComponent(Wearable) and
@@ -541,6 +546,7 @@ local function activateAssistant(self, options)
             
                         t.n = i
                         t.set = set
+                        hasTargets = i > 0
                         return t[k]
                     end
                 end
@@ -555,17 +561,20 @@ local function activateAssistant(self, options)
             local FindItems = util.FindItems
             local GetClosest = util.GetClosest
             local TryAddSubObjective = util.TryAddSubObjective
-            
 
             self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
             function(instance, ptable)
                 local character = instance.character
 
-                if  not (untouchedContainers.n <= 0) and
+                if  hasTargets and
                     character.HasTalent("JengaMaster") and
                     character.IsOnPlayerTeam
                 then
-                    if allCharacterTimers[character]:Update(ptable["deltaTime"]) then
+                    local characterData = allCharacterData[character]
+                    
+                    if  not characterData.goToObj and
+                        characterData.timer:Update(ptable["deltaTime"])
+                    then
                         local closestContainer = GetClosest(character.WorldPosition, FindItems(character, untouchedContainers())) --[[@type Barotrauma.Item]]
 
                         if closestContainer then

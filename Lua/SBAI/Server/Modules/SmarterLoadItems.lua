@@ -65,14 +65,14 @@ local generateLoadItemActPredicate
 do
     local ParentItemsHaveDontTakeItemsTag = util.ParentItemsHaveDontTakeItemsTag
     local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
-    local ValsContain = util.itertools.ValsContain
+    local Contains = util.itertools.Contains
 
     ---@param instance Barotrauma.AIObjectiveLoadItem
     ---@param refillerTag string
     ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
     function generateIsValidContainablePredicate(instance, refillerTag)
         return function(character, item)
-            if  ValsContain(instance.ignoredItems, item) or
+            if  Contains(instance.ignoredItems, item) or
                 ParentItemsHaveDontTakeItemsTag(item)
             then
                 return false
@@ -108,7 +108,7 @@ do
         ---@param item Barotrauma.Item
         ---@return boolean
         return function(character, item)
-            if  ValsContain(instance.ignoredItems, item) or
+            if  Contains(instance.ignoredItems, item) or
                 item.ConditionPercentage >= minCon or
                 ParentItemsHaveDontTakeItemsTag(item) or
                 item.ConditionIncreasedRecently
@@ -140,14 +140,14 @@ local function activate(self)
     local IsSpecifiedContainer = util.IsSpecifiedContainer
     local MatchItem = util.MatchItem
     local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
-    local ValsContain = util.itertools.ValsContain
+    local Contains = util.itertools.Contains
 
     self:AddPatch("Barotrauma.AIObjectiveLoadItem", "IsValidContainable", nil,
     function(instance, ptable)
         for loadData in allLoadData do
             local refillerTag = loadData[3]
 
-            if ValsContain(instance.TargetContainerTags, refillerTag) then
+            if Contains(instance.TargetContainerTags, refillerTag) then
 
                 ptable.PreventExecution = true
 
@@ -161,7 +161,7 @@ local function activate(self)
         for loadData in allLoadData do
             local itemTag, _, refillerTag, minCon = unpack(loadData)
 
-            if ValsContain(instance.TargetContainerTags, refillerTag) then
+            if Contains(instance.TargetContainerTags, refillerTag) then
                 local character = instance.character --[[@type Barotrauma.Character]]
                 local item = instance.targetItem --[[@type Barotrauma.Item]]
                 
@@ -200,7 +200,7 @@ local function activate(self)
                 for loadData in allLoadData do
                     local itemTag, containableTag, refillerTag, _ = unpack(loadData)
 
-                    if ValsContain(curObj.TargetContainerTags, refillerTag) then --[[@cast destContainer -nil]]
+                    if Contains(curObj.TargetContainerTags, refillerTag) then --[[@cast destContainer -nil]]
                         local item = ptable["targetItem"] --[[@type Barotrauma.Item]]
                         local container = item.Container
                         
@@ -240,7 +240,7 @@ local function activate(self)
                     for loadData in allLoadData do
                         local _, containableTag, refillerTag, _ = unpack(loadData)
 
-                        if ValsContain(curObj.TargetContainerTags, refillerTag) then
+                        if Contains(curObj.TargetContainerTags, refillerTag) then
                             local index = GetSpecificSlot(ptable["container"], containableTag)
 
                             if index then

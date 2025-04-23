@@ -1,10 +1,10 @@
 local Constants = require("SBAI.Shared.constants")
 
 local util = {}
+util.functools = {}
+util.itertools = {}
 
 local LuaUserData = LuaUserData
-local pack = table.pack
-local unpack = table.unpack
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
 
@@ -19,7 +19,17 @@ util.CLEAR_REG = {
     ITEM_REMOVED=8
 }
 
+---@param t table
+function util.itertools.ClearTable(t)
+    for k, _ in next, t do
+        t[k] = nil
+    end
+end
+
 do
+    local Acronym = Constants.Acronym
+    local CLEAR_REG = util.CLEAR_REG
+
     local btest = bit32.btest
     local insert = table.insert
     local remove = table.remove
@@ -38,7 +48,7 @@ do
             CHARACTER_DEATH=characterDeath,
             ITEM_REMOVED=itemRemoved
         }) do
-            if btest(util.CLEAR_REG[flag], flags) then
+            if btest(CLEAR_REG[flag], flags) then
                 insert(subRegistry, t)
             end
         end
@@ -54,7 +64,7 @@ do
             CHARACTER_DEATH=characterDeath,
             ITEM_REMOVED=itemRemoved
         }) do
-            if btest(util.CLEAR_REG[flag], flags) then
+            if btest(CLEAR_REG[flag], flags) then
                 for i, v in ipairs(subRegistry) do
                     if v == t then
                         remove(subRegistry, i)
@@ -65,14 +75,18 @@ do
         end
     end
 
-    Hook.Add("roundEnd", Constants.Acronym..".RoundEndClear",
-    function()
-        for t in roundEnd do --[[@cast t table]]
-            util.ClearTable(t)
-        end
-    end)
+    do
+        local ClearTable = util.itertools.ClearTable
 
-    Hook.Add("character.death", Constants.Acronym..".CharacterDeathClear",
+        Hook.Add("roundEnd", Acronym..".RoundEndClear",
+        function()
+            for t in roundEnd do --[[@cast t table]]
+                ClearTable(t)
+            end
+        end)
+    end
+
+    Hook.Add("character.death", Acronym..".CharacterDeathClear",
     ---@param character Barotrauma.Character
     function(character)
         for t in characterDeath do --[[@cast t table]]
@@ -80,7 +94,7 @@ do
         end
     end)
 
-    Hook.Add("item.removed", Constants.Acronym..".ItemRemovedClear",
+    Hook.Add("item.removed", Acronym..".ItemRemovedClear",
     ---@param item Barotrauma.Item
     function(item)
         for t in itemRemoved do --[[@cast t table]]
@@ -89,23 +103,30 @@ do
     end)
 end
 
----@type table<string,Barotrauma.Item[]>
-util.ItemGroup = setmetatable({}, {
-    __index = function(t, k)
-        local name = Constants.Acronym..".ItemGroup."..k
-        local isRegistered, table = pcall(Util.GetItemGroup, name)
+do
+    local Acronym = Constants.Acronym
 
-        if isRegistered then
-            t[k] = table
-        else
-            Util.RegisterItemGroup(name, function(item)
-                return item.HasTag(k)
-            end)
-            t[k] = Util.GetItemGroup(name)
+    local GetItemGroup = Util.GetItemGroup
+    local RegisterItemGroup = Util.RegisterItemGroup
+
+    ---@type table<string,Barotrauma.Item[]>
+    util.ItemGroup = setmetatable({}, {
+        __index = function(t, k)
+            local name = Acronym..".ItemGroup."..k
+            local isRegistered, table = pcall(GetItemGroup, name)
+
+            if isRegistered then
+                t[k] = table
+            else
+                RegisterItemGroup(name, function(item)
+                    return item.HasTag(k)
+                end)
+                t[k] = GetItemGroup(name)
+            end
+            return t[k]
         end
-        return t[k]
-    end
-})
+    })
+end
 
 util.RegisterTable(util.ItemGroup, util.CLEAR_REG.ROUND_END)
 
@@ -143,32 +164,53 @@ function util.IsWaitObjective(instance)
     return instance.IsWaitOrder
 end
 
-util.itertools = {}
+---@generic T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a0:T0,a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param arg T0
+---@return fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial(func, arg)
+    return function(...)
+        return func(arg, ...)
+    end
+end
 
----@generic T
----@param list T[]
----@param value T
+---@generic V
+---@param predicate fun(v:V):boolean
+---@param t? V[]
+---@param ... V
 ---@return boolean
-function util.itertools.ValsContain(list, value)
-    for v in list do
-        if v == value then
-            return true
-        end
+function util.itertools.Any(predicate, t, ...)
+    for obj in (t ~= nil and t or {...}) do
+        if predicate(obj) then return true end
     end
     return false
 end
 
----@generic T
----@param dict table<T,any>
----@param key T
+---@generic V
+---@param predicate fun(v:V):boolean
+---@param t? V[]
+---@param ... V
 ---@return boolean
-function util.itertools.KeysContain(dict, key)
-    for k, _ in pairs(dict) do
-        if k == key then
-            return true
-        end
+function util.itertools.All(predicate, t, ...)
+    for obj in (t or {...}) do
+        if not predicate(obj) then return false end
     end
-    return false
+    return true
+end
+
+do
+    ---@generic V
+    ---@param t V[]
+    ---@param v V
+    ---@return boolean
+    function util.itertools.Contains(t, v)
+        for val in t do
+            if val == v then
+                return true
+            end
+        end
+        return false
+    end
 end
 
 ---@param ... any[]
@@ -203,26 +245,37 @@ function util.itertools.RemoveKeys(t, ...)
     end
 end
 
-do
-    local RemoveKeys = util.itertools.RemoveKeys
-    local unpack = table.unpack
-
-    ---@generic T
-    ---@param t table<T,any>
-    ---@param predicate fun(obj:T):boolean
-    function util.itertools.RemoveSpecifiedKeys(t, predicate)
-        for k in next, t do
-            if predicate(k) then
-                t[k] = nil
-            end
+---@generic K,V
+---@param t table<K,V>
+---@param predicate fun(k:K, v:V):boolean
+function util.itertools.RemoveSpecifiedItems(t, predicate)
+    for k, v in next, t do
+        if predicate(k, v) then
+            t[k] = nil
         end
     end
 end
 
----@generic T: table
+do
+    local Contains = util.itertools.Contains
+    local RemoveSpecifiedItems = util.itertools.RemoveSpecifiedItems
+
+    ---@generic T
+    ---@param t table<T,any>
+    ---@param ... T
+    function util.itertools.RemoveVals(t, ...)
+        local compVals =  {...}
+
+        return RemoveSpecifiedItems(t, function(_, v)
+            return Contains(compVals, v)
+        end)
+    end
+end
+
+---@generic T:table
 ---@param t T
 ---@return T
-function util.CopyTable(t)
+function util.itertools.CopyTable(t)
     local tNew = {}
 
     for k, v in next, t do
@@ -231,30 +284,27 @@ function util.CopyTable(t)
     return tNew
 end
 
----@param t table
-function util.ClearTable(t)
-    for k, _ in pairs(t) do
-        t[k] = nil
-    end
-end
+do
+    local unpack = table.unpack
 
----@param t table<integer,any>[]
----@return fun()
----@nodiscard
-function util.Variator(t)
-    local i = 0
-    local n = #t
+    ---@param t table<integer,any>[]
+    ---@return fun()
+    ---@nodiscard
+    function util.itertools.Variator(t)
+        local i = 0
+        local n = #t
 
-    if i >= n then return function() end end
+        if i >= n then return function() end end
 
-    local ni = #t[1]
+        local ni = #t[1]
 
-    return function()
-        i = i + 1
+        return function()
+            i = i + 1
 
-        if i <= n then
-        if #t[i] ~= ni then error("table sizes must be the same", 2) end
-            return unpack(t[i])
+            if i <= n then
+            if #t[i] ~= ni then error("table sizes must be the same", 2) end
+                return unpack(t[i])
+            end
         end
     end
 end
@@ -287,19 +337,25 @@ function util.GetSpecificSlot(itemContainer, itemTag)
     end
 end
 
----@param container Barotrauma.Item
----@param itemTag Barotrauma.Item
----@return boolean
----@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):boolean
-function util.IsSpecifiedContainer(container, itemTag)
-    local itemContainer = container.GetComponent(Components.ItemContainer)
+do
+    local ItemContainer = Components.ItemContainer
 
-    if type(itemTag) == "string" then
-        return util.GetSpecificSlot(itemContainer, itemTag) ~= nil
+    local GetSpecificSlot = util.GetSpecificSlot
+
+    ---@param container Barotrauma.Item
+    ---@param itemTag Barotrauma.Item
+    ---@return boolean
+    ---@overload fun(container:Barotrauma.Item, itemTag:Barotrauma.Identifier):boolean
+    function util.IsSpecifiedContainer(container, itemTag)
+        local itemContainer = container.GetComponent(ItemContainer)
+
+        if type(itemTag) == "string" then
+            return GetSpecificSlot(itemContainer, itemTag) ~= nil
+        end
+        local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
+
+        return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
     end
-    local isContainerPreferreditemTag, isPreferencesDefined, isSecondary = itemTag.IsContainerPreferred(itemContainer, false, false)
-
-    return isContainerPreferreditemTag and isPreferencesDefined and not isSecondary
 end
 
 ---@param character Barotrauma.Character
@@ -337,87 +393,109 @@ function util.HasSimpleAccess(character, item)
     return true
 end
 
----@param item Barotrauma.Item
----@param targetConditionPercentageRange? number|number[]
----@return boolean
----@nodiscard
-local function ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange)
-    if targetConditionPercentageRange == nil then
-        return true
-    elseif type(targetConditionPercentageRange) == "table" then
-        return targetConditionPercentageRange[1] <= item.ConditionPercentage and item.ConditionPercentage <= targetConditionPercentageRange[2]
-    else
-        return item.ConditionPercentage == targetConditionPercentageRange
-    end
-end
 
----@param item Barotrauma.Item
----@return boolean
-function util.PoweredItemHasNeededPower(item)
-    local poweredComponent = item.GetComponent(Components.Powered) --[[@type Barotrauma.Items.Components.Powered]]
+do
+    local Powered = Components.Powered
 
-    return not poweredComponent or
-        poweredComponent.PowerConsumption <= 0 or
-        poweredComponent.HasPower == true
-end
-
----@param character? Barotrauma.Character
----@param item Barotrauma.Item
----@param targetTag? Barotrauma.Identifier
----@param targetConditionPercentageRange? number|number[]
----@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
----@return boolean
----@nodiscard
-function util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate)
-    return  item ~= nil and
-            (not targetTag or item.HasTag(targetTag)) and
-            (not targetConditionPercentageRange or ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange)) and
-            (not character or util.HasSimpleAccess(character, item)) and
-            (not predicate or predicate(character, item))
-end
-
----@param character? Barotrauma.Character
----@param itemList Barotrauma.Item[]
----@param targetTag? Barotrauma.Identifier
----@param targetConditionPercentageRange? number|number[]
----@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
----@return Barotrauma.Item?
-function util.FindItem(character, itemList, targetTag, targetConditionPercentageRange, predicate)
-    -- if not itemList then error("itemList must be provided", 2) end
-    for item in itemList do --[[@cast item Barotrauma.Item]]
-        if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
-            return item
-        end
-    end
-end
-
----@param character Barotrauma.Character
----@param itemList Barotrauma.Item[]
----@param targetTag? Barotrauma.Identifier
----@param targetConditionPercentageRange? number|number[]
----@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
----@return Barotrauma.Item[] items
-function util.FindItems(character, itemList, targetTag, targetConditionPercentageRange, predicate)
-    local i = 0 --[[@type integer]]
-    local items = {} --[=[@type Barotrauma.Item[]]=]
-
-    for item in itemList do --[[@cast item Barotrauma.Item]]
-        if util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
-            i = i + 1
-            items[i] = item
-        end
-    end
-
-    return items
-end
-
----@param ids Barotrauma.Identifier[]
----@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
-function util.GenerateIdPredicate(ids)
-    ---@param character Barotrauma.Character
     ---@param item Barotrauma.Item
-    return function(character, item)
-        return util.itertools.ValsContain(ids, item.Prefab.Identifier)
+    ---@return boolean
+    function util.PoweredItemHasNeededPower(item)
+        local poweredComponent = item.GetComponent(Powered) --[[@type Barotrauma.Items.Components.Powered]]
+
+        return not poweredComponent or
+            poweredComponent.PowerConsumption <= 0 or
+            poweredComponent.HasPower == true
+    end
+end
+
+do
+    local HasSimpleAccess = util.HasSimpleAccess
+
+    ---@param item Barotrauma.Item
+    ---@param targetConditionPercentageRange? number|number[]
+    ---@return boolean
+    ---@nodiscard
+    local function ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange)
+        if targetConditionPercentageRange == nil then
+            return true
+        elseif type(targetConditionPercentageRange) == "table" then
+            return targetConditionPercentageRange[1] <= item.ConditionPercentage and item.ConditionPercentage <= targetConditionPercentageRange[2]
+        else
+            return item.ConditionPercentage == targetConditionPercentageRange
+        end
+    end
+
+    ---@param character? Barotrauma.Character
+    ---@param item Barotrauma.Item
+    ---@param targetTag? Barotrauma.Identifier
+    ---@param targetConditionPercentageRange? number|number[]
+    ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
+    ---@return boolean
+    ---@nodiscard
+    function util.MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate)
+        return  item ~= nil and
+                (not targetTag or item.HasTag(targetTag)) and
+                (not targetConditionPercentageRange or ItemMatchesConditionPercentageRange(item, targetConditionPercentageRange)) and
+                (not character or HasSimpleAccess(character, item)) and
+                (not predicate or predicate(character, item))
+    end
+end
+
+do
+    local MatchItem = util.MatchItem
+
+    ---@param character? Barotrauma.Character
+    ---@param itemList Barotrauma.Item[]
+    ---@param targetTag? Barotrauma.Identifier
+    ---@param targetConditionPercentageRange? number|number[]
+    ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
+    ---@return Barotrauma.Item?
+    function util.FindItem(character, itemList, targetTag, targetConditionPercentageRange, predicate)
+        -- if not itemList then error("itemList must be provided", 2) end
+        for item in itemList do --[[@cast item Barotrauma.Item]]
+            if MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
+                return item
+            end
+        end
+    end
+end
+    
+
+do
+    local MatchItem = util.MatchItem
+
+    ---@param character Barotrauma.Character
+    ---@param itemList Barotrauma.Item[]
+    ---@param targetTag? Barotrauma.Identifier
+    ---@param targetConditionPercentageRange? number|number[]
+    ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
+    ---@return Barotrauma.Item[] items
+    function util.FindItems(character, itemList, targetTag, targetConditionPercentageRange, predicate)
+        local i = 0 --[[@type integer]]
+        local items = {} --[=[@type Barotrauma.Item[]]=]
+
+        for item in itemList do --[[@cast item Barotrauma.Item]]
+            if MatchItem(character, item, targetTag, targetConditionPercentageRange, predicate) then
+                i = i + 1
+                items[i] = item
+            end
+        end
+
+        return items
+    end
+end
+
+do
+    local Contains = util.itertools.Contains
+    
+    ---@param ids Barotrauma.Identifier[]
+    ---@return fun(character:Barotrauma.Character, item:Barotrauma.Item):boolean
+    function util.GenerateIdPredicate(ids)
+        ---@param character Barotrauma.Character
+        ---@param item Barotrauma.Item
+        return function(character, item)
+            return Contains(ids, item.Prefab.Identifier)
+        end
     end
 end
 
@@ -433,37 +511,43 @@ function util.ParentItemsHaveDontTakeItemsTag(item)
     return false
 end
 
----@param character? Barotrauma.Character
----@param containerList Barotrauma.Item[]
----@param targetContainableItemTag Barotrauma.Identifier
----@param targetContainerTag? Barotrauma.Identifier
----@param targetConditionPercentageRange? number|number[]
----@param hasEmptySlots? boolean
----@param isSpecifiedAlready? boolean
----@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
----@return Barotrauma.Item[]
-function util.FindSpecificContainers(character, containerList, targetContainableItemTag, targetContainerTag, targetConditionPercentageRange, hasEmptySlots, isSpecifiedAlready, predicate)
-    local i = 0 --[[@type integer]]
-    local containers = {} --[=[@type Barotrauma.Item[]]=]
+do
+    local FindItem = util.FindItem
+    local IsSpecifiedContainer = util.IsSpecifiedContainer
+    local MatchItem = util.MatchItem
 
-    local function containerPredicate(_, container)
-        return  util.IsSpecifiedContainer(container, targetContainableItemTag) and
-                (not predicate or predicate(character, container))
-    end
-    -- if not containerList then error("containerList must be provided", 2) end
-    for container in containerList do --[[@cast container Barotrauma.Item]]
-        if util.MatchItem(character, container, targetContainerTag, nil, not isSpecifiedAlready and containerPredicate or predicate) then
-            local inventory = container.OwnInventory
+    ---@param character? Barotrauma.Character
+    ---@param containerList Barotrauma.Item[]
+    ---@param targetContainableItemTag Barotrauma.Identifier
+    ---@param targetContainerTag? Barotrauma.Identifier
+    ---@param targetConditionPercentageRange? number|number[]
+    ---@param hasEmptySlots? boolean
+    ---@param isSpecifiedAlready? boolean
+    ---@param predicate? fun(character?:Barotrauma.Character, item?:Barotrauma.Item):boolean
+    ---@return Barotrauma.Item[]
+    function util.FindSpecificContainers(character, containerList, targetContainableItemTag, targetContainerTag, targetConditionPercentageRange, hasEmptySlots, isSpecifiedAlready, predicate)
+        local i = 0 --[[@type integer]]
+        local containers = {} --[=[@type Barotrauma.Item[]]=]
 
-            if  (not hasEmptySlots or inventory.EmptySlotCount > 0) and
-                (not targetContainableItemTag or util.FindItem(nil, inventory.FindAllItems(nil, true), targetContainableItemTag, targetConditionPercentageRange))
-                    then
-                i = i + 1
-                containers[i] = container
+        local function containerPredicate(_, container)
+            return  IsSpecifiedContainer(container, targetContainableItemTag) and
+                    (not predicate or predicate(character, container))
+        end
+        -- if not containerList then error("containerList must be provided", 2) end
+        for container in containerList do --[[@cast container Barotrauma.Item]]
+            if MatchItem(character, container, targetContainerTag, nil, not isSpecifiedAlready and containerPredicate or predicate) then
+                local inventory = container.OwnInventory
+
+                if  (not hasEmptySlots or inventory.EmptySlotCount > 0) and
+                    (not targetContainableItemTag or FindItem(nil, inventory.FindAllItems(nil, true), targetContainableItemTag, targetConditionPercentageRange))
+                        then
+                    i = i + 1
+                    containers[i] = container
+                end
             end
         end
+        return containers
     end
-    return containers
 end
 
 do
@@ -480,86 +564,99 @@ do
     end
 end
 
----@param startPosition Microsoft.Xna.Framework.Vector2
----@param ... Barotrauma.ISpatialEntity[]
----@return Barotrauma.ISpatialEntity
-function util.GetClosest(startPosition, ...)
-    local closest = nil
-    local bestDistanceFactor = 0.0
+do
+    local GetDistanceFactor = util.GetDistanceFactor
 
-    ---@param item Barotrauma.ISpatialEntity
-    local function testClosest(item)
-        local distanceFactor = util.GetDistanceFactor(startPosition, item.WorldPosition, 0.2)
+    ---@param startPosition Microsoft.Xna.Framework.Vector2
+    ---@param ... Barotrauma.ISpatialEntity[]
+    ---@return Barotrauma.ISpatialEntity
+    function util.GetClosest(startPosition, ...)
+        local closest = nil
+        local bestDistanceFactor = 0.0
 
-        if distanceFactor > bestDistanceFactor then
-            closest = item
-            bestDistanceFactor = distanceFactor
-        end
-    end
+        ---@param item Barotrauma.ISpatialEntity
+        local function testClosest(item)
+            local distanceFactor = GetDistanceFactor(startPosition, item.WorldPosition, 0.2)
 
-    for items in {...} do
-        if type(items) == "table" then --[=[@cast items Barotrauma.ISpatialEntity[]]=]
-            for item in items do --[[@cast item Barotrauma.ISpatialEntity]]
-                testClosest(item)
+            if distanceFactor > bestDistanceFactor then
+                closest = item
+                bestDistanceFactor = distanceFactor
             end
-        else --[[@cast items Barotrauma.ISpatialEntity]]
-            testClosest(items)
         end
+
+        for items in {...} do
+            if type(items) == "table" then --[=[@cast items Barotrauma.ISpatialEntity[]]=]
+                for item in items do --[[@cast item Barotrauma.ISpatialEntity]]
+                    testClosest(item)
+                end
+            else --[[@cast items Barotrauma.ISpatialEntity]]
+                testClosest(items)
+            end
+        end
+        return closest
     end
-    return closest
 end
 
----@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
----@generic T:Barotrauma.AIObjective
----@param instance Barotrauma.AIObjective
----@param objective nil
----@param constructor fun():T
----@param onCompletedGenerator fun(Barotrauma.AIObjective: any)
----@param onAbandonGenerator fun(Barotrauma.AIObjective: any)
----@return boolean
----@return T?
-function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
-    if objective ~= nil then
-        if not util.itertools.ValsContain(instance.subObjectives, objective) then objective = nil end
-        return false
-    else
-        objective = constructor()
+do
+    local Contains = util.itertools.Contains
 
-        if util.itertools.ValsContain(instance.subObjectives, objective) then return false end
-        if instance.AllowMultipleInstances then
-            objective.SourceObjective = instance
-            instance.subObjectives.Add(objective)
+    ---@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
+    ---@generic T:Barotrauma.AIObjective
+    ---@param instance Barotrauma.AIObjective
+    ---@param objective nil
+    ---@param constructor fun():T
+    ---@param onCompletedGenerator fun(Barotrauma.AIObjective: any)
+    ---@param onAbandonGenerator fun(Barotrauma.AIObjective: any)
+    ---@return boolean
+    ---@return T?
+    function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
+        if objective ~= nil then
+            if not Contains(instance.subObjectives, objective) then objective = nil end
+            return false
         else
-            instance.AddSubObjective(objective)
+            objective = constructor()
+
+            if util.itertools.Contains(instance.subObjectives, objective) then return false end
+            if instance.AllowMultipleInstances then
+                objective.SourceObjective = instance
+                instance.subObjectives.Add(objective)
+            else
+                instance.AddSubObjective(objective)
+            end
+            if onCompletedGenerator ~= nil then
+                objective.Completed.add(onCompletedGenerator(objective))
+            end
+            if onAbandonGenerator ~= nil then
+                objective.Abandoned.add(onAbandonGenerator(objective))
+            end
+            return true
         end
-        if onCompletedGenerator ~= nil then
-            objective.Completed.add(onCompletedGenerator(objective))
-        end
-        if onAbandonGenerator ~= nil then
-            objective.Abandoned.add(onAbandonGenerator(objective))
-        end
-        return true
     end
 end
 
----@generic T:any
----@param n number
----@param func fun(...:T):any
----@param ... T
----@return number
-function util.Benchmark(n, func, ...)
-    local clock, difftime = os.clock, os.difftime
-    local timeTotal = 0
+util.debug = {}
+do
+    local clock = os.clock
+    local difftime = os.difftime
 
-    n = (n >= 1) and n or 100
-    for _=1,n,1 do
-        local t1 = clock()
-        func(...)
-        local t2 = clock()
+    ---@generic T:any
+    ---@param n number
+    ---@param func fun(...:T):any
+    ---@param ... T
+    ---@return number
+    function util.debug.Benchmark(n, func, ...)
+        local timeTotal = 0
 
-        timeTotal = timeTotal + difftime(t2, t1)
+        n = (n >= 1) and n or 100
+        for _=1,n,1 do
+            local t1 = clock()
+            func(...)
+            local t2 = clock()
+
+            timeTotal = timeTotal + difftime(t2, t1)
+        end
+        return timeTotal/n
     end
-    return timeTotal/n
 end
 
 ---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
@@ -596,29 +693,35 @@ function util.UnregisterAll(...)
     end
 end
 
----@generic T:any...
----@generic R:any...
----@param typeNames string[]
----@param func fun(args:T):R
----@param ... T
----@return R
-function util.DoWithTemporaryRegistrations(typeNames, func, ...)
-    util.RegisterAll(unpack(typeNames))
-
-    local out = pack(pcall(func, ...))
-
-    out.n = nil
-
-    util.UnregisterAll(unpack(typeNames))
-
-    local success = out[1]
-    local results = select(2, unpack(out))
-
-    if not success then
-        error(results, 2)
-    end
+do
+    local pack = table.pack
+    local unpack = table.unpack
+    local RegisterAll = util.RegisterAll
+    local UnregisterAll = util.UnregisterAll
     
-    return results
+
+    ---@generic T:any...
+    ---@generic R:any...
+    ---@param typeNames string[]
+    ---@param func fun(args:T):R
+    ---@param ... T
+    ---@return R
+    function util.DoWithTemporaryRegistrations(typeNames, func, ...)
+        RegisterAll(unpack(typeNames))
+
+        local out = {pcall(func, ...)}
+
+        UnregisterAll(unpack(typeNames))
+
+        local success = out[1]
+        local results = select(2, unpack(out))
+
+        if not success then
+            error(results, 2)
+        end
+        
+        return results
+    end
 end
 
 do
@@ -632,6 +735,8 @@ do
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet")
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1")
     LuaUserData.UnregisterType("System.Collections.Immutable.ImmutableHashSet`1+Builder")
+
+    local pack = table.pack
 
     ---@param prefab Barotrauma.ItemPrefab
     ---@param ... Barotrauma.Identifier-arr

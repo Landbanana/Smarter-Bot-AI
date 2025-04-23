@@ -9,7 +9,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 local petItemIds = {"poop", "mucusball", "chitin"}
 
 local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-local ValsContain = util.itertools.ValsContain
+local Contains = util.itertools.Contains
 local sort = table.sort
 
 ---@param self Types.Module
@@ -32,7 +32,7 @@ local function activate(self)
         local cleanableItems = Item._cleanableItems --[[@type System.Collections.Generic.List*1Barotrauma*Item]]
 
         for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-            if  ValsContain(petItemIds, item.Prefab.Identifier.Value) and
+            if  Contains(petItemIds, item.Prefab.Identifier.Value) and
                 not cleanableItems.Contains(item)
             then
                 Item._cleanableItems.Add(item)
@@ -62,7 +62,7 @@ local function deactivate(self)
             local removeIndices = {} --[=[@type number[]]=]
 
             for i, item in ipairs(cleanableList) do
-                if ValsContain(petItemIds, item.Prefab.Identifier.Value) then
+                if Contains(petItemIds, item.Prefab.Identifier.Value) then
                     numIndices = numIndices + 1
                     removeIndices[numIndices] = i - 1
                 end
