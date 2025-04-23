@@ -65,7 +65,7 @@ local generateLoadItemActPredicate
 do
     local ParentItemsHaveDontTakeItemsTag = util.ParentItemsHaveDontTakeItemsTag
     local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
-    local ValsContain = util.ValsContain
+    local ValsContain = util.itertools.ValsContain
 
     ---@param instance Barotrauma.AIObjectiveLoadItem
     ---@param refillerTag string
@@ -140,7 +140,7 @@ local function activate(self)
     local IsSpecifiedContainer = util.IsSpecifiedContainer
     local MatchItem = util.MatchItem
     local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
-    local ValsContain = util.ValsContain
+    local ValsContain = util.itertools.ValsContain
 
     self:AddPatch("Barotrauma.AIObjectiveLoadItem", "IsValidContainable", nil,
     function(instance, ptable)

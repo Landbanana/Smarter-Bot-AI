@@ -143,11 +143,13 @@ function util.IsWaitObjective(instance)
     return instance.IsWaitOrder
 end
 
+util.itertools = {}
+
 ---@generic T
 ---@param list T[]
 ---@param value T
 ---@return boolean
-function util.ValsContain(list, value)
+function util.itertools.ValsContain(list, value)
     for v in list do
         if v == value then
             return true
@@ -160,7 +162,7 @@ end
 ---@param dict table<T,any>
 ---@param key T
 ---@return boolean
-function util.KeysContain(dict, key)
+function util.itertools.KeysContain(dict, key)
     for k, _ in pairs(dict) do
         if k == key then
             return true
@@ -357,7 +359,7 @@ function util.GenerateIdPredicate(ids)
     ---@param character Barotrauma.Character
     ---@param item Barotrauma.Item
     return function(character, item)
-        return util.ValsContain(ids, item.Prefab.Identifier.Value)
+        return util.itertools.ValsContain(ids, item.Prefab.Identifier)
     end
 end
 
@@ -460,12 +462,12 @@ end
 ---@return T?
 function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
     if objective ~= nil then
-        if not util.ValsContain(instance.subObjectives, objective) then objective = nil end
+        if not util.itertools.ValsContain(instance.subObjectives, objective) then objective = nil end
         return false
     else
         objective = constructor()
 
-        if util.ValsContain(instance.subObjectives, objective) then return false end
+        if util.itertools.ValsContain(instance.subObjectives, objective) then return false end
         if instance.AllowMultipleInstances then
             objective.SourceObjective = instance
             instance.subObjectives.Add(objective)

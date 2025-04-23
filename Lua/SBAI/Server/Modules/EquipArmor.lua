@@ -2,7 +2,7 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 local Wearable = Components.Wearable
-local ValsContain = util.ValsContain
+local ValsContain = util.itertools.ValsContain
 
 local function staticPredicate(character, item)
     return item.GetComponent(Wearable) == nil or

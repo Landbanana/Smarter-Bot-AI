@@ -9,7 +9,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 local petItemIds = {"poop", "mucusball", "chitin"}
 
 local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-local ValsContain = util.ValsContain
+local ValsContain = util.itertools.ValsContain
 local sort = table.sort
 
 ---@param self Types.Module
