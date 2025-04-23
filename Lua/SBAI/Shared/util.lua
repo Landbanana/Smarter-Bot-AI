@@ -171,6 +171,27 @@ function util.itertools.KeysContain(dict, key)
     return false
 end
 
+function util.itertools.Chain(...)
+    local tableList = {...}
+    local tableIdx = 0
+    local tableListMax = #tableList
+    local tableCur
+    local n = 0
+    local i = 0
+
+    return function()
+        i = i + 1
+        while i > n do
+            tableIdx = tableIdx + 1
+            if tableIdx > tableListMax then return end
+            tableCur = tableList[tableIdx]
+            n = #tableCur
+            i = 1
+        end
+        return tableCur[i]
+    end
+end
+
 ---@generic T: table
 ---@param t T
 ---@return T
@@ -208,6 +229,16 @@ function util.Variator(t)
         if #t[i] ~= ni then error("table sizes must be the same", 2) end
             return unpack(t[i])
         end
+    end
+end
+
+do
+    local HULL_SAFETY_THRESHOLD = LuaUserData.CreateStatic("Barotrauma.HumanAIController").HULL_SAFETY_THRESHOLD
+
+    ---@param character Barotrauma.Character
+    function util.HumanInSafeHull(character)
+        return character.IsHuman and
+            character.AIController.CurrentHullSafety >= HULL_SAFETY_THRESHOLD
     end
 end
 
