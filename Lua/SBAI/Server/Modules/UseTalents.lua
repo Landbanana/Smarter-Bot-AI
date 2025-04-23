@@ -8,6 +8,7 @@ do
     LuaUserData.MakeFieldAccessible(descriptor, "slots")
 
     descriptor = Descriptors["Barotrauma.AIObjectiveCombat"]
+    LuaUserData.MakeMethodAccessible(descriptor, "IsEnemyClose")
     LuaUserData.MakeFieldAccessible(descriptor, "CloseDistance")
 
     ---@class Barotrauma.AIObjectiveCombat
@@ -608,6 +609,7 @@ local function activateAssistant(self, options)
                                         objective.SteeringManager.Reset()
                                         objective.PathSteering.ResetPath()
                                     end
+                                    characterData.goToObj = nil
                                     instance.RemoveSubObjective(AIObjectiveGoTo, objective)
                                 end
                                 return onCompleted
@@ -618,6 +620,7 @@ local function activateAssistant(self, options)
                             local function onAbandonGenerator(objective)
                                 ---@type fun()
                                 local function onAbandon()
+                                    characterData.goToObj = nil
                                     instance.RemoveSubObjective(AIObjectiveGoTo, objective)
                                 end
                                 return onAbandon
@@ -632,7 +635,7 @@ local function activateAssistant(self, options)
                                 end
                             end
                             
-                            TryAddSubObjective(instance, goToObj, constructor, onCompletedGenerator, onAbandonGenerator)
+                            _, characterData.goToObj = TryAddSubObjective(instance, goToObj, constructor, onCompletedGenerator, onAbandonGenerator)
                         end
                     end
                 end
