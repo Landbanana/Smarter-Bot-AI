@@ -441,21 +441,14 @@ local function activateAssistant(self, options)
     if suboptions.enable then
         self.namespace = self.namespace + talentId
 
-        local Timer = Types.Timer
-
         local untouchedContainers = self:RegisterTable("ROUND_END") --[[@type {n:number, set:table<Barotrauma.Item,true>}]]
-        local maxStackCheckDelay = suboptions["timeBetween"]
-        ---@type table<Barotrauma.Character,Types.Timer>
-        local allCharacterTimers = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
-            ---@param t table<Barotrauma.Character,Types.Timer>
-            ---@param k any
-            __index=function(t, k)
-                t[k] = Timer.new(maxStackCheckDelay)
-                return t[k]
-            end
-        })
+        local allCharacterTimers = self:RegisterTable("ROUND_END", "CHARACTER_DEATH") --[[@type table<Barotrauma.Character,Types.Timer>]]
+        local maxStackCheckDelay = suboptions["timeBetween"] --[[@type number]]
 
-        local function containerNotTouched(container)
+        local containerNotTouched
+        local anyJengaMasters
+
+        function containerNotTouched(container)
             for k in next, container.StatManager.talentStats do
                 if k.TalentIdentifier == "JengaMaster" then
                     return false
@@ -463,9 +456,7 @@ local function activateAssistant(self, options)
             end
             return true
         end
-
-        local anyJengaMasters
-
+        
         do
             local Character = Character
     
@@ -483,135 +474,161 @@ local function activateAssistant(self, options)
             end
         end
 
-        setmetatable(untouchedContainers, {
-            ---@param t table
-            ---@return Barotrauma.Item[]
-            __call=function(t)
-                local list = {}
-                local i = 0
+        do
+            local Timer = Types.Timer
 
-                for container in next, t.set do
-                    i = i + 1
-                    list[i] = container
-                end
-                
-                return list
-            end,
-            ---@param t table
-            ---@param k string
-            ---@return number|table<Barotrauma.Item,true>
-            __index=function(t, k)
-                if k == "set" or k == "n" then
-                    local set = {}
-                    local i = 0
-        
-                    for containerItem in util.FindItems(nil, Submarine.MainSub.GetItems(true), "Container", nil,
-                    function (_, item)
-                        if not item.GetComponent(Components.Holdable) and
-                            not item.GetComponent(Components.Wearable) and
-                            containerNotTouched(item)
-                        then
-                            local container = item.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
-
-                            if container then
-                                local containableIds = container.ContainableItemIdentifiers
-                                
-                                if  containableIds.Contains("smallitem") and
-                                    containableIds.Contains("mediumitem")
-                                then
-                                    return true
-                                end
-                            end
-                        end
-                        return false
-                    end) do
-                        i = set[containerItem] and i or (i + 1)
-                        set[containerItem] = true
-                    end
-        
-                    t.n = i
-                    t.set = set
+            setmetatable(allCharacterTimers, {
+                ---@param t table<Barotrauma.Character,Types.Timer>
+                ---@param k any
+                __index=function(t, k)
+                    t[k] = Timer.new(maxStackCheckDelay)
                     return t[k]
                 end
-            end
-        })
+            })
+        end
 
-        --self:AddHook("roundStart", anyJengaMasters)
-        
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
-        function(instance, ptable)
-            local character = instance.character
+        do
+            local Holdable = Components.Holdable
+            local ItemContainer = Components.ItemContainer
+            local Wearable = Components.Wearable
+            local Submarine = Submarine
 
-            if  not (untouchedContainers.n <= 0) and
-                character.HasTalent("JengaMaster") and
-                character.IsOnPlayerTeam
-            then
-                if allCharacterTimers[character]:Update(ptable["deltaTime"]) then
-                    local closestContainer = util.GetClosest(character.WorldPosition, util.FindItems(character, untouchedContainers())) --[[@type Barotrauma.Item]]
+            setmetatable(untouchedContainers, {
+                ---@param t table
+                ---@return Barotrauma.Item[]
+                __call=function(t)
+                    local list = {}
+                    local i = 0
 
-                    if closestContainer then
-                        ---@return Barotrauma.AIObjectiveGoTo
-                        ---@nodiscard
-                        local function constructor()
-                            local objective = AIObjectiveGoTo(closestContainer, character, instance.objectiveManager, false, false, 1, 50.0)
-                            
-                            objective.SpeakIfFails = false
-                            objective.DebugLogWhenFails = false
-                            objective.AllowGoingOutside = false
-                            return objective
-                        end
-                        ---@param objective Barotrauma.AIObjectiveGoTo
-                        ---@return fun()
-                        local function onCompletedGenerator(objective)
-                            ---@type fun()
-                            local function onCompleted()
-                                local n = untouchedContainers.n
+                    for container in next, t.set do
+                        i = i + 1
+                        list[i] = container
+                    end
 
-                                if  n > 0 and
-                                    character.CanInteractWith(closestContainer)
-                                then
-                                    print(containerNotTouched(closestContainer))
-                                    character.SelectedItem = closestContainer
+                    return list
+                end,
+                ---@param t table
+                ---@param k string
+                ---@return number|table<Barotrauma.Item,true>
+                __index=function(t, k)
+                    if k == "set" or k == "n" then
+                        local set = {}
+                        local i = 0
+            
+                        for containerItem in util.FindItems(nil, Submarine.MainSub.GetItems(true), "Container", nil,
+                        function (_, item)
+                            if not item.GetComponent(Holdable) and
+                                not item.GetComponent(Wearable) and
+                                containerNotTouched(item)
+                            then
+                                local container = item.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
 
-                                    if not containerNotTouched(closestContainer) then
-                                        print(closestContainer)
-                                        print(containerNotTouched(closestContainer))
-                                        
-                                        untouchedContainers.set[closestContainer] = nil
-                                        untouchedContainers.n = n - 1
+                                if container then
+                                    local containableIds = container.ContainableItemIdentifiers
+                                    
+                                    if  containableIds.Contains("smallitem") and
+                                        containableIds.Contains("mediumitem")
+                                    then
+                                        return true
                                     end
-                                    objective.SteeringManager.Reset()
-                                    objective.PathSteering.ResetPath()
                                 end
-                                instance.RemoveSubObjective(AIObjectiveGoTo, objective)
                             end
-                            return onCompleted
+                            return false
+                        end) do
+                            i = set[containerItem] and i or (i + 1)
+                            set[containerItem] = true
                         end
-
-                        ---@param objective Barotrauma.AIObjectiveGoTo
-                        ---@return fun()
-                        local function onAbandonGenerator(objective)
-                            ---@type fun()
-                            local function onAbandon()
-                                instance.RemoveSubObjective(AIObjectiveGoTo, objective)
-                            end
-                            return onAbandon
-                        end
-
-                        local goToObj --[[@type Barotrauma.AIObjectiveGoTo]]
-
-                        for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                            if objective.Identifier.Value == "JengaMaster" then
-                                goToObj = objective
-                                break
-                            end
-                        end
-                        
-                        util.TryAddSubObjective(instance, goToObj, constructor, onCompletedGenerator, onAbandonGenerator)
+            
+                        t.n = i
+                        t.set = set
+                        return t[k]
                     end
                 end
-            end
-        end, Hook.HookMethodType.Before)
+            })
+        end
+
+        self:AddHook("roundStart", anyJengaMasters)
+
+        do
+            local AIObjectiveGoTo = AIObjectiveGoTo
+
+            local FindItems = util.FindItems
+            local GetClosest = util.GetClosest
+            local TryAddSubObjective = util.TryAddSubObjective
+            
+
+            self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
+            function(instance, ptable)
+                local character = instance.character
+
+                if  not (untouchedContainers.n <= 0) and
+                    character.HasTalent("JengaMaster") and
+                    character.IsOnPlayerTeam
+                then
+                    if allCharacterTimers[character]:Update(ptable["deltaTime"]) then
+                        local closestContainer = GetClosest(character.WorldPosition, FindItems(character, untouchedContainers())) --[[@type Barotrauma.Item]]
+
+                        if closestContainer then
+                            ---@return Barotrauma.AIObjectiveGoTo
+                            ---@nodiscard
+                            local function constructor()
+                                local objective = AIObjectiveGoTo(closestContainer, character, instance.objectiveManager, false, false, 1, 50.0)
+                                
+                                objective.SpeakIfFails = false
+                                objective.DebugLogWhenFails = false
+                                objective.AllowGoingOutside = false
+                                return objective
+                            end
+                            ---@param objective Barotrauma.AIObjectiveGoTo
+                            ---@return fun()
+                            local function onCompletedGenerator(objective)
+                                ---@type fun()
+                                local function onCompleted()
+                                    local n = untouchedContainers.n
+
+                                    if  n > 0 and
+                                        character.CanInteractWith(closestContainer) and
+                                        containerNotTouched(closestContainer)
+                                    then
+                                        character.SelectedItem = closestContainer
+
+                                        if not containerNotTouched(closestContainer) then
+                                            untouchedContainers.set[closestContainer] = nil
+                                            untouchedContainers.n = n - 1
+                                        end
+                                        objective.SteeringManager.Reset()
+                                        objective.PathSteering.ResetPath()
+                                    end
+                                    instance.RemoveSubObjective(AIObjectiveGoTo, objective)
+                                end
+                                return onCompleted
+                            end
+
+                            ---@param objective Barotrauma.AIObjectiveGoTo
+                            ---@return fun()
+                            local function onAbandonGenerator(objective)
+                                ---@type fun()
+                                local function onAbandon()
+                                    instance.RemoveSubObjective(AIObjectiveGoTo, objective)
+                                end
+                                return onAbandon
+                            end
+
+                            local goToObj --[[@type Barotrauma.AIObjectiveGoTo]]
+
+                            for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
+                                if objective.Identifier.Value == "JengaMaster" then
+                                    goToObj = objective
+                                    break
+                                end
+                            end
+                            
+                            TryAddSubObjective(instance, goToObj, constructor, onCompletedGenerator, onAbandonGenerator)
+                        end
+                    end
+                end
+            end, Hook.HookMethodType.Before)
+        end
         anyJengaMasters()
         self.namespace = -self.namespace
     end
