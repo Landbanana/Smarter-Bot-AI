@@ -1,5 +1,4 @@
 local Constants = require("SBAI.Shared.constants")
-local Types = require("SBAI.Shared.types")
 
 local Config = {data={}}
 
@@ -223,38 +222,49 @@ end
 
 if SERVER or Game.IsSingleplayer then
     function Config.Load()
-        Config.data = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or {}
-        
-        ---@param option table
-        ---@param optionName string
-        ---@param optionDefault ConfigOption|ConfigSection
-        local function LoadRecurse(option, optionName, optionDefault)
-            local optionValue = option[optionName]
-            local optionType = type(optionDefault.value)
+        local rawConfig = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or nil
+        local config = Config.data
+
+        ---@param name string
+        ---@param raw table
+        ---@param default ConfigOption|ConfigSection
+        local function LoadRecurse(name, raw, default)
+            local defaultValue = default.value
+            local defaultType = type(defaultValue)
+            local rawValue = raw[name]
             
-            if optionDefault.value ~= nil then --[[@cast optionDefault -ConfigSection]]
-                if optionValue == nil or type(optionValue) ~= optionType then
-                    option[optionName] = optionDefault.value
-                elseif optionType == "number" then
-                    option[optionName] = math.clamp(optionValue, optionDefault.min, optionDefault.max)
-                end
-            else --[[@cast optionDefault -ConfigOption]]
-                if optionValue == nil then
-                    option[optionName] = optionDefault:Flatten()
+            if defaultValue ~= nil then --[[@cast default -ConfigSection]]
+                if type(rawValue) ~= defaultType then
+                    return defaultValue
+                elseif defaultType == "number" then
+                    return math.clamp(rawValue, default.min, default.max)
                 else
-                    for k, v in pairs(optionDefault) do
-                        LoadRecurse(option[optionName], k, v)
+                    return rawValue
+                end
+            else --[[@cast default -ConfigOption]]
+                if rawValue == nil then
+                    return default:Flatten()
+                else
+                    local out = {}
+                    local i = 0
+
+                    for k, v in next, default do
+                        i = i + 1
+                        out[k] = LoadRecurse(k, rawValue, v)
                     end
+                    return out
                 end
             end
         end
 
-        for k, v in pairs(Config.defaults.CONFIG) do
-            local success, errMsg = pcall(LoadRecurse, Config.data, k, v)
+        for k, v in next, Config.defaults.CONFIG do
+            local success, result = pcall(LoadRecurse, k, rawConfig, v) --[[@type boolean, any]]
 
-            if not success then
-                Logger.LogError("SBAI.Config.Load: "..errMsg)
-                Config.data[k] = v:Flatten()
+            if success == false then
+                Logger.LogError("SBAI.Config.Load."..k..": "..result)
+                config[k] = v:Flatten()
+            else
+                config[k] = result
             end
         end
     end
