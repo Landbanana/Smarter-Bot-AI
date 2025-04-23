@@ -143,7 +143,7 @@ local function activate(self)
         if not section.enable then goto continue end
 
         anyObjTypeEnabled = true
-        onlyAtFriendlyOutposts = section["OnlyAtFriendlyOutposts"]
+        onlyAtFriendlyOutposts = section["onlyAtFriendlyOutposts"]
 
         LuaUserData.MakeFieldAccessible(Descriptors[fullObjectiveType], "subObjectives")
 

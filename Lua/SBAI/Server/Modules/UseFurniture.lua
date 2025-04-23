@@ -77,8 +77,8 @@ local function activateAutoUseWhenIdle(self, options)
 
     do
         local optionToFurniture = {
-            Beds=FURNITURE.BED,
-            Chairs=FURNITURE.CHAIR
+            beds=FURNITURE.BED,
+            chairs=FURNITURE.CHAIR
         }
         local i = 0
 
@@ -148,7 +148,7 @@ local function activate(self)
         __index=function(t, k)
             local predicate = predicateMap[k]
 
-            if not predicate then error("Value not recognized as FURNITURE") end
+            if not predicate then error("Value not recognized as FURNITURE", 2) end
 
             local idSet = {}
 

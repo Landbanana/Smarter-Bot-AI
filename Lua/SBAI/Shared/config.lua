@@ -118,10 +118,10 @@ do
 
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")
-    subsection:CreateOption("OnlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("onlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Wait")
-    subsection:CreateOption("OnlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("onlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
@@ -152,21 +152,21 @@ do
 
     section = defaults:CreateSection("UseFurniture")
     subsection = section:CreateSection("AutoUseWhenIdle")
-    subsection:CreateOption("Beds", true, Config.OPTION_TYPE.boolean)
-    subsection:CreateOption("Chairs", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("beds", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("chairs", true, Config.OPTION_TYPE.boolean)
 
     section:CreateOption("stayInBedIfHurt", true, Config.OPTION_TYPE.boolean)
 
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("UseTalents")
-    section:CreateOption("Idle", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("Wait", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("idle", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("wait", true, Config.OPTION_TYPE.boolean)
     section:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Assistant")
     subsubsection = subsection:CreateSection("InspiringTunes")
-    subsubsection:CreateOption("StopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
 
     subsubsection = subsection:CreateSection("NonThreatening")
     subsubsection:CreateOption("ragdollHealthPercent", 75.0, Config.OPTION_TYPE.float, 10, 90) 
@@ -179,11 +179,11 @@ do
 
     subsection = section:CreateSection("Captain")
     subsubsection = subsection:CreateSection("SteadyTune")
-    subsubsection:CreateOption("StopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
 
     -- subsection = section:CreateSection("Engineer")
     -- subsubsection = subsection:CreateSection("MelodicRespite")
-    -- subsubsection:CreateOption("StopAfterBuffed", false, Config.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("stopAfterBuffed", false, Config.OPTION_TYPE.boolean)
 
     Config.defaults.CONFIG = defaults
 end
