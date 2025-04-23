@@ -504,18 +504,20 @@ local function activate(self)
             end
         })
 
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
-        function(instance, ptable)
-            local character = instance.character
-            local characterData = rawget(allCharacterData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
+        if self.options["idle"] then
+            self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
+            function(instance, ptable)
+                local character = instance.character
+                local characterData = rawget(allCharacterData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
 
-            if characterData then
-                if characterData.isPlaying then
-                    ptable.PreventExecution = true
-                    return false
+                if characterData then
+                    if characterData.isPlaying then
+                        ptable.PreventExecution = true
+                        return false
+                    end
                 end
-            end
-        end, Hook.HookMethodType.Before)
+            end, Hook.HookMethodType.Before)
+        end
     end
 end
 
