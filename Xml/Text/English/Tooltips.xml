@@ -39,8 +39,10 @@
   <GUI.tooltips.usetalents.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.idle>
   <GUI.tooltips.usetalents.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.wait>
   <GUI.tooltips.usetalents>Lets the AI utilize some talents that they previously couldn't</GUI.tooltips.usetalents>
-  <GUI.tooltips.usetalents.timebetween>How long the AI should wait before checking if crewmates have a buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.timebetween>
+  <GUI.tooltips.usetalents.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.timebetween>
   <GUI.tooltips.usetalents.assistant>Assistant talents</GUI.tooltips.usetalents.assistant>
+  <GUI.tooltips.usetalents.assistant.jengamaster>AI Assistants with the "Jenga Master" talent will go around the ship and apply the Max Stack Size bonus to any applicable containers when idling</GUI.tooltips.usetalents.assistant.jengamaster>
+  <GUI.tooltips.usetalents.assistant.jengamaster.timebetween>Specific delay for AI checking if any containers still need the buff</GUI.tooltips.usetalents.assistant.jengamaster.timebetween>
   <GUI.tooltips.usetalents.assistant.nonthreatening>AI Assistants with the "Non-Threatening" talent will ragdoll if they're attacked, their health goes below a certain percentage, and the room they're in isn't on fire or flooding and they don't have a diving suit/mask</GUI.tooltips.usetalents.assistant.nonthreatening>
   <GUI.tooltips.usetalents.assistant.nonthreatening.ragdollhealthpercent>How low the bot's health should get before ragdolling</GUI.tooltips.usetalents.assistant.nonthreatening.ragdollhealthpercent>
   <GUI.tooltips.usetalents.assistant.inspiringtunes>AI assistants with the "Inspiring Tunes" talent will play instruments in their inventory periodically. NOTE: All instruments (NOT just the bikehorn) work with this talent (even in vanilla!)</GUI.tooltips.usetalents.assistant.inspiringtunes>
