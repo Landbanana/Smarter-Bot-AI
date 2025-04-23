@@ -13,6 +13,7 @@ Config.OPTION_TYPE = {
 Config.defaults = {
     MAX_CONDITION_PERCENTAGE = 95,
     MIN_CONDITION_PERCENTAGE = 0,
+    MIN_TIME_BETWEEN = 5,
     MAX_TIME_BETWEEN = 1000,
     CONFIG = {}
 }
@@ -108,10 +109,10 @@ do
     defaults:CreateSection("CrewStaysInSub")
 
     section = defaults:CreateSection("EquipArmor")
-    section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section = defaults:CreateSection("LadderFix")
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
@@ -122,7 +123,7 @@ do
     subsection = section:CreateSection("Wait")
     subsection:CreateOption("onlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Ammunition")
     subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
@@ -161,11 +162,14 @@ do
     section = defaults:CreateSection("UseTalents")
     section:CreateOption("idle", true, Config.OPTION_TYPE.boolean)
     section:CreateOption("wait", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Assistant")
     subsubsection = subsection:CreateSection("InspiringTunes")
     subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    
+    subsubsection = subsection:CreateSection("JengaMaster")
+    subsubsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsubsection = subsection:CreateSection("NonThreatening")
     subsubsection:CreateOption("ragdollHealthPercent", 75.0, Config.OPTION_TYPE.float, 10, 90) 

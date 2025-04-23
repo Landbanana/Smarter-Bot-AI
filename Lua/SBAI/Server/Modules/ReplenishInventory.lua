@@ -250,7 +250,7 @@ local function activate(self)
                                 local moveItemObj --[[@type Barotrauma.AIObjectiveMoveItem]]
 
                                 for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                                    if objective.Identifier.Equals("move item") then
+                                    if objective.Identifier == "move item" then
                                         moveItemObj = objective
                                         break
                                     end

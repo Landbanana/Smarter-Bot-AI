@@ -12,6 +12,25 @@ do
 
     ---@class Barotrauma.AIObjectiveCombat
     ---@field CloseDistance System.Single
+
+    LuaUserData.RegisterType("Barotrauma.TalentStatIdentifier")
+    
+    ---@class Barotrauma.TalentStatIdentifier
+    ---@field Stat Barotrauma.TalenItemStats
+    ---@field TalentIdentifier Barotrauma.Identifier
+    ---@field UniqueCharacterId System.UInt32
+    ---@field Save System.Boolean
+
+    LuaUserData.MakeFieldAccessible(LuaUserData.RegisterType("Barotrauma.ItemStatManager"), "talentStats")
+
+    ---@class Barotrauma.ItemStatManager
+    ---@field talentStats System.Collections.Generic.Dictionary*1Barotrauma*TalentStatIdentifier*1System*Single
+    
+    descriptor = Descriptors["Barotrauma.AIObjectiveGoTo"]
+    LuaUserData.MakePropertyAccessible(descriptor, "PathSteering")
+    LuaUserData.MakePropertyAccessible(descriptor, "SteeringManager")
+    
+    --LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "AllowInAnySub")
 end
 
 local allTalentRanges
@@ -49,11 +68,11 @@ do
 end
 
 ---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), timer:Types.Timer?}>
-local allCharacterData
+local allCharacterInstrumentData
 local allInstrumentTalentData
 
-local ---@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
-instrumentData = setmetatable({}, {
+---@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
+local instrumentData = setmetatable({}, {
     ---@param t {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
     ---@param k string
     __index=function(t, k)
@@ -203,7 +222,7 @@ do
     ---@param character Barotrauma.Character
     ---@param instrumentIds string[]
     function playInstruments(character, instrumentIds)
-        local characterData = allCharacterData[character]
+        local characterData = allCharacterInstrumentData[character]
         local instance = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
 
         if instance ~= characterData.lastObjective then
@@ -263,7 +282,7 @@ do
             local character = instance.character
             
             if character.HasTalent(talentId) then
-                local characterData = allCharacterData[character]
+                local characterData = allCharacterInstrumentData[character]
 
                 if characterData.timer:Update(ptable["deltaTime"]) then
                     if  not prePatch or
@@ -415,6 +434,187 @@ local function activateAssistant(self, options)
         end, Hook.HookMethodType.Before)
         self.namespace = -self.namespace
     end
+
+    talentId = "JengaMaster"
+    suboptions = options[talentId]
+
+    if suboptions.enable then
+        self.namespace = self.namespace + talentId
+
+        local Timer = Types.Timer
+
+        local untouchedContainers = self:RegisterTable("ROUND_END") --[[@type {n:number, set:table<Barotrauma.Item,true>}]]
+        local maxStackCheckDelay = suboptions["timeBetween"]
+        ---@type table<Barotrauma.Character,Types.Timer>
+        local allCharacterTimers = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
+            ---@param t table<Barotrauma.Character,Types.Timer>
+            ---@param k any
+            __index=function(t, k)
+                t[k] = Timer.new(maxStackCheckDelay)
+                return t[k]
+            end
+        })
+
+        local function containerNotTouched(container)
+            for k in next, container.StatManager.talentStats do
+                if k.TalentIdentifier == "JengaMaster" then
+                    return false
+                end
+            end
+            return true
+        end
+
+        local anyJengaMasters
+
+        do
+            local Character = Character
+    
+            ---@return number
+            function anyJengaMasters()
+                for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
+                    if  character.IsHuman and
+                        character.IsBot and
+                        character.IsOnPlayerTeam and
+                        character.HasTalent("JengaMaster")
+                    then
+                        return untouchedContainers.n
+                    end
+                end
+            end
+        end
+
+        setmetatable(untouchedContainers, {
+            ---@param t table
+            ---@return Barotrauma.Item[]
+            __call=function(t)
+                local list = {}
+                local i = 0
+
+                for container in next, t.set do
+                    i = i + 1
+                    list[i] = container
+                end
+                
+                return list
+            end,
+            ---@param t table
+            ---@param k string
+            ---@return number|table<Barotrauma.Item,true>
+            __index=function(t, k)
+                if k == "set" or k == "n" then
+                    local set = {}
+                    local i = 0
+        
+                    for containerItem in util.FindItems(nil, Submarine.MainSub.GetItems(true), "Container", nil,
+                    function (_, item)
+                        if not item.GetComponent(Components.Holdable) and
+                            not item.GetComponent(Components.Wearable) and
+                            containerNotTouched(item)
+                        then
+                            local container = item.GetComponent(Components.ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+
+                            if container then
+                                local containableIds = container.ContainableItemIdentifiers
+                                
+                                if  containableIds.Contains("smallitem") and
+                                    containableIds.Contains("mediumitem")
+                                then
+                                    return true
+                                end
+                            end
+                        end
+                        return false
+                    end) do
+                        i = set[containerItem] and i or (i + 1)
+                        set[containerItem] = true
+                    end
+        
+                    t.n = i
+                    t.set = set
+                    return t[k]
+                end
+            end
+        })
+
+        --self:AddHook("roundStart", anyJengaMasters)
+        
+        self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
+        function(instance, ptable)
+            local character = instance.character
+
+            if  not (untouchedContainers.n <= 0) and
+                character.HasTalent("JengaMaster") and
+                character.IsOnPlayerTeam
+            then
+                if allCharacterTimers[character]:Update(ptable["deltaTime"]) then
+                    local closestContainer = util.GetClosest(character.WorldPosition, util.FindItems(character, untouchedContainers())) --[[@type Barotrauma.Item]]
+
+                    if closestContainer then
+                        ---@return Barotrauma.AIObjectiveGoTo
+                        ---@nodiscard
+                        local function constructor()
+                            local objective = AIObjectiveGoTo(closestContainer, character, instance.objectiveManager, false, false, 1, 50.0)
+                            
+                            objective.SpeakIfFails = false
+                            objective.DebugLogWhenFails = false
+                            objective.AllowGoingOutside = false
+                            return objective
+                        end
+                        ---@param objective Barotrauma.AIObjectiveGoTo
+                        ---@return fun()
+                        local function onCompletedGenerator(objective)
+                            ---@type fun()
+                            local function onCompleted()
+                                local n = untouchedContainers.n
+
+                                if  n > 0 and
+                                    character.CanInteractWith(closestContainer)
+                                then
+                                    print(containerNotTouched(closestContainer))
+                                    character.SelectedItem = closestContainer
+
+                                    if not containerNotTouched(closestContainer) then
+                                        print(closestContainer)
+                                        print(containerNotTouched(closestContainer))
+                                        
+                                        untouchedContainers.set[closestContainer] = nil
+                                        untouchedContainers.n = n - 1
+                                    end
+                                    objective.SteeringManager.Reset()
+                                    objective.PathSteering.ResetPath()
+                                end
+                                instance.RemoveSubObjective(AIObjectiveGoTo, objective)
+                            end
+                            return onCompleted
+                        end
+
+                        ---@param objective Barotrauma.AIObjectiveGoTo
+                        ---@return fun()
+                        local function onAbandonGenerator(objective)
+                            ---@type fun()
+                            local function onAbandon()
+                                instance.RemoveSubObjective(AIObjectiveGoTo, objective)
+                            end
+                            return onAbandon
+                        end
+
+                        local goToObj --[[@type Barotrauma.AIObjectiveGoTo]]
+
+                        for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
+                            if objective.Identifier.Value == "JengaMaster" then
+                                goToObj = objective
+                                break
+                            end
+                        end
+                        
+                        util.TryAddSubObjective(instance, goToObj, constructor, onCompletedGenerator, onAbandonGenerator)
+                    end
+                end
+            end
+        end, Hook.HookMethodType.Before)
+        anyJengaMasters()
+        self.namespace = -self.namespace
+    end
 end
 
 ---@param self Types.Module
@@ -483,7 +683,7 @@ local function activate(self)
         local Shoot = InputType.Shoot
 
         ---@type table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
-        allCharacterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
+        allCharacterInstrumentData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
         ---@param t table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
         ---@param k Barotrauma.Character
         ---@return table<Barotrauma.Character,{instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self), ["timer"]:Types.Timer}>
@@ -508,7 +708,7 @@ local function activate(self)
             self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
             function(instance, ptable)
                 local character = instance.character
-                local characterData = rawget(allCharacterData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
+                local characterData = rawget(allCharacterInstrumentData, character) --[[@type {instrument:Barotrauma.Item?, isPlaying:boolean, lastObjective:Barotrauma.AIObjective, Reset:fun(self)}?]]
 
                 if characterData then
                     if characterData.isPlaying then
