@@ -4,6 +4,9 @@ local Constants = {
     Version="1.5.1",
     Path=table.pack(...)[1] --[[@type string]],
     ModConfigsDirPath=Game.SaveFolder.."/ModConfigs", --[[@type string]]
+
+    MAX_FLOAT=3.402823E+38,
+
     D_TIMER_NOISE=0.1,
     D_PETITEM_TEMPLATE="creepingorange",
     D_NONTHREATENING_STUN=20

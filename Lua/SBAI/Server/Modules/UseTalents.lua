@@ -17,7 +17,7 @@ end
 local allTalentRanges
 
 do
-    local MaxValueSingle = Single(util.UnregisteredStaticDescriptors["System.Single"].Static.MaxValue)
+    local MAX_FLOAT = Constants.MAX_FLOAT
 
     ---@type table<string,{maxDistance:number, allowSelf:boolean}>
     allTalentRanges = setmetatable({}, {
@@ -34,7 +34,7 @@ do
                     if abilityGroupEffect.GetAttributeString("abilityeffecttype") == "OnUseRangedWeapon" then
                         for applyStatusEffect in abilityGroupEffect.Element.Descendants("CharacterAbilityApplyStatusEffectsToAllies") do
                             t[k] = {
-                                maxDistance=applyStatusEffect.GetAttributeFloat("maxdistance", MaxValueSingle),
+                                maxDistance=applyStatusEffect.GetAttributeFloat("maxdistance", MAX_FLOAT),
                                 allowSelf=applyStatusEffect.GetAttributeBool("allowself", true)
                             }
                             return t[k]
