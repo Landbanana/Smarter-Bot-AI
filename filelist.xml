@@ -5,13 +5,14 @@
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleanablePetItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/CombatTweaks.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Modules/IdleUseFurniture.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/PreventAttackingHandcuffed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/ReplenishInventory.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/SmarterLoadItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseFurniture.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseShipDeconstructorIfAvailable.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseTalents.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/config.lua" />

@@ -111,10 +111,6 @@ do
     section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
-    section = defaults:CreateSection("IdleUseFurniture")
-    section:CreateOption("Beds", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("Chairs", true, Config.OPTION_TYPE.boolean)
-
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, 5, Config.defaults.MAX_TIME_BETWEEN)
 
@@ -153,6 +149,13 @@ do
 
     subsection = section:CreateSection("OxygenTanks")
     subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    section = defaults:CreateSection("UseFurniture")
+    subsection = section:CreateSection("AutoUseWhenIdle")
+    subsection:CreateOption("Beds", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("Chairs", true, Config.OPTION_TYPE.boolean)
+
+    section:CreateOption("stayInBedIfHurt", true, Config.OPTION_TYPE.boolean)
 
     defaults:CreateSection("UseShipDeconstructorIfAvailable")
 

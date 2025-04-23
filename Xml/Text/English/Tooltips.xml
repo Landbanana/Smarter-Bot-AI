@@ -4,9 +4,9 @@
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
-  <GUI.tooltips.idleusefurniture>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.idleusefurniture>
+  <!-- <GUI.tooltips.idleusefurniture>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.idleusefurniture>
   <GUI.tooltips.idleusefurniture.beds>Bots will use beds when they idle</GUI.tooltips.idleusefurniture.beds>
-  <GUI.tooltips.idleusefurniture.chairs>Bots will use chairs when they idle</GUI.tooltips.idleusefurniture.chairs>
+  <GUI.tooltips.idleusefurniture.chairs>Bots will use chairs when they idle</GUI.tooltips.idleusefurniture.chairs> -->
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
   <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
   <GUI.tooltips.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.preventattackinghandcuffed>
