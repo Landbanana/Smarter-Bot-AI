@@ -118,7 +118,7 @@ do
     function SBAI.Control.Activate()
         saveAllOrderData()
         
-        for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+        for k in next, SBAI.Config.defaults.CONFIG do
             modules[k]:Activate(namespace + k, SBAI.Config.data[k])
         end
 
@@ -135,7 +135,7 @@ do
             loadOrders = true
         end
 
-        for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
+        for k in next, SBAI.Config.defaults.CONFIG do
             modules[k]:Deactivate()
         end
 
