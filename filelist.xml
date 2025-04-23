@@ -5,7 +5,6 @@
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleanablePetItems.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Modules/CombatTweaks.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
