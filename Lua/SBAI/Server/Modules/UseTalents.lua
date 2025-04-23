@@ -180,11 +180,11 @@ end
 local instrumentTalentEnabled = false
 local playInstruments
 local allObjData = {
-    ["Idle"]={
+    ["idle"]={
         fullTypeName="Barotrauma.AIObjectiveIdle",
         prePatch=util.True
     },
-    ["Wait"]={
+    ["wait"]={
         fullTypeName="Barotrauma.AIObjectiveGoTo",
         prePatch=util.IsWaitObjective
     }
@@ -359,7 +359,7 @@ local function activateAssistant(self, options)
             instrumentTalentEnabled = true
 
             self:AddPatch(objData.fullTypeName, "Act", nil,
-            generatePatch(talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+            generatePatch(talentId, suboptions["stopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
         end
         self.namespace = -self.namespace
     end
@@ -429,7 +429,7 @@ local function activateCaptain(self, options)
             instrumentTalentEnabled = true
                 
             self:AddPatch(objData.fullTypeName, "Act", nil,
-            generatePatch(talentId, suboptions["StopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
+            generatePatch(talentId, suboptions["stopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
         end
         self.namespace = -self.namespace
     end
