@@ -12,8 +12,8 @@ Types.Timer = {}
 Types.Timer.__index = Types.Timer
 
 do
-    local AddNoise = util.AddNoise
     local clock = os.clock
+    local D_TIMER_NOISE = Constants.D_TIMER_NOISE
 
     ---@public
     ---@param delay Types.Timer
@@ -23,13 +23,17 @@ do
         local t = {
             lastClock=clock(),
             delay=delay,
-            noise=noise or Constants.D_TIMER_NOISE
+            noise=noise or D_TIMER_NOISE
         }
-        setmetatable(t, Types.Timer)
 
+        setmetatable(t, Types.Timer)
         t:Reset()
         return t
     end
+end
+
+do
+    local AddNoise = util.AddNoise
 
     ---@public
     function Types.Timer:Reset()
@@ -48,14 +52,19 @@ do
         
         return false
     end
+end
+
+do
+    local clock = os.clock
+    local difftime = os.difftime
 
     ---@public
     ---@return boolean
     function Types.Timer:UpdateClock()
         local curClock = clock()
-        local deltaTime = curClock - self.lastClock
-        self.lastClock = curClock
+        local deltaTime = difftime(curClock, self.lastClock)
 
+        self.lastClock = curClock
         return self:Update(deltaTime)
     end
 end
@@ -94,9 +103,7 @@ function Types.Module.new(activate, deactivate)
     t.activate = activate
     t.deactivate = deactivate
 
-    setmetatable(t, Types.Module)
-
-    return t
+    return setmetatable(t, Types.Module)
 end
 
 ---@public
@@ -190,6 +197,45 @@ do
         self.patches = {}
         self.tables = {}
     end
+end
+
+
+---@class Types.TimedCharacterData
+---@field private [Barotrauma.Character] {timer:Types.Timer}
+---@field private timeBetween number
+Types.TimedCharacterData = {}
+Types.TimedCharacterData.__index = Types.TimedCharacterData
+
+do
+    local Timer = Types.Timer
+
+    ---@public
+    ---@param character Barotrauma.Character
+    function Types.TimedCharacterData:Add(character)
+        self[character] = {timer=Timer.new(self.timeBetween)}
+    end
+end
+
+---@public
+---@param character Barotrauma.Character
+---@return { timer: Types.Timer }
+function Types.TimedCharacterData:Get(character)
+    if not self[character] then
+        self:Add(character)
+    end
+    return self[character]
+end
+
+---@public
+---@param module Types.Module
+---@param timeBetween? number
+---@return Types.TimedCharacterData
+function Types.TimedCharacterData.new(module, timeBetween)
+    local t = module:RegisterTable("ROUND_END", "CHARACTER_DEATH")
+
+    t.timeBetween = timeBetween or module.options["timeBetween"]
+
+    return setmetatable(t, Types.TimedCharacterData)
 end
 
 return Types

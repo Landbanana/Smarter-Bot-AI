@@ -7,7 +7,6 @@ LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
 
 local Pickable = Components.Pickable
 
-
 local allSections = {
     ["BatteryCells"] = {"mobilebattery", "mobilebattery", "batterycellrecharger", true},
     ["OxygenTanks"] = {"refillableoxygensource", "oxygensource", "oxygentankrefiller", true},
@@ -103,24 +102,6 @@ local function activate(self)
 
     if #allLoadData <= 0 then return end
 
-    local anyObjTypeEnabled = false
-    local characterData --[[@type table<Barotrauma.Character,Types.Timer>]]
-
-    do
-        local Timer = Types.Timer
-        local timeBetween = self.options["timeBetween"]
-
-        ---@type table<Barotrauma.Character,Types.Timer>
-        characterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
-            ---@param t table<Barotrauma.Character,Types.Timer>
-            ---@param k Barotrauma.Character
-            __index = function(t, k)
-                t[k] = Timer.new(timeBetween)
-                return t[k]
-            end
-        })
-    end
-
     local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
     local ItemContainer = Components.ItemContainer
 
@@ -132,6 +113,9 @@ local function activate(self)
     local IsWaitObjective = util.IsWaitObjective
     local TryAddSubObjective = util.TryAddSubObjective
     local Variator = util.itertools.Variator
+
+    local anyObjTypeEnabled = false
+    local allCharacterData = Types.TimedCharacterData.new(self)
 
     for objectiveType, fullObjectiveType, specifierFunction in Variator({
         {"Idle", "Barotrauma.AIObjectiveIdle", True},
@@ -154,10 +138,10 @@ local function activate(self)
             if  character.Submarine ~= nil and
                 character.Submarine.Info.IsPlayer
             then
-                local characterDataInstance = characterData[character]
+                local characterData = allCharacterData:Get(character)
                 
-                if characterDataInstance:Update(ptable["deltaTime"]) then
-                    if  not characterDataInstance["moveItemObj"] and
+                if characterData.timer:Update(ptable["deltaTime"]) then
+                    if  not characterData["moveItemObj"] and
                         specifierFunction(instance) and
                         not onlyAtFriendlyOutposts or (
                             Level.IsLoadedFriendlyOutpost and
@@ -200,7 +184,7 @@ local function activate(self)
                                 
                                 ptable.PreventExecution = true
 
-                                characterDataInstance["index"] = targetContainer.OwnInventory.FindIndex(targetItem)
+                                characterData["index"] = targetContainer.OwnInventory.FindIndex(targetItem)
                                 
                                 ---@return Barotrauma.AIObjectiveMoveItem
                                 ---@nodiscard
@@ -221,14 +205,14 @@ local function activate(self)
                                         if  refillerTag == "" and
                                             targetItem.ConditionPercentage > 0 and
                                             not closestFullItem.IsFullCondition then
-                                            targetContainer.OwnInventory.TryPutItem(targetItem, characterDataInstance["index"], false, true, character, true, true)
+                                            targetContainer.OwnInventory.TryPutItem(targetItem, characterData["index"], false, true, character, true, true)
                                         end
                                         if originalClosestFullItemContainer then
                                             originalClosestFullItemContainer.Inventory.TryPutItem(targetItem, character, nil, true, false)
                                         end
-                                        characterDataInstance["mainObj"] = nil
-                                        characterDataInstance["moveItemObj"] = nil
-                                        characterDataInstance["index"] = nil
+                                        characterData["mainObj"] = nil
+                                        characterData["moveItemObj"] = nil
+                                        characterData["index"] = nil
                                         instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
                                     end
                                     return onCompleted
@@ -239,9 +223,9 @@ local function activate(self)
                                 local function onAbandonGenerator(objective)
                                     ---@type fun()
                                     local function onAbandon()
-                                        characterDataInstance["mainObj"] = nil
-                                        characterDataInstance["moveItemObj"] = nil
-                                        characterDataInstance["index"] = nil
+                                        characterData["mainObj"] = nil
+                                        characterData["moveItemObj"] = nil
+                                        characterData["index"] = nil
                                         instance.RemoveSubObjective(AIObjectiveMoveItem, objective)
                                     end
                                     return onAbandon
@@ -255,8 +239,8 @@ local function activate(self)
                                         break
                                     end
                                 end
-                                characterDataInstance["mainObj"] = instance
-                                _, characterDataInstance["moveItemObj"] = TryAddSubObjective(instance, moveItemObj, constructor, onCompletedGenerator, onAbandonGenerator)
+                                characterData["mainObj"] = instance
+                                _, characterData["moveItemObj"] = TryAddSubObjective(instance, moveItemObj, constructor, onCompletedGenerator, onAbandonGenerator)
                             end
                         end
                     end
@@ -269,15 +253,15 @@ local function activate(self)
         self:AddPatch("Barotrauma.AIObjectiveContainItem", ".ctor",
         {"Barotrauma.Character", "Barotrauma.Item", "Barotrauma.Items.Components.ItemContainer", "Barotrauma.AIObjectiveManager", "System.Single"},
         function(instance, ptable)
-            local characterDataInstance = rawget(characterData, ptable["character"])
+            local characterData = allCharacterData[ptable["character"]]
 
-            if characterDataInstance then
-                local mainObj = characterDataInstance["mainObj"]
+            if characterData then
+                local mainObj = characterData["mainObj"]
 
                 if  mainObj and
                     mainObj == ptable["objectiveManager"].CurrentObjective
                 then
-                    instance.TargetSlot = characterDataInstance["index"]
+                    instance.TargetSlot = characterData["index"]
                     instance.AllowDangerousPressure = false
                     instance.AllowToFindDivingGear = false
                 end

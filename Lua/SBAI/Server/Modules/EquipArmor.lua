@@ -34,59 +34,46 @@ end
 ---@param self Types.Module
 local function activate(self)
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
-    local characterData
+    local allCharacterData = Types.TimedCharacterData.new(self)
 
     do
-        local Timer = Types.Timer
-        local timeBetween = self.options["timeBetween"]
-
-        ---@type table<Barotrauma.Character,Types.Timer>
-        characterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
-            ---@param t table<Barotrauma.Character,Types.Timer>
-            ---@param k Barotrauma.Character
-            __index = function(t, k)
-                t[k] = Timer.new(timeBetween)
-                return t[k]
-            end
-        })
-    end
-
-    local FindItems = util.FindItems
-    
-    self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
-    function(instance, ptable)
-        local character = instance.character --[[@type Barotrauma.Character]]
+        local FindItems = util.FindItems
         
-        if  character.IsHuman and
-            characterData[character]:Update(ptable["deltaTime"])
-        then
-            local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
-            local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
+        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
+        function(instance, ptable)
+            local character = instance.character --[[@type Barotrauma.Character]]
+            
+            if  character.IsHuman and
+                allCharacterData:Get(character).timer:Update(ptable["deltaTime"])
+            then
+                local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
+                local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
 
-            do
-                local i = 0
+                do
+                    local i = 0
 
-                for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
-                    if not inventory.GetItemInLimbSlot(slotType) then
-                        i = i + 1
-                        filteredClothesSlotTypes[i] = slotType
+                    for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
+                        if not inventory.GetItemInLimbSlot(slotType) then
+                            i = i + 1
+                            filteredClothesSlotTypes[i] = slotType
+                        end
                     end
+
+                    if i <= 0 then return end
                 end
 
-                if i <= 0 then return end
-            end
+                local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, generateWearableArmorPredicate(filteredClothesSlotTypes))
 
-            local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, generateWearableArmorPredicate(filteredClothesSlotTypes))
-
-            for slotType in filteredClothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
-                for item in wearables do --[[@cast item Barotrauma.Item]]
-                    if inventory.TryPutItem(item, character, {slotType}, true, true) then
-                        break
+                for slotType in filteredClothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
+                    for item in wearables do --[[@cast item Barotrauma.Item]]
+                        if inventory.TryPutItem(item, character, {slotType}, true, true) then
+                            break
+                        end
                     end
                 end
             end
-        end
-    end, Hook.HookMethodType.Before)
+        end, Hook.HookMethodType.Before)
+    end
 end
 
 return Types.Module.new(activate)

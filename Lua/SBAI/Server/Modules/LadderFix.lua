@@ -5,22 +5,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"]
 
 ---@param self Types.Module
 local function activate(self)
-    local characterData --[[@type table<Barotrauma.Character,Types.Timer>]]
-
-    do
-        local Timer = Types.Timer
-        local timeBetween = self.options["timeBetween"]
-
-        ---@type table<Barotrauma.Character,Types.Timer>
-        characterData = setmetatable(self:RegisterTable("ROUND_END", "CHARACTER_DEATH"), {
-            ---@param t table<Barotrauma.Character,Types.Timer>
-            ---@param k Barotrauma.Character
-            __index=function(t, k)
-                t[k] = Timer.new(timeBetween)
-                return t[k]
-            end}
-        )
-    end
+    local allCharacterData = Types.TimedCharacterData.new(self)
 
     local Distance = Vector2.Distance
 
@@ -30,14 +15,14 @@ local function activate(self)
         local character = controller.Character --[[@type Barotrauma.Character]]
 
         if  character.CanClimb then
-            local characterDataInstance = characterData[character]
+            local characterData = allCharacterData:Get(character)
 
-            if characterDataInstance:UpdateClock() then
+            if characterData.timer:UpdateClock() then
                 if  instance.GetCurrentLadder() and
                     character.IsClimbing and
                     controller.Steering.Length() > 1
                 then
-                    local oldSimPos = characterDataInstance["simPos"] --[[@type Microsoft.Xna.Framework.Vector2]]
+                    local oldSimPos = characterData["simPos"] --[[@type Microsoft.Xna.Framework.Vector2]]
                     local simPos = controller.SimPosition --[[@type Microsoft.Xna.Framework.Vector2]]
 
                     if oldSimPos then
@@ -59,21 +44,21 @@ local function activate(self)
                                             potentialNode.ConnectedDoor.HasAccess(character)
                                         )
                                     then
-                                        characterDataInstance["simPos"] = nil
+                                        characterData["simPos"] = nil
                                         currentPath.SkipToNode(potentialIndex)
                                         break
                                     end
                                 end
                             end
                         else
-                            characterDataInstance["simPos"] = nil
+                            characterData["simPos"] = nil
                         end
-                        characterDataInstance:Reset()
+                        characterData.timer:Reset()
                     else
-                        characterDataInstance["simPos"] = simPos
+                        characterData["simPos"] = simPos
                     end
                 else
-                    characterDataInstance["simPos"] = nil
+                    characterData["simPos"] = nil
                 end
             end
         end
