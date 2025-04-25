@@ -169,7 +169,7 @@ do
     subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
     
     subsubsection = subsection:CreateSection("JengaMaster")
-    subsubsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsubsection:CreateOption("timeBetween", 120, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsubsection = subsection:CreateSection("NonThreatening")
     subsubsection:CreateOption("ragdollHealthPercent", 75.0, Config.OPTION_TYPE.float, 10, 90) 
