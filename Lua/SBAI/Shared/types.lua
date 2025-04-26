@@ -3,6 +3,164 @@ local util = require("SBAI.Shared.util")
 
 local Types = {}
 
+---@enum TYPES
+Types.TYPES = {
+    SET=1
+}
+
+---@class Set
+---@field public type Types.TYPES.SET
+Types.Set = {type=Types.TYPES.SET}
+Types.Set.__index = Types.Set
+
+---@return Set
+function Types.Set.new()
+    local t = {}
+
+    setmetatable(t, Types.Set)
+    return t
+end
+
+---@param k any
+function Types.Set:Add(k)
+    self[k] = true
+end
+
+---@param k any
+function Types.Set:Remove(k)
+    self[k] = nil
+end
+
+do
+    local SET = Types.TYPES.SET
+
+    ---@param self Set
+    ---@param t any[]|Set
+    function Types.Set:Update(t)
+        if t.type == SET then
+            for k in next, t do
+                self:Add(k)
+            end
+        else
+            for v in t do
+                self:Add(v)
+            end
+        end
+    end
+end
+
+do
+    local new = Types.Set.new
+
+    ---@param self Set
+    ---@return Set
+    function Types.Set:Copy()
+        local out = new()
+
+        out:Update(self)
+        return out
+    end
+end
+
+---@param self Set
+---@param t any[]|Set
+function Types.Set:Union(t)
+    local out = self:Copy()
+    
+    out:Update(t)
+    return out
+end
+
+do
+    local SET = Types.TYPES.SET
+
+    local new = Types.Set.new
+
+    ---@param self Set
+    ---@param t any[]|Set
+    function Types.Set:Intersection_Update(t)
+        if t.type ~= SET then
+            local temp = new()
+
+            for v in t do
+                temp:Add(v)
+            end
+            t = temp
+        end
+
+        for k in next, self do
+            if t[k] == nil then
+                self:Remove(k)
+            end
+        end
+    end
+end
+
+---@param self Set
+---@param t any[]|Set
+---@return Set
+function Types.Set:Intersection(t)
+    local out = self:Copy()
+
+    out:Intersection_Update(t)
+    return out
+end
+
+do
+    local SET = Types.TYPES.SET
+
+    ---@param self Set
+    ---@param t any[]|Set
+    function Types.Set:Difference_Update(t)
+        if t.type == SET then
+            for k in next, t do
+                self:Remove(k)
+            end
+        else
+            for v in t do
+                self:Remove(v)
+            end
+        end
+    end
+end
+
+---@param self Set
+---@param t any[]|Set
+---@return Set
+function Types.Set:Difference(t)
+    local out = self:Copy()
+
+    out:Difference_Update(t)
+    return out
+end
+
+do
+    local SET = Types.TYPES.SET
+
+    ---@param self Set
+    ---@param t any[]|Set
+    function Types.Set:Symmetric_Difference_Update(t)
+        if t.type == SET then
+            for k in next, t do
+                self[k] = not self[k] and true or nil
+            end
+        else
+            for v in t do
+                self[v] = not self[v] and true or nil
+            end
+        end
+    end
+end
+
+---@param self Set
+---@param t any[]|Set
+function Types.Set:Symmetric_Difference(t)
+    local out = self:Copy()
+
+    out:Symmetric_Difference_Update(t)
+    return out
+end
+
 ---@class Types.Timer
 ---@field private lastClock number
 ---@field private time number
@@ -80,16 +238,28 @@ end
 Types.Module = {}
 Types.Module.__index = Types.Module
 
----@private
----@generic T
----@param funcName string
----@param func fun(T):any
----@param ... T
-function Types.Module:pcall(funcName, func, ...)
-    local success, errMsg = pcall(func, self, ...)
+do
+    local Logger = Logger
+    local remove = table.remove
+    local unpack = table.unpack
 
-    if not success then
-        Logger.LogError(self.namespace().."."..funcName..": "..errMsg)
+    ---@private
+    ---@generic T,R
+    ---@param name? string
+    ---@param func fun(...:T):R
+    ---@param ... T
+    ---@return R
+    function Types.Module:pcall(name, func, ...)
+        local results = {pcall(func, self, ...)}
+        local success = remove(results, 1)
+
+        name = name == nil and "" or "."..name
+
+        if not success then
+            Logger.LogError(self.namespace()..name..": "..results[1])
+        else
+            return unpack(results)
+        end
     end
 end
 
@@ -207,6 +377,36 @@ do
     end
 end
 
+do
+    local insert = table.insert
+    local select = select
+    local unpack = table.unpack
+
+    ---@public
+    ---@generic T
+    ---@param name string
+    ---@param func fun(self:Types.Module, options:table, ...:T)
+    ---@param ... T
+    function Types.Module:DoOption(name, func, ...)
+        local options = self.options[name]
+
+        if options then
+            local args = {...}
+            local n = select("#", ...)
+
+            if type(options) == "table" then
+                if not options.enable then return end
+                insert(args, 1, options)
+                n = n + 1
+            end
+            self.namespace = self.namespace + name
+            local results = {self:pcall(nil, func, unpack(args, 1, n))}
+            self.namespace = -self.namespace
+            return unpack(results)
+        end
+    end
+end
+
 
 ---@class Types.TimedCharacterData
 ---@field private [Barotrauma.Character] {timer:Types.Timer}
@@ -234,16 +434,22 @@ function Types.TimedCharacterData:Get(character)
     return self[character]
 end
 
----@public
----@param module Types.Module
----@param timeBetween? number
----@return Types.TimedCharacterData
-function Types.TimedCharacterData.new(module, timeBetween)
-    timeBetween = timeBetween or module.options["timeBetween"]
-    
-    local t = module:RegisterTable({timeBetween=timeBetween}, "ROUND_END", "CHARACTER_DEATH")
+do
+    local CopyTable = util.itertools.CopyTable
 
-    return setmetatable(t, Types.TimedCharacterData)
+    ---@public
+    ---@param module Types.Module
+    ---@param timeBetween? number
+    ---@param init? table
+    ---@return Types.TimedCharacterData
+    function Types.TimedCharacterData.new(module, timeBetween, init)
+        init = init and CopyTable(init) or {}
+        init.timeBetween = timeBetween or module.options["timeBetween"]
+        
+        local t = module:RegisterTable(init, "ROUND_END", "CHARACTER_DEATH")
+
+        return setmetatable(t, Types.TimedCharacterData)
+    end
 end
 
 return Types
