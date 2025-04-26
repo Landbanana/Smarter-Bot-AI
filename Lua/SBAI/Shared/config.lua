@@ -235,7 +235,7 @@ if SERVER or Game.IsSingleplayer then
         local function LoadRecurse(name, raw, default)
             local defaultValue = default.value
             local defaultType = type(defaultValue)
-            local rawValue = raw[name]
+            local rawValue = raw and raw[name] or nil
             
             if defaultValue ~= nil then --[[@cast default -ConfigSection]]
                 if type(rawValue) ~= defaultType then
