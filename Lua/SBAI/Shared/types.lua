@@ -8,12 +8,12 @@ Types.TYPES = {
     SET=1
 }
 
----@class Set
+---@class Types.Set
 ---@field public type Types.TYPES.SET
 Types.Set = {type=Types.TYPES.SET}
 Types.Set.__index = Types.Set
 
----@return Set
+---@return Types.Set
 function Types.Set.new()
     local t = {}
 
@@ -34,8 +34,8 @@ end
 do
     local SET = Types.TYPES.SET
 
-    ---@param self Set
-    ---@param t any[]|Set
+    ---@param self Types.Set
+    ---@param t any[]|Types.Set
     function Types.Set:Update(t)
         if t.type == SET then
             for k in next, t do
@@ -51,9 +51,8 @@ end
 
 do
     local new = Types.Set.new
-
-    ---@param self Set
-    ---@return Set
+    
+    ---@return Types.Set
     function Types.Set:Copy()
         local out = new()
 
@@ -62,8 +61,8 @@ do
     end
 end
 
----@param self Set
----@param t any[]|Set
+---@param self Types.Set
+---@param t any[]|Types.Set
 function Types.Set:Union(t)
     local out = self:Copy()
     
@@ -76,8 +75,8 @@ do
 
     local new = Types.Set.new
 
-    ---@param self Set
-    ---@param t any[]|Set
+    ---@param self Types.Set
+    ---@param t any[]|Types.Set
     function Types.Set:Intersection_Update(t)
         if t.type ~= SET then
             local temp = new()
@@ -96,9 +95,9 @@ do
     end
 end
 
----@param self Set
----@param t any[]|Set
----@return Set
+---@param self Types.Set
+---@param t any[]|Types.Set
+---@return Types.Set
 function Types.Set:Intersection(t)
     local out = self:Copy()
 
@@ -109,8 +108,8 @@ end
 do
     local SET = Types.TYPES.SET
 
-    ---@param self Set
-    ---@param t any[]|Set
+    ---@param self Types.Set
+    ---@param t any[]|Types.Set
     function Types.Set:Difference_Update(t)
         if t.type == SET then
             for k in next, t do
@@ -124,9 +123,9 @@ do
     end
 end
 
----@param self Set
----@param t any[]|Set
----@return Set
+---@param self Types.Set
+---@param t any[]|Types.Set
+---@return Types.Set
 function Types.Set:Difference(t)
     local out = self:Copy()
 
@@ -137,8 +136,8 @@ end
 do
     local SET = Types.TYPES.SET
 
-    ---@param self Set
-    ---@param t any[]|Set
+    ---@param self Types.Set
+    ---@param t any[]|Types.Set
     function Types.Set:Symmetric_Difference_Update(t)
         if t.type == SET then
             for k in next, t do
@@ -152,8 +151,8 @@ do
     end
 end
 
----@param self Set
----@param t any[]|Set
+---@param self Types.Set
+---@param t any[]|Types.Set
 function Types.Set:Symmetric_Difference(t)
     local out = self:Copy()
 
