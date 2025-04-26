@@ -8,13 +8,14 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 
 local petItemIds = {"poop", "mucusball", "chitin"}
 
-local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-local Contains = util.itertools.Contains
-local sort = table.sort
-
 ---@param self Types.Module
 local function activate(self)
-    return DoWithTemporaryRegistrations({
+    local Item = Item
+    local ItemPrefab = ItemPrefab
+
+    local Contains = util.itertools.Contains
+
+    return util.DoWithTemporaryRegistrations({
         "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
     },
@@ -43,6 +44,13 @@ end
 
 ---@param self Types.Module
 local function deactivate(self)
+    local Item = Item
+    local ItemPrefab = ItemPrefab
+
+    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+    local Contains = util.itertools.Contains
+    local sort = table.sort
+
     return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]"},
     function()
         for t in petItemIds do

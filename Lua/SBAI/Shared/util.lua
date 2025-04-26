@@ -1,8 +1,9 @@
 local Constants = require("SBAI.Shared.constants")
 
 local util = {}
-util.functools = {}
-util.itertools = {}
+util.debug={}
+util.functools={}
+util.itertools={}
 
 local LuaUserData = LuaUserData
 
@@ -15,7 +16,7 @@ LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrict
 ---@param t table
 function util.itertools.ClearTable(t)
     for k in next, t do
-        rawset(t, k, nil)
+        t[k] = nil
     end
 end
 
@@ -27,16 +28,9 @@ function util.itertools.CopyTable(t1, t2)
     t2 = t2 or {}
 
     for k, v in next, t1 do
-        rawset(t2, k, v)
+        t2[k] = v
     end
     return t2
-end
-
----@generic T
----@param t table<T,any>
----@param key T
-function util.itertools.RemoveKey(t, key)
-    rawset(t, key, nil)
 end
 
 ---@generic T
@@ -44,7 +38,7 @@ end
 ---@param ... T
 function util.itertools.RemoveKeys(t, ...)
     for k in {...} do
-        rawset(t, k, nil)
+        t[k] = nil
     end
 end
 
@@ -54,7 +48,7 @@ end
 function util.itertools.RemoveValue(t, value)
     for k, v in next, t do
         if v == value then
-            rawset(t, k, nil)
+            t[k] = nil
             return
         end
     end
@@ -69,7 +63,7 @@ function util.itertools.RemoveValues(t, ...)
     for k, v in next, t do
         for value in values do
             if v == value then
-                rawset(t, k, nil)
+                t[k] = nil
                 break
             end
         end
@@ -82,7 +76,7 @@ end
 function util.itertools.RemoveSpecifiedItem(t, predicate)
     for k, v in next, t do
         if predicate(k, v) then
-            rawset(t, k, nil)
+            t[k] = nil
             break
         end
     end
@@ -94,7 +88,7 @@ end
 function util.itertools.RemoveSpecifiedItems(t, predicate)
     for k, v in next, t do
         if predicate(k, v) then
-            rawset(t, k, nil)
+            t[k] = nil
         end
     end
 end
@@ -123,19 +117,17 @@ function util.itertools.All(predicate, t, ...)
     return true
 end
 
-do
-    ---@generic V
-    ---@param t V[]
-    ---@param v V
-    ---@return boolean
-    function util.itertools.Contains(t, v)
-        for val in t do
-            if val == v then
-                return true
-            end
+---@generic V
+---@param t V[]
+---@param v V
+---@return boolean
+function util.itertools.Contains(t, v)
+    for val in t do
+        if val == v then
+            return true
         end
-        return false
     end
+    return false
 end
 
 ---@param ... any[]
@@ -349,7 +341,6 @@ do
     ---@param deviation number
     ---@return number
     function util.AddNoise(value, deviation)
-        if value == nil or deviation == nil then error("bad", 2) end
         return value*(1 + deviation*(2*random() - 1))
     end
 end
@@ -366,13 +357,36 @@ function util.IsWaitObjective(instance)
     return instance.IsWaitOrder
 end
 
----@generic T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a0:T0,a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param arg T0
----@return fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial(func, arg)
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param a1 T1
+---@return fun(a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial1(func, a1)
     return function(...)
-        return func(arg, ...)
+        return func(a1, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param a1 T1
+---@param a2 T2
+---@return fun(a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial2(func, a1, a2)
+    return function(...)
+        return func(a1, a2, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@return fun(a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial3(func, a1, a2, a3)
+    return function(...)
+        return func(a1, a2, a3, ...)
     end
 end
 
@@ -701,7 +715,6 @@ do
     end
 end
 
-util.debug = {}
 do
     local clock = os.clock
     local difftime = os.difftime
@@ -761,7 +774,6 @@ function util.UnregisterAll(...)
 end
 
 do
-    local pack = table.pack
     local unpack = table.unpack
     local RegisterAll = util.RegisterAll
     local UnregisterAll = util.UnregisterAll

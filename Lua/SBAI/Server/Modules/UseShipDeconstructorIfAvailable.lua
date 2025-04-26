@@ -28,8 +28,8 @@ local function activate(self)
             local i = 0
 
             for deconstructor in FindItems(nil, Submarine.MainSub.GetItems(true), nil, nil,
-            function(_, j)
-                return j.GetComponent(Deconstructor) ~= nil
+            function(_, item)
+                return item.GetComponent(Deconstructor) ~= nil
             end) do
                 i = i + 1
                 list[i] = deconstructor
@@ -45,7 +45,7 @@ local function activate(self)
 
     do
         local Character = Character
-        local deconObj = LuaUserData.CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
+        local AIObjectiveDeconstructItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
 
         ---@return number
         function anyDeconOrder()
@@ -53,7 +53,7 @@ local function activate(self)
                 if  character.IsHuman and
                     character.IsBot and
                     character.IsOnPlayerTeam and
-                    character.AIController.objectiveManager.HasOrder(deconObj)
+                    character.AIController.objectiveManager.HasOrder(AIObjectiveDeconstructItem)
                 then
                     return playerDeconstructors.n
                 end
