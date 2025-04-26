@@ -386,6 +386,7 @@ do
 end
 
 do
+    local Get = util.config.Get
     local insert = table.insert
     local select = select
     local unpack = table.unpack
@@ -396,7 +397,8 @@ do
     ---@param func fun(self:Types.Module, options:table, ...:T)
     ---@param ... T
     function Types.Module:DoOption(name, func, ...)
-        local options = self.options[name]
+        local newNamespace = self.namespace + name
+        local options = Get(self.options, newNamespace, 1)
 
         if options then
             local args = {...}
@@ -414,7 +416,6 @@ do
         end
     end
 end
-
 
 ---@class Types.TimedCharacterData
 ---@field private [Barotrauma.Character] {timer:Types.Timer}

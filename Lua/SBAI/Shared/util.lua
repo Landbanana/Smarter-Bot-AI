@@ -1,9 +1,10 @@
 local Constants = require("SBAI.Shared.constants")
 
 local util = {}
-util.debug={}
-util.functools={}
-util.itertools={}
+util.config = {}
+util.debug = {}
+util.functools = {}
+util.itertools = {}
 
 local LuaUserData = LuaUserData
 
@@ -800,6 +801,56 @@ do
         end
         
         return results
+    end
+end
+
+---@param config table
+---@param optionString string
+---@param skip integer
+---@return OptionType
+---@overload fun(config, optionList:Namespace)
+function util.config.Get(config, optionString, skip)
+    skip = skip or 0
+
+    if type(optionString) == "string" then
+        for _=0,skip,1 do
+            optionString = optionString:match("[^%.]+%.(.+)")
+        end
+        for sub in optionString:gmatch("([^%.]+)") do
+            config = config[sub]
+        end
+    else
+        local i = 0
+
+        for sub in optionString.stack do
+            if i >= skip then
+                config = config[sub]
+            else
+                i = i + 1
+            end
+        end
+    end
+    return config
+end
+
+do
+    local Get = util.config.Get
+    local match = string.match
+
+    ---@param config table
+    ---@param optionString string
+    ---@param skip integer
+    ---@param value any
+    ---@overload fun(optionList:Namespace, value:OptionType)
+    function util.config.Set(config, optionString, value, skip)
+        if type(optionString) == "table" then
+            Get(config, -optionString, skip)[optionString.stack[#optionString.stack]] = value
+            return
+        end
+
+        local preOptionString, subOptionString = match(optionString, "(.+[^%.]+)%.([^%.]+)$")
+
+        Get(config, preOptionString, skip)[subOptionString] = value
     end
 end
 

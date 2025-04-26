@@ -1,5 +1,4 @@
 local util = require("SBAI.Shared.util")
-local Constants = require("SBAI.Shared.constants")
 
 local SBAI = {
     Constants=require("SBAI.Shared.constants"),
@@ -148,7 +147,10 @@ if SERVER or Game.IsSingleplayer then
 
     SBAI.Config.Save = function(reactivate)
         oldSave()
-        if reactivate == nil or reactivate then SBAI.Control.Activate() end
+        if reactivate == nil or reactivate then
+            SBAI.Control.Deactivate()
+            SBAI.Control.Activate()
+        end
     end
 
     SBAI.Config.Load()

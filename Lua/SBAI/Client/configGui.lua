@@ -1,4 +1,5 @@
 local SBAI = require("SBAI")
+local util = require("SBAI.Shared.util")
 
 local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
 
@@ -293,7 +294,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
     local function processNumber(defaults, option, value, optionType)
         MakeNamedCut(defaults, option)
 
-        local configRef = SBAI.Config.Get(-namespace)
+        local configRef = util.config.Get(SBAI.Config.data, -namespace)
         local key = namespace.stack[#namespace.stack]
         local numberInput = GUI.NumberInput(
             GUI.RectTransform(
@@ -385,7 +386,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
                 MakeNamedCut(defaults, option)
             end
             
-            local configRef = SBAI.Config.Get(-namespace)
+            local configRef = util.config.Get(SBAI.Config.data, -namespace)
             local key = namespace.stack[#namespace.stack]
             local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
             ---@param button Barotrauma.GUIButton
