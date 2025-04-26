@@ -661,21 +661,10 @@ local function activate(self)
         -- Engineer=activateEngineer
     }
 
-    do
-        local toRemove = {}
-        local i = 0
-
-        for k, _ in pairs(allObjData) do
-            if not self.options[k] then
-                i = i + 1
-                toRemove[i] = k
-            end
-        end
-
-        for k in toRemove do
-            allObjData[k] = nil
-        end
-    end
+    util.itertools.RemoveSpecifiedItems(allObjData,
+    function(k, v)
+        return not self.options[k]
+    end)
 
     for job, jobActivate in pairs(jobMap) do
         local sectionOptions = self.options[job]
@@ -686,7 +675,7 @@ local function activate(self)
             self.namespace = -self.namespace
         end
     end
-
+    
     if instrumentTalentEnabled then
         local Aim = InputType.Aim
         local Shoot = InputType.Shoot
