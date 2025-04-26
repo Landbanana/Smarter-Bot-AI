@@ -168,12 +168,16 @@ end
 
 ---@param self Types.Module
 local function deactivate(self)
+    local Item = Item
+    
+    local FindItems = util.FindItems
+    
     return util.DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
     function()
         local chairItems = Item._chairItems
 
         chairItems.Clear()
-        for item in util.FindItems(nil, Item.ItemList, "chair") do
+        for item in FindItems(nil, Item.ItemList, "chair") do
             chairItems.Add(item)
         end
     end)
