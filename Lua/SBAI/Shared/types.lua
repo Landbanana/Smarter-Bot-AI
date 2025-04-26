@@ -136,21 +136,29 @@ function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hoo
     Hook.Patch(identifier, className, methodName, parameterTypes, patch, hookType)
 end
 
----@public
----@param ... util.CLEAR_REG
----@return table
-function Types.Module:RegisterTable(...)
-    local flags = 0
+do
+    local CLEAR_REG = util.CLEAR_REG
 
-    for flag in {...} do --[[@cast flag util.CLEAR_REG]]
-        flags = flags + util.CLEAR_REG[flag]
+    local RegisterTable = util.RegisterTable
+    local insert = table.insert
+
+    ---@public
+    ---@param init? table
+    ---@param ... util.CLEAR_REG
+    ---@return table
+    function Types.Module:RegisterTable(init, ...)
+        local flags = 0
+
+        for flag in {...} do --[[@cast flag util.CLEAR_REG]]
+            flags = flags + CLEAR_REG[flag]
+        end
+
+        local t = {}
+
+        RegisterTable(t, init, flags)
+        insert(self.tables, {t=t, flags=flags})
+        return t
     end
-
-    local t = {}
-
-    util.RegisterTable(t, flags)
-    table.insert(self.tables, {t=t, flags=flags})
-    return t
 end
 
 ---@public
@@ -181,7 +189,7 @@ do
                 Hook.RemovePatch(v.identifier, v.className, v.methodName, v.parameterTypes, v.hookType)
             end
 
-            for v in self.tables do --[[@cast v {t:table, flags:}]]
+            for v in self.tables do --[[@cast v {t:table, flags:number}]]
                 UnregisterTable(v.t, v.flags)
             end
 
@@ -231,9 +239,9 @@ end
 ---@param timeBetween? number
 ---@return Types.TimedCharacterData
 function Types.TimedCharacterData.new(module, timeBetween)
-    local t = module:RegisterTable("ROUND_END", "CHARACTER_DEATH")
-
-    t.timeBetween = timeBetween or module.options["timeBetween"]
+    timeBetween = timeBetween or module.options["timeBetween"]
+    
+    local t = module:RegisterTable({timeBetween=timeBetween}, "ROUND_END", "CHARACTER_DEATH")
 
     return setmetatable(t, Types.TimedCharacterData)
 end

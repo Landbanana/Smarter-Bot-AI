@@ -12,165 +12,90 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjec
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
----@enum (key) util.CLEAR_REG
-util.CLEAR_REG = {
-    ROUND_END=2,
-    CHARACTER_DEATH=4,
-    ITEM_REMOVED=8
-}
-
 ---@param t table
 function util.itertools.ClearTable(t)
-    for k, _ in next, t do
-        t[k] = nil
+    for k in next, t do
+        rawset(t, k, nil)
     end
 end
 
-do
-    local Acronym = Constants.Acronym
-    local CLEAR_REG = util.CLEAR_REG
+---@generic T:table
+---@param t1 T
+---@param t2? table
+---@return T
+function util.itertools.CopyTable(t1, t2)
+    t2 = t2 or {}
 
-    local btest = bit32.btest
-    local insert = table.insert
-    local remove = table.remove
+    for k, v in next, t1 do
+        rawset(t2, k, v)
+    end
+    return t2
+end
 
-    local roundEnd = {}
-    local characterDeath = {}
-    local itemRemoved = {}
+---@generic T
+---@param t table<T,any>
+---@param key T
+function util.itertools.RemoveKey(t, key)
+    rawset(t, key, nil)
+end
 
-    ---@param t table
-    ---@param flags number
-    function util.RegisterTable(t, flags)
-        if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+---@generic T
+---@param t table<T,any>
+---@param ... T
+function util.itertools.RemoveKeys(t, ...)
+    for k in {...} do
+        rawset(t, k, nil)
+    end
+end
 
-        for flag, subRegistry in pairs({
-            ROUND_END=roundEnd,
-            CHARACTER_DEATH=characterDeath,
-            ITEM_REMOVED=itemRemoved
-        }) do
-            if btest(CLEAR_REG[flag], flags) then
-                insert(subRegistry, t)
+---@generic T
+---@param t table<T,any>
+---@param value T
+function util.itertools.RemoveValue(t, value)
+    for k, v in next, t do
+        if v == value then
+            rawset(t, k, nil)
+            return
+        end
+    end
+end
+
+---@generic T
+---@param t table<T,any>
+---@param ... T
+function util.itertools.RemoveValues(t, ...)
+    local values = {...}
+
+    for k, v in next, t do
+        for value in values do
+            if v == value then
+                rawset(t, k, nil)
+                break
             end
         end
     end
+end
 
-    ---@param t table
-    ---@param flags number
-    function util.UnregisterTable(t, flags)
-        if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
-
-        for flag, subRegistry in pairs({
-            ROUND_END=roundEnd,
-            CHARACTER_DEATH=characterDeath,
-            ITEM_REMOVED=itemRemoved
-        }) do
-            if btest(CLEAR_REG[flag], flags) then
-                for i, v in ipairs(subRegistry) do
-                    if v == t then
-                        remove(subRegistry, i)
-                        break
-                    end
-                end
-            end
+---@generic K,V
+---@param t table<K,V>
+---@param predicate fun(k:K, v:V):boolean
+function util.itertools.RemoveSpecifiedItem(t, predicate)
+    for k, v in next, t do
+        if predicate(k, v) then
+            rawset(t, k, nil)
+            break
         end
     end
+end
 
-    do
-        local ClearTable = util.itertools.ClearTable
-
-        Hook.Add("roundEnd", Acronym..".RoundEndClear",
-        function()
-            for t in roundEnd do --[[@cast t table]]
-                ClearTable(t)
-            end
-        end)
-    end
-
-    Hook.Add("character.death", Acronym..".CharacterDeathClear",
-    ---@param character Barotrauma.Character
-    function(character)
-        for t in characterDeath do --[[@cast t table]]
-            t[character] = nil
+---@generic K,V
+---@param t table<K,V>
+---@param predicate fun(k:K, v:V):boolean
+function util.itertools.RemoveSpecifiedItems(t, predicate)
+    for k, v in next, t do
+        if predicate(k, v) then
+            rawset(t, k, nil)
         end
-    end)
-
-    Hook.Add("item.removed", Acronym..".ItemRemovedClear",
-    ---@param item Barotrauma.Item
-    function(item)
-        for t in itemRemoved do --[[@cast t table]]
-            t[item] = nil
-        end
-    end)
-end
-
-do
-    local Acronym = Constants.Acronym
-
-    local GetItemGroup = Util.GetItemGroup
-    local RegisterItemGroup = Util.RegisterItemGroup
-
-    ---@type table<string,Barotrauma.Item[]>
-    util.ItemGroup = setmetatable({}, {
-        __index = function(t, k)
-            local name = Acronym..".ItemGroup."..k
-            local isRegistered, table = pcall(GetItemGroup, name)
-
-            if isRegistered then
-                t[k] = table
-            else
-                RegisterItemGroup(name, function(item)
-                    return item.HasTag(k)
-                end)
-                t[k] = GetItemGroup(name)
-            end
-            return t[k]
-        end
-    })
-end
-
-util.RegisterTable(util.ItemGroup, util.CLEAR_REG.ROUND_END)
-
-do
-    local clamp = math.clamp
-
-    local function InverseLerp(min, max, v)
-        local diff = max - min;
-        
-        if (diff == 0) then return v >= max and 1 or 0 end
-        return clamp((v - min) / diff, 0, 1);
-    end
-end
-
-do
-    local random = math.random
-
-    ---@param value number
-    ---@param deviation number
-    ---@return number
-    function util.AddNoise(value, deviation)
-        return value*(1 + deviation*(2*random() - 1))
-    end
-end
-
----@return true
----@nodiscard
-function util.True()
-    return true
-end
-
----@param instance Barotrauma.AIObjectiveGoTo
----@return boolean
-function util.IsWaitObjective(instance)
-    return instance.IsWaitOrder
-end
-
----@generic T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a0:T0,a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param arg T0
----@return fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial(func, arg)
-    return function(...)
-        return func(arg, ...)
     end
 end
 
@@ -236,26 +161,6 @@ function util.itertools.Chain(...)
     end
 end
 
----@generic T
----@param t table<T,any>
----@param ... T
-function util.itertools.RemoveKeys(t, ...)
-    for k in {...} do
-        t[k] = nil
-    end
-end
-
----@generic K,V
----@param t table<K,V>
----@param predicate fun(k:K, v:V):boolean
-function util.itertools.RemoveSpecifiedItems(t, predicate)
-    for k, v in next, t do
-        if predicate(k, v) then
-            t[k] = nil
-        end
-    end
-end
-
 do
     local Contains = util.itertools.Contains
     local RemoveSpecifiedItems = util.itertools.RemoveSpecifiedItems
@@ -270,18 +175,6 @@ do
             return Contains(compVals, v)
         end)
     end
-end
-
----@generic T:table
----@param t T
----@return T
-function util.itertools.CopyTable(t)
-    local tNew = {}
-
-    for k, v in next, t do
-        tNew[k] = v
-    end
-    return tNew
 end
 
 do
@@ -306,6 +199,180 @@ do
                 return unpack(t[i])
             end
         end
+    end
+end
+
+---@enum (key) util.CLEAR_REG
+util.CLEAR_REG = {
+    ROUND_END=2,
+    CHARACTER_DEATH=4,
+    ITEM_REMOVED=8
+}
+
+do
+    local roundEnd = {} --[=[@type table<any,any>[]]=]
+    local characterDeath = {} --[=[@type table<Barotrauma.Character,any>[]]=]
+    local itemRemoved = {} --[=[@type table<Barotrauma.Item,any>[]]=]
+
+    local initKey = {}
+
+    do
+        local CLEAR_REG = util.CLEAR_REG
+
+        local btest = bit32.btest
+        local CopyTable = util.itertools.CopyTable
+        local insert = table.insert
+
+        ---@param t table
+        ---@param init? table
+        ---@param flags number
+        function util.RegisterTable(t, init, flags)
+            if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+
+            for flag, subRegistry in pairs({
+                ROUND_END=roundEnd,
+                CHARACTER_DEATH=characterDeath,
+                ITEM_REMOVED=itemRemoved
+            }) do
+                if btest(CLEAR_REG[flag], flags) then
+                    insert(subRegistry, t)
+                end
+            end
+            if init then
+                CopyTable(init, t)
+                t[initKey] = init
+            end
+        end
+    end
+
+    do
+        local CLEAR_REG = util.CLEAR_REG
+
+        local btest = bit32.btest
+        local RemoveValue = util.itertools.RemoveValue
+
+        ---@param t table
+        ---@param flags number
+        function util.UnregisterTable(t, flags)
+            if type(t) ~= "table" then error("t is a "..type(t)..", expecting a table", 2) end
+
+            for flag, subRegistry in pairs({
+                ROUND_END=roundEnd,
+                CHARACTER_DEATH=characterDeath,
+                ITEM_REMOVED=itemRemoved
+            }) do
+                if btest(CLEAR_REG[flag], flags) then
+                    RemoveValue(subRegistry, t)
+                end
+            end
+            t[initKey] = nil
+        end
+    end
+
+    do
+        local ClearTable = util.itertools.ClearTable
+        local CopyTable = util.itertools.CopyTable
+
+        Hook.Add("roundEnd", Constants.Acronym..".RoundEndClear",
+        function()
+            for t in roundEnd do --[[@cast t table]]
+                local init = rawget(t, initKey)
+            
+                ClearTable(t)
+                if init then
+                    CopyTable(init, t)
+                    t[initKey] = init
+                end
+            end
+        end)
+    end
+
+    Hook.Add("character.death", Constants.Acronym..".CharacterDeathClear",
+    ---@param character Barotrauma.Character
+    function(character)
+        for t in characterDeath do --[[@cast t table]]
+            t[character] = nil
+        end
+    end)
+
+    Hook.Add("item.removed", Constants.Acronym..".ItemRemovedClear",
+    ---@param item Barotrauma.Item
+    function(item)
+        for t in itemRemoved do --[[@cast t table]]
+            t[item] = nil
+        end
+    end)
+end
+
+do
+    local Acronym = Constants.Acronym
+
+    local GetItemGroup = Util.GetItemGroup
+    local RegisterItemGroup = Util.RegisterItemGroup
+
+    ---@type table<string,Barotrauma.Item[]>
+    util.ItemGroup = setmetatable({}, {
+        __index = function(t, k)
+            local name = Acronym..".ItemGroup."..k
+            local isRegistered, table = pcall(GetItemGroup, name)
+
+            if isRegistered then
+                t[k] = table
+            else
+                RegisterItemGroup(name, function(item)
+                    return item.HasTag(k)
+                end)
+                t[k] = GetItemGroup(name)
+            end
+            return t[k]
+        end
+    })
+end
+
+util.RegisterTable(util.ItemGroup, nil, util.CLEAR_REG.ROUND_END)
+
+do
+    local clamp = math.clamp
+
+    local function InverseLerp(min, max, v)
+        local diff = max - min;
+        
+        if (diff == 0) then return v >= max and 1 or 0 end
+        return clamp((v - min) / diff, 0, 1);
+    end
+end
+
+do
+    local random = math.random
+
+    ---@param value number
+    ---@param deviation number
+    ---@return number
+    function util.AddNoise(value, deviation)
+        if value == nil or deviation == nil then error("bad", 2) end
+        return value*(1 + deviation*(2*random() - 1))
+    end
+end
+
+---@return true
+---@nodiscard
+function util.True()
+    return true
+end
+
+---@param instance Barotrauma.AIObjectiveGoTo
+---@return boolean
+function util.IsWaitObjective(instance)
+    return instance.IsWaitOrder
+end
+
+---@generic T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a0:T0,a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param arg T0
+---@return fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial(func, arg)
+    return function(...)
+        return func(arg, ...)
     end
 end
 

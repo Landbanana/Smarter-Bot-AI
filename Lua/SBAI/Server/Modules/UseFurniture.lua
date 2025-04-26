@@ -58,7 +58,7 @@ end
 ---@param options table
 local function activateAutoUseWhenIdle(self, options)
     local idleFurniture = {}
-    local idleFurnitureList = setmetatable(self:RegisterTable("ROUND_END"), {
+    local idleFurnitureList = setmetatable(self:RegisterTable(nil, "ROUND_END"), {
         __call=function(t)
             if not t.data then
                 do

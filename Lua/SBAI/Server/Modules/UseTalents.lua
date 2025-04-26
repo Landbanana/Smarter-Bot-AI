@@ -34,7 +34,7 @@ do
     --LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "AllowInAnySub")
 end
 
-local allTalentRanges
+local allTalentRanges --[[@type table<string,{maxDistance:number, allowSelf:boolean}>]]
 
 do
     local MAX_FLOAT = Constants.MAX_FLOAT
@@ -72,7 +72,8 @@ end
 ---@field private [Barotrauma.Character] {timer:Types.Timer, isPlaying:boolean, instrument:Barotrauma.Item?, lastObjective:Barotrauma.AIObjective?}
 ---@field public Get fun(self:UseTalents.allCharacterInstrumentData, character:Barotrauma.Character):{timer:Types.Timer, isPlaying:boolean, instrument:Barotrauma.Item?, lastObjective:Barotrauma.AIObjective?}
 local allCharacterInstrumentData
-local allInstrumentTalentData
+local allInstrumentTalentData --[[@type table<string,{afflictionId:Barotrauma.Identifier, validInstruments:Barotrauma.Identifier[]}>]]
+
 
 ---@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
 local instrumentData = setmetatable({}, {
@@ -201,7 +202,7 @@ end
 
 local instrumentTalentEnabled = false
 local playInstruments
-local allObjData = {
+local allInstrumentObjData = {
     ["idle"]={
         fullTypeName="Barotrauma.AIObjectiveIdle",
         prePatch=util.True
@@ -374,7 +375,7 @@ local function activateAssistant(self, options)
 
     if suboptions.enable then
         self.namespace = self.namespace + talentId
-        for objData in allObjData do
+        for objData in allInstrumentObjData do
             instrumentTalentEnabled = true
 
             self:AddPatch(objData.fullTypeName, "Act", nil,
@@ -441,7 +442,7 @@ local function activateAssistant(self, options)
     if suboptions.enable then
         self.namespace = self.namespace + talentId
 
-        local untouchedContainers = self:RegisterTable("ROUND_END") --[[@type {n:number, set:table<Barotrauma.Item,true>}]]
+        local untouchedContainers = self:RegisterTable(nil, "ROUND_END") --[[@type {n:number, set:table<Barotrauma.Item,true>}]]
         local allCharacterData = Types.TimedCharacterData.new(self, suboptions["timeBetween"])
         local hasTargets = true
 
@@ -637,7 +638,7 @@ local function activateCaptain(self, options)
     
     if suboptions.enable then
         self.namespace = self.namespace + talentId
-        for objData in allObjData do
+        for objData in allInstrumentObjData do
             instrumentTalentEnabled = true
                 
             self:AddPatch(objData.fullTypeName, "Act", nil,
@@ -661,7 +662,7 @@ local function activate(self)
         -- Engineer=activateEngineer
     }
 
-    util.itertools.RemoveSpecifiedItems(allObjData,
+    util.itertools.RemoveSpecifiedItems(allInstrumentObjData,
     function(k, v)
         return not self.options[k]
     end)

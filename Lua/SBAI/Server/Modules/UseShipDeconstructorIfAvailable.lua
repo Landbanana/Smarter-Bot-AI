@@ -16,7 +16,7 @@ local function activate(self)
     local FindItems = util.FindItems
     local PoweredItemHasNeededPower = util.PoweredItemHasNeededPower
 
-    local playerDeconstructors = self:RegisterTable("ROUND_END") --[=[@type {n:number, list:Barotrauma.Item[]}]=]
+    local playerDeconstructors = self:RegisterTable(nil, "ROUND_END") --[=[@type {n:number, list:Barotrauma.Item[]}]=]
 
     setmetatable(playerDeconstructors, {
     ---@param t table
