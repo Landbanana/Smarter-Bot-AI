@@ -391,6 +391,19 @@ function util.functools.Partial3(func, a1, a2, a3)
     end
 end
 
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@param a4 T4
+---@return fun(a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial4(func, a1, a2, a3, a4)
+    return function(...)
+        return func(a1, a2, a3, a4, ...)
+    end
+end
+
 do
     local HULL_SAFETY_THRESHOLD = LuaUserData.CreateStatic("Barotrauma.HumanAIController").HULL_SAFETY_THRESHOLD
 
