@@ -21,6 +21,15 @@ function Types.Set.new()
     return t
 end
 
+do
+    local SET = Types.TYPES.SET
+
+    function Types.Set.IsSet(t)
+        return  type(t) == "table" and
+            t.type == SET
+    end
+end
+
 ---@param k any
 function Types.Set:Add(k)
     self[k] = true
@@ -32,12 +41,11 @@ function Types.Set:Remove(k)
 end
 
 do
-    local SET = Types.TYPES.SET
+    local IsSet = Types.Set.IsSet
 
-    ---@param self Types.Set
     ---@param t any[]|Types.Set
     function Types.Set:Update(t)
-        if t.type == SET then
+        if IsSet(t) then
             for k in next, t do
                 self:Add(k)
             end
@@ -61,7 +69,6 @@ do
     end
 end
 
----@param self Types.Set
 ---@param t any[]|Types.Set
 function Types.Set:Union(t)
     local out = self:Copy()
@@ -71,14 +78,13 @@ function Types.Set:Union(t)
 end
 
 do
-    local SET = Types.TYPES.SET
+    local IsSet = Types.Set.IsSet
 
     local new = Types.Set.new
 
-    ---@param self Types.Set
     ---@param t any[]|Types.Set
     function Types.Set:Intersection_Update(t)
-        if t.type ~= SET then
+        if not IsSet(t) then
             local temp = new()
 
             for v in t do
@@ -95,7 +101,6 @@ do
     end
 end
 
----@param self Types.Set
 ---@param t any[]|Types.Set
 ---@return Types.Set
 function Types.Set:Intersection(t)
@@ -106,12 +111,11 @@ function Types.Set:Intersection(t)
 end
 
 do
-    local SET = Types.TYPES.SET
+    local IsSet = Types.Set.IsSet
 
-    ---@param self Types.Set
     ---@param t any[]|Types.Set
     function Types.Set:Difference_Update(t)
-        if t.type == SET then
+        if IsSet(t) then
             for k in next, t do
                 self:Remove(k)
             end
@@ -123,7 +127,6 @@ do
     end
 end
 
----@param self Types.Set
 ---@param t any[]|Types.Set
 ---@return Types.Set
 function Types.Set:Difference(t)
@@ -134,12 +137,11 @@ function Types.Set:Difference(t)
 end
 
 do
-    local SET = Types.TYPES.SET
+    local IsSet = Types.Set.IsSet
 
-    ---@param self Types.Set
     ---@param t any[]|Types.Set
     function Types.Set:Symmetric_Difference_Update(t)
-        if t.type == SET then
+        if IsSet(t) then
             for k in next, t do
                 self[k] = not self[k] and true or nil
             end
@@ -151,13 +153,20 @@ do
     end
 end
 
----@param self Types.Set
 ---@param t any[]|Types.Set
 function Types.Set:Symmetric_Difference(t)
     local out = self:Copy()
 
     out:Symmetric_Difference_Update(t)
     return out
+end
+
+---@return boolean
+function Types.Set:IsEmpty()
+    for _ in next, self do
+        return false
+    end
+    return true
 end
 
 ---@class Types.Timer

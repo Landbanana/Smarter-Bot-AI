@@ -1,14 +1,16 @@
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-local wearableArmorPredicate --[[@type fun(slotTypes:Barotrauma.InvSlotType, character:Barotrauma.Character, item:Barotrauma.Item):boolean]]
+local wearableArmorPredicate --[[@type fun(slotTypes:integer, character:Barotrauma.Character, item:Barotrauma.Item):boolean]]
 
 do
     local Wearable = Components.Wearable
 
+    local band = bit32.band
     local Contains = util.itertools.Contains
     
-    ---@param slotTypes Barotrauma.InvSlotType[]
+    
+    ---@param slotTypes integer
     ---@param character Barotrauma.Character
     ---@param item Barotrauma.Item
     ---@return boolean
@@ -18,8 +20,8 @@ do
             not item.HasTag("deepdiving") or
             not Contains(character.HeldItems, item)
         then
-            for slot in slotTypes do --[[@cast slot Barotrauma.InvSlotType]]
-                if Contains(item.AllowedSlots, slot) then
+            for v in item.AllowedSlots do
+                if band(slotTypes, v) == v then
                     return true
                 end
             end
@@ -33,6 +35,7 @@ local function activate(self)
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
     local allCharacterData = Types.TimedCharacterData.new(self)
 
+    local band = bit32.band
     local FindItems = util.FindItems
     local Partial1 = util.functools.Partial1
 
@@ -44,27 +47,22 @@ local function activate(self)
             allCharacterData:Get(character).timer:Update(ptable["deltaTime"])
         then
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
-            local filteredClothesSlotTypes = {} --[=[@type Barotrauma.InvSlotType[]]=]
+            local filteredClothesSlotTypes = 0
 
-            do
-                local i = 0
-
-                for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
-                    if not inventory.GetItemInLimbSlot(slotType) then
-                        i = i + 1
-                        filteredClothesSlotTypes[i] = slotType
-                    end
+            for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
+                if not inventory.GetItemInLimbSlot(slotType) then
+                    filteredClothesSlotTypes = filteredClothesSlotTypes + slotType
                 end
-
-                if i <= 0 then return end
             end
+
+            if filteredClothesSlotTypes == 0 then return end
             
             local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, Partial1(wearableArmorPredicate, filteredClothesSlotTypes))
 
-            for slotType in filteredClothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
-                for item in wearables do --[[@cast item Barotrauma.Item]]
-                    if inventory.TryPutItem(item, character, {slotType}, true, true) then
-                        break
+            for item in wearables do --[[@cast item Barotrauma.Item]]
+                for v in item.AllowedSlots do
+                    if band(filteredClothesSlotTypes, v) == v then
+                        if inventory.TryPutItem(item, character, {v}, true, true) then return end
                     end
                 end
             end
