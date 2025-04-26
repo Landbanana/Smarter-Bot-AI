@@ -169,6 +169,26 @@ function Types.Set:IsEmpty()
     return true
 end
 
+do
+    local ClearTable = util.itertools.ClearTable
+
+    function Types.Set:Clear()
+        return ClearTable(self)
+    end
+end
+
+---@return any[]
+function Types.Set:ToList()
+    local out = {}
+    local i = 0
+
+    for k in next, self do
+        i = i + 1
+        out[i] = k
+    end
+    return out
+end
+
 ---@class Types.Timer
 ---@field private lastClock number
 ---@field private time number
