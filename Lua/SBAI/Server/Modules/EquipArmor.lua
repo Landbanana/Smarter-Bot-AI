@@ -34,7 +34,7 @@ local function activate(self)
     local allCharacterData = Types.TimedCharacterData.new(self)
 
     local FindItems = util.FindItems
-    local Partial = util.functools.Partial1
+    local Partial1 = util.functools.Partial1
 
     self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
     function(instance, ptable)
@@ -59,7 +59,7 @@ local function activate(self)
                 if i <= 0 then return end
             end
             
-            local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, Partial(wearableArmorPredicate, filteredClothesSlotTypes))
+            local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, Partial1(wearableArmorPredicate, filteredClothesSlotTypes))
 
             for slotType in filteredClothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
                 for item in wearables do --[[@cast item Barotrauma.Item]]
