@@ -60,43 +60,6 @@ end
 ---@param self Types.Module
 ---@param options table
 local function activateAutoUseWhenIdle(self, options)
-    -- local data
-
-    -- do
-    --     local ItemList = util.UnregisteredStaticDescriptors["System.Collections.Generic.List`1[[Barotrauma.Item]]"]
-    --     data = LuaUserData.CreateUserDataFromDescriptor(ItemList.Static(Item, {}), ItemList.Descriptor)
-    -- end
-
-    -- local idleFurniture = self:RegisterTable({data=data, init=false}, "ROUND_END")
-
-    -- do
-    --     local idleFurnitureIds = Types.Set.new()
-
-    --     do
-    --         local optionToFURNITURE = {
-    --             beds=FURNITURE.BED,
-    --             chairs=FURNITURE.CHAIR
-    --         }
-    --         for k, v in pairs(options) do
-    --             if  k ~= "enable" and
-    --                 v == true
-    --             then
-    --                 idleFurnitureIds:Update(ids[optionToFURNITURE[k]])
-    --             end
-    --         end
-    --     end
-
-    --     local Item = Item
-
-    --     setmetatable(idleFurniture, {
-    --         __call=function(t)
-    --             if t.init == false then
-                    
-    --             end
-    --             return t.data
-    --         end
-    --     })
-    -- end
     local idleFurnitureIds = Types.Set.new()
     local loadChairItems
 
@@ -134,14 +97,6 @@ local function activateAutoUseWhenIdle(self, options)
     end
 
     self:AddHook("roundStart", loadChairItems)
-
-    -- self:AddPatch("Barotrauma.Item", "get_ChairItems", nil,
-    -- function(instance, ptable)
-    --     ptable.PreventExecution = true
-
-    --     return idleFurniture()
-    -- end, Hook.HookMethodType.Before)
-
     loadChairItems()
 end
 
