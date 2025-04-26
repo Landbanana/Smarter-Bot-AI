@@ -5,13 +5,16 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "Act")
 
+---@class Barotrauma.Item
+---@field _chairItems System.Collections.Generic.List*1Barotrauma*Item
+
 ---@enum (key) FURNITURE
 local FURNITURE = {
     BED=1,
     CHAIR=2
 }
 
-local ids --[[@type table<FURNITURE,table<Barotrauma.Identifier,true>>]]
+local ids --[[@type table<FURNITURE,Set>]]
 local bedPredicate
 local chairPredicate
 
@@ -57,61 +60,89 @@ end
 ---@param self Types.Module
 ---@param options table
 local function activateAutoUseWhenIdle(self, options)
-    local idleFurniture = {}
-    local idleFurnitureList = setmetatable(self:RegisterTable(nil, "ROUND_END"), {
-        __call=function(t)
-            if not t.data then
-                do
-                    local ItemList = util.UnregisteredStaticDescriptors["System.Collections.Generic.List`1[[Barotrauma.Item]]"]
+    -- local data
 
-                    t.data = LuaUserData.CreateUserDataFromDescriptor(ItemList.Static(Item, {}), ItemList.Descriptor)
-                end
+    -- do
+    --     local ItemList = util.UnregisteredStaticDescriptors["System.Collections.Generic.List`1[[Barotrauma.Item]]"]
+    --     data = LuaUserData.CreateUserDataFromDescriptor(ItemList.Static(Item, {}), ItemList.Descriptor)
+    -- end
 
-                for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-                    local id = item.Prefab.Identifier
+    -- local idleFurniture = self:RegisterTable({data=data, init=false}, "ROUND_END")
 
-                    for idSet in idleFurniture do
-                        if idSet[id] then
-                            t.data.Add(item)
-                            break
-                        end
-                    end
-                end
-            end
-            return t.data
-        end
-    })
+    -- do
+    --     local idleFurnitureIds = Types.Set.new()
+
+    --     do
+    --         local optionToFURNITURE = {
+    --             beds=FURNITURE.BED,
+    --             chairs=FURNITURE.CHAIR
+    --         }
+    --         for k, v in pairs(options) do
+    --             if  k ~= "enable" and
+    --                 v == true
+    --             then
+    --                 idleFurnitureIds:Update(ids[optionToFURNITURE[k]])
+    --             end
+    --         end
+    --     end
+
+    --     local Item = Item
+
+    --     setmetatable(idleFurniture, {
+    --         __call=function(t)
+    --             if t.init == false then
+                    
+    --             end
+    --             return t.data
+    --         end
+    --     })
+    -- end
+    local idleFurnitureIds = Types.Set.new()
+    local loadChairItems
 
     do
-        local optionToFurniture = {
+        local optionToFURNITURE = {
             beds=FURNITURE.BED,
             chairs=FURNITURE.CHAIR
         }
-        local i = 0
-
-        for k, v in pairs(options) do
+        for k, v in next, options do
             if  k ~= "enable" and
                 v == true
             then
-                i = i + 1
-                idleFurniture[i] = ids[optionToFurniture[k]]
+                idleFurnitureIds:Update(ids[optionToFURNITURE[k]])
             end
         end
     end
 
-    self:AddHook("roundStart",
-    function()
-        return idleFurnitureList()
-    end)
+    do
+        local Item = Item
 
-    self:AddPatch("Barotrauma.Item", "get_ChairItems", nil,
-    function(instance, ptable)
-        ptable.PreventExecution = true
+        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+        local Partial2 = util.functools.Partial2
 
-        return idleFurnitureList()
-    end, Hook.HookMethodType.Before)
+        loadChairItems = Partial2(DoWithTemporaryRegistrations, {"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
+        function()
+            local chairItems = Item._chairItems
 
-    idleFurnitureList()
+            chairItems.Clear()
+            for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
+                if idleFurnitureIds[item.Prefab.Identifier] then
+                    chairItems.Add(item)
+                end
+            end
+        end)
+    end
+
+    self:AddHook("roundStart", loadChairItems)
+
+    -- self:AddPatch("Barotrauma.Item", "get_ChairItems", nil,
+    -- function(instance, ptable)
+    --     ptable.PreventExecution = true
+
+    --     return idleFurniture()
+    -- end, Hook.HookMethodType.Before)
+
+    loadChairItems()
 end
 
 ---@param self Types.Module
@@ -137,54 +168,60 @@ end
 
 ---@param self Types.Module
 local function activate(self)
-    ---@type table<FURNITURE,fun(prefab:Barotrauma.ItemPrefab):boolean>
-    local predicateMap = {
-        [FURNITURE.BED]=bedPredicate,
-        [FURNITURE.CHAIR]=chairPredicate
-    }
+    do
+        ---@type table<FURNITURE,fun(prefab:Barotrauma.ItemPrefab):boolean>
+        local predicateMap = {
+            [FURNITURE.BED]=bedPredicate,
+            [FURNITURE.CHAIR]=chairPredicate
+        }
 
-    ---@type table<FURNITURE,table<Barotrauma.Identifier,true>>
-    ids = setmetatable({}, {
-        ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
-        ---@param k FURNITURE
-        ---@return table<Barotrauma.Identifier,true>
-        __call=function(t, k) return t[k] end,
-        ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
-        ---@param k FURNITURE
-        ---@return table<Barotrauma.Identifier,true>
-        __index=function(t, k)
-            local predicate = predicateMap[k]
+        local Prefabs = ItemPrefab.Prefabs
+        local new = Types.Set.new
 
-            if not predicate then error("Value not recognized as FURNITURE", 2) end
+        ---@type table<FURNITURE,Set>
+        ids = setmetatable({}, {
+            ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
+            ---@param k FURNITURE
+            ---@return table<Barotrauma.Identifier,true>
+            __call=function(t, k) return t[k] end,
+            ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
+            ---@param k FURNITURE
+            ---@return table<Barotrauma.Identifier,true>
+            __index=function(t, k)
+                local predicate = predicateMap[k]
 
-            local idSet = {}
+                if not predicate then error("Value not recognized as FURNITURE", 2) end
 
-            for prefab in ItemPrefab.Prefabs do
-                if predicate(prefab) then
-                    idSet[prefab.Identifier] = true
+                local idSet = new()
+
+                for prefab in Prefabs do
+                    if predicate(prefab) then
+                        idSet:Add(prefab.Identifier)
+                    end
                 end
+                t[k] = idSet
+                return t[k]
             end
-            t[k] = idSet
-            return t[k]
-        end
-    })
-
-    local optionName = "AutoUseWhenIdle"
-    local section = self.options[optionName]
-
-    if section.enable then
-        self.namespace = self.namespace + optionName
-        activateAutoUseWhenIdle(self, section)
-        self.namespace = -self.namespace
+        })
     end
 
-    optionName = "stayInBedIfHurt"
+    self:DoOption("AutoUseWhenIdle", activateAutoUseWhenIdle)
+    self:DoOption("stayInBedIfHurt", activateStayInBedIfHurt)
 
-    if self.options[optionName] then
-        self.namespace = self.namespace + optionName
-        activateStayInBedIfHurt(self)
-        self.namespace = -self.namespace
-    end
+    setmetatable(ids, nil)
 end
 
-return Types.Module.new(activate)
+---@param self Types.Module
+local function deactivate(self)
+    return util.DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
+    function()
+        local chairItems = Item._chairItems
+
+        chairItems.Clear()
+        for item in util.FindItems(nil, Item.ItemList, "chair") do
+            chairItems.Add(item)
+        end
+    end)
+end
+
+return Types.Module.new(activate, deactivate)
