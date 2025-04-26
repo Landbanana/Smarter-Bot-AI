@@ -73,10 +73,24 @@ end
 ---@field public Get fun(self:UseTalents.allCharacterInstrumentData, character:Barotrauma.Character):{timer:Types.Timer, isPlaying:boolean, instrument:Barotrauma.Item?, lastObjective:Barotrauma.AIObjective?}
 local allCharacterInstrumentData
 local allInstrumentTalentData --[[@type table<string,{afflictionId:Barotrauma.Identifier, validInstruments:Barotrauma.Identifier[]}>]]
+local instrumentData --[[@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}]]
+local allInstrumentObjData = {
+    ["idle"]={
+        fullTypeName="Barotrauma.AIObjectiveIdle",
+        prePatch=util.True
+    },
+    ["wait"]={
+        fullTypeName="Barotrauma.AIObjectiveGoTo",
+        prePatch=util.IsWaitObjective
+    }
+}
 
+local initInstruments
+local playInstruments
+local generatePatch
 
 ---@type {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
-local instrumentData = setmetatable({}, {
+instrumentData = setmetatable({}, {
     ---@param t {[string]:{slotTypes:Barotrauma.InvSlotType[]}}
     ---@param k string
     __index=function(t, k)
@@ -200,18 +214,62 @@ do
     })
 end
 
-local instrumentTalentEnabled = false
-local playInstruments
-local allInstrumentObjData = {
-    ["idle"]={
-        fullTypeName="Barotrauma.AIObjectiveIdle",
-        prePatch=util.True
-    },
-    ["wait"]={
-        fullTypeName="Barotrauma.AIObjectiveGoTo",
-        prePatch=util.IsWaitObjective
-    }
-}
+do
+    local isUninitialized = true
+
+    local Add
+    local Reset
+
+    do
+        local oldAdd = Types.TimedCharacterData.Add --[[@type fun(self:Types.TimedCharacterData, character:Barotrauma.Character)]]
+        
+        ---@param self UseTalents.allCharacterInstrumentData
+        ---@param character Barotrauma.Character
+        function Add(self, character)
+            oldAdd(self, character)
+            self[character].isPlaying = false
+        end
+    end
+    
+    do
+        local Aim = InputType.Aim
+        local Shoot = InputType.Shoot
+        
+        ---@param self UseTalents.allCharacterInstrumentData
+        ---@param character Barotrauma.Character
+        function Reset(self, character)
+            local t = self[character]
+    
+            t.isPlaying = false
+            t.lastObjective = nil
+            character.ClearInput(Aim)
+            character.ClearInput(Shoot)
+            character.TryPutItemInAnySlot(t.instrument)
+        end
+    end
+
+    function initInstruments(self)
+        if not isUninitialized then return end
+        isUninitialized = nil
+
+        allCharacterInstrumentData = Types.TimedCharacterData.new(self, nil, {Add=Add, Reset=Reset}) --[[@cast allCharacterInstrumentData UseTalents.allCharacterInstrumentData]]
+
+        if self.options["idle"] then
+            self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
+            function(instance, ptable)
+                local character = instance.character
+                local characterData = allCharacterInstrumentData[character]
+
+                if  characterData and
+                    characterData.isPlaying
+                then
+                    ptable.PreventExecution = true
+                    return false
+                end
+            end, Hook.HookMethodType.Before)
+        end
+    end
+end
 
 do
     local RangedWeapon = Components.RangedWeapon
@@ -268,8 +326,6 @@ do
         end
     end
 end
-
-local generatePatch
 
 do
     ---@generic T:Barotrauma.AIObjective
@@ -376,7 +432,7 @@ local function activateAssistant(self, options)
     if suboptions.enable then
         self.namespace = self.namespace + talentId
         for objData in allInstrumentObjData do
-            instrumentTalentEnabled = true
+            initInstruments(self)
 
             self:AddPatch(objData.fullTypeName, "Act", nil,
             generatePatch(talentId, suboptions["stopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
@@ -639,7 +695,7 @@ local function activateCaptain(self, options)
     if suboptions.enable then
         self.namespace = self.namespace + talentId
         for objData in allInstrumentObjData do
-            instrumentTalentEnabled = true
+            initInstruments(self)
                 
             self:AddPatch(objData.fullTypeName, "Act", nil,
             generatePatch(talentId, suboptions["stopAfterBuffed"], objData.prePatch), Hook.HookMethodType.Before)
@@ -648,76 +704,15 @@ local function activateCaptain(self, options)
     end
 end
 
--- ---@param self Types.Module
--- ---@param options table
--- local function activateEngineer(self, options)
-    
--- end
-
 ---@param self Types.Module
 local function activate(self)
-    local jobMap = {
-        Assistant=activateAssistant,
-        Captain=activateCaptain--,
-        -- Engineer=activateEngineer
-    }
-
     util.itertools.RemoveSpecifiedItems(allInstrumentObjData,
     function(k, v)
         return not self.options[k]
     end)
 
-    for job, jobActivate in pairs(jobMap) do
-        local sectionOptions = self.options[job]
-
-        if sectionOptions.enable then
-            self.namespace = self.namespace + job
-            jobActivate(self, sectionOptions)
-            self.namespace = -self.namespace
-        end
-    end
-    
-    if instrumentTalentEnabled then
-        local Aim = InputType.Aim
-        local Shoot = InputType.Shoot
-        
-        allCharacterInstrumentData = Types.TimedCharacterData.new(self) --[[@cast allCharacterInstrumentData UseTalents.allCharacterInstrumentData]]
-
-        do
-            local oldAdd = getmetatable(allCharacterInstrumentData).Add --[[@type fun(self:Types.TimedCharacterData, character:Barotrauma.Character)]]
-
-            ---@param character Barotrauma.Character
-            function allCharacterInstrumentData:Add(character)
-                oldAdd(self, character)
-                self[character].isPlaying = false
-            end
-        end
-
-        function allCharacterInstrumentData:Reset(character)
-            local t = self[character]
-
-            t.isPlaying = false
-            t.lastObjective = nil
-            character.ClearInput(Aim)
-            character.ClearInput(Shoot)
-            character.TryPutItemInAnySlot(t.instrument)
-        end
-
-        if self.options["idle"] then
-            self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
-            function(instance, ptable)
-                local character = instance.character
-                local characterData = allCharacterInstrumentData[character]
-
-                if  characterData and
-                    characterData.isPlaying
-                then
-                    ptable.PreventExecution = true
-                    return false
-                end
-            end, Hook.HookMethodType.Before)
-        end
-    end
+    self:DoOption("Assistant", activateAssistant)
+    self:DoOption("Captain", activateCaptain)
 end
 
 return Types.Module.new(activate)
