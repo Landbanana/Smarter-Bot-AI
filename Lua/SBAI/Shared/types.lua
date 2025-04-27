@@ -335,6 +335,27 @@ function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hoo
 end
 
 do
+    local defaultNestedMethodNames = Constants.defaultNestedMethodNames
+
+    CheckNestedMethodName = util.debug.CheckNestedMethodName
+    
+    ---@public
+    ---@generic T
+    ---@param className `T`
+    ---@param mainMethodName string
+    ---@param nestedMethodName string
+    ---@param parameterTypes? string[]
+    ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    ---@param hookType Barotrauma.LuaCsHook.HookMethodType
+    function Types.Module:AddNestedPatch(className, mainMethodName, nestedMethodName, parameterTypes, patch, hookType)
+        local pattern = "<"..mainMethodName..">g__"..nestedMethodName.."|"
+        local methodName = CheckNestedMethodName(className, mainMethodName, nestedMethodName, defaultNestedMethodNames[className.."["..pattern.."]"])
+
+        return self:AddPatch(className, methodName, parameterTypes, patch, hookType)
+    end
+end
+
+do
     local CLEAR_REG = util.CLEAR_REG
 
     local RegisterTable = util.RegisterTable

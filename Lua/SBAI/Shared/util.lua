@@ -928,4 +928,61 @@ do
     end
 end
 
+---@param className string
+---@param mainFuncName string
+---@param nestedFuncName string
+---@param default string
+---@return string?
+function util.debug.CheckNestedMethodName(className, mainFuncName, nestedFuncName, default)
+    return default
+end
+
+if CSActive then
+    do
+        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+        local LuaUserData = LuaUserData
+
+        ---@param className string
+        ---@param mainFuncName string
+        ---@param nestedFuncName string
+        ---@return string?
+        local function inner(className, mainFuncName, nestedFuncName)
+            local type = LuaUserData.GetType(className)
+            local pattern = "<"..mainFuncName..">g__"..nestedFuncName.."|"
+
+            for k, v in next, type.GetMethods(4 + 8 + 16 + 32) do
+                local name = v.Name --[[@type string]]
+                
+                if name:match(pattern) then
+                    return name
+                end
+            end
+        end
+
+        ---@param className string
+        ---@param mainFuncName string
+        ---@param nestedFuncName string
+        ---@return string
+        function util.debug.GetNestedMethodName(className, mainFuncName, nestedFuncName)
+            return DoWithTemporaryRegistrations({
+                "System.Type",
+                "System.Reflection.RuntimeMethodInfo"
+            }, inner, className, mainFuncName, nestedFuncName)
+        end
+    end
+
+    do
+        local GetNestedFunc = util.debug.GetNestedMethodName
+
+        ---@param className string
+        ---@param mainFuncName string
+        ---@param nestedFuncName string
+        ---@param default string
+        ---@return string
+        function util.debug.CheckNestedMethodName(className, mainFuncName, nestedFuncName, default)
+            return GetNestedFunc(className, mainFuncName, nestedFuncName) or default
+        end
+    end
+end
+
 return util
