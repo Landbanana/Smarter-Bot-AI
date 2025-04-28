@@ -1,5 +1,9 @@
 local Constants = require("SBAI.Shared.constants")
 
+local networking = require("SBAI.Shared.networking")
+local member = networking.member
+local MSG = networking.MSG
+
 local Config = {data={}}
 
 ---@enum OptionType
@@ -104,6 +108,10 @@ do
     local subsection
     local subsubsection
     
+    ---section = defaults:CreateSection("CleaningAdditions")
+    ---subsection = section:CreateSection("CleanWalls")
+    ---subsection:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
     defaults:CreateSection("CleanablePetItems")
 
     defaults:CreateSection("CrewStaysInSub")
@@ -113,6 +121,9 @@ do
 
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    section = defaults:CreateSection("Orders")
+    section:CreateOption("ignoreRoom", true, Config.OPTION_TYPE.boolean)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 
@@ -191,44 +202,13 @@ do
     Config.defaults.CONFIG = defaults
 end
 
----@param optionString string
----@param value OptionType
----@overload fun(optionList:Namespace, value:OptionType)
-function Config.Set(optionString, value)
-    if type(optionString) == "table" then
-        Config.Get(-optionString)[optionString.stack[#optionString.stack]] = value
-        return
-    end
-
-    local preOptionString, subOptionString = string.match(optionString, "(.+[^%.]+)%.([^%.]+)$")
-
-    Config.Get(preOptionString)[subOptionString] = value
-end
-
----@param optionString string
----@return OptionType
----@overload fun(optionList:Namespace)
-function Config.Get(optionString)
-    local config = Config.data
-
-    if type(optionString) == "string" then
-        for sub in string.gmatch(optionString, "([^%.]+)") do
-            config = config[sub]
-        end
-    else
-        for sub in optionString.stack do
-            config = config[sub]
-        end
-    end
-
-    return config
-end
-
-if SERVER or Game.IsSingleplayer then
+if  SERVER or
+    Game.IsSingleplayer
+then
     function Config.Load()
         local rawConfig = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or nil
         local config = Config.data
-
+        
         ---@param name string
         ---@param raw table
         ---@param default ConfigOption|ConfigSection
@@ -267,9 +247,9 @@ if SERVER or Game.IsSingleplayer then
 
         for k, v in next, Config.defaults.CONFIG do
             local success, result = pcall(LoadRecurse, k, rawConfig, v) --[[@type boolean, any]]
-
+            
             if success == false then
-                Logger.LogError("SBAI.Config.Load."..k..": "..result)
+                Logger.LogError("Config.Load."..k..": "..result)
                 config[k] = v:Flatten()
             else
                 config[k] = result
@@ -277,82 +257,58 @@ if SERVER or Game.IsSingleplayer then
         end
     end
 
-    function Config.Save()
-        File.CreateDirectory(Constants.ModConfigsDirPath)
-        File.Write(Constants.ConfigPath, json.serialize(Config.data))
+    do
+        local ModConfigsDirPath = Constants.ModConfigsDirPath
+        local ConfigPath = Constants.ConfigPath
+
+        local CreateDirectory = File.CreateDirectory
+        local serialize = json.serialize
+        local Write = File.Write
+
+        function Config.Save()
+            CreateDirectory(ModConfigsDirPath)
+            Write(ConfigPath, serialize(Config.data))
+        end
+    end
+
+    if Game.IsMultiplayer then
+        member:AddHandler(MSG.CONF_REQUEST,
+        function(data, client)
+            if not client then return end
+            Config.Load()
+            return member:Send(MSG.CONF_UPDATE, client, nil, Config.data)
+        end)
+    
+        do
+            local ManageSettings = ClientPermissions.ManageSettings
+    
+            member:AddHandler(MSG.CONF_UPDATE,
+            function(data, client)
+                if not client.HasPermission(ManageSettings) then return end
+    
+                Config.data = data
+                Config.Save()
+            end)
+        end
     end
 end
 
-if Game.IsMultiplayer then
-    ---@enum NetworkMsg
-    local NETWORK_MSG = {
-        ConfigUpdate=Constants.Acronym..".ConfigUpdate",
-        ConfigRequest=Constants.Acronym..".ConfigRequest"
-    }
-
-    ---@return string
-    local function SerializeConfig()
-        return json.serialize(Config.data)
+if  Game.IsMultiplayer and
+    CLIENT
+then
+    function Config.Load()
+        return member:Send(MSG.CONF_REQUEST)
     end
-
-    ---@param message Barotrauma.Networking.IReadMessage
-    local function UnserializeConfig(message)
-        Config.data = json.parse(message.ReadString())
+    
+    function Config.Save()
+        if not Config.data then return end
+        return member:Send(MSG.CONF_UPDATE, nil, nil, Config.data)
     end
-
-    if SERVER then
-        ---@param client Barotrauma.Networking.Client
-        local function SendConfig(client)
-            local message = Networking.Start(NETWORK_MSG.ConfigUpdate)
     
-            message.WriteString(SerializeConfig())
-            return Networking.Send(message, client and client.Connection or nil)
-        end
-    
-        Networking.Receive(NETWORK_MSG.ConfigUpdate,
-        ---@param message Barotrauma.Networking.IReadMessage
-        ---@param client Barotrauma.Networking.Client
-        function(message, client)
-            if not client.HasPermission(ClientPermissions.ManageSettings) then return end
-    
-            UnserializeConfig(message)
-            return Config.Save()
-        end)
-    
-        Networking.Receive(NETWORK_MSG.ConfigRequest,
-        ---@param _ Barotrauma.Networking.IReadMessage
-        ---@param client Barotrauma.Networking.IReadMessage
-        function(_, client)
-            if not client then return end
-    
-            return SendConfig(client)
-        end)
-    else
-        local function SendConfig()
-            local message = Networking.Start(NETWORK_MSG.ConfigUpdate)
-
-            message.WriteString(SerializeConfig())
-            return Networking.Send(message)
-        end
-    
-        local function RequestConfig()
-            return Networking.Send(Networking.Start(NETWORK_MSG.ConfigRequest))
-        end
-
-        function Config.Load()
-            return RequestConfig()
-        end
-    
-        function Config.Save()
-            return SendConfig()
-        end
-    
-        Networking.Receive(NETWORK_MSG.ConfigUpdate,
-        ---@param message Barotrauma.Networking.IReadMessage
-        function(message)
-            return UnserializeConfig(message)
-        end)
-    end
+    member:AddHandler(MSG.CONF_UPDATE,
+    function(data, client)
+        Config.data = data
+    end)
 end
 
 return Config

@@ -1,9 +1,9 @@
 local util = require("SBAI.Shared.util")
+local Config = require("SBAI.Shared.config")
+local Constants = require("SBAI.Shared.constants")
+local networking = require("SBAI.Shared.networking")
 
-local SBAI = {
-    Constants=require("SBAI.Shared.constants"),
-    Config=require("SBAI.Shared.config")
-}
+local SBAI = {}
 
 ---@class Namespace
 ---@field public i integer
@@ -58,17 +58,93 @@ local Namespace_mt = {
     end
 }
 
-local namespace = setmetatable({i=0, base=SBAI.Constants.Acronym, stack={}}, Namespace_mt) --[[@type Namespace]]
-local modules = {} --[[@type table<string,Types.Module>]]
-
-for k, _ in pairs(SBAI.Config.defaults.CONFIG) do
-    modules[k] = require("SBAI.Server.Modules."..k)
-end
+local namespace = setmetatable({i=0, base=Constants.Acronym, stack={}}, Namespace_mt) --[[@type Namespace]]
 
 SBAI.namespace = namespace
-SBAI.Control = {}
+
+---@class ModuleController
+---@field private namespace Namespace
+---@field private modules {[string]:Types.Module}
+---@field private prefix fun()
+---@field private postfix fun()
+local ModuleController = {}
+ModuleController.__index = ModuleController
 
 do
+    local Exists = File.Exists
+    local path = Constants.Path
+    local True = util.True
+
+    ---@public
+    ---@param prefix? fun()
+    ---@param postfix? fun()
+    ---@param namespace Namespace
+    ---@return ModuleController
+    function ModuleController.new(prefix, postfix, namespace)
+        local lastStack = namespace.stack[#namespace.stack]
+        local t = {
+            namespace=namespace,
+            modules={},
+            prefix=True or prefix,
+            postfix=True or postfix
+        }
+
+        local specifiedPath = ToolBox.CleanUpPath(path.."/Lua/SBAI/"..lastStack.."/Modules/")
+
+        for k in next, Config.defaults.CONFIG do
+            if Exists(specifiedPath..k..".lua") then
+                t.modules[k] = require("SBAI."..lastStack..".Modules."..k)
+            end
+        end
+
+        return setmetatable(t, ModuleController)
+    end
+end
+
+---@private
+function ModuleController:activate()
+    for k, module in next, self.modules do
+        module:Activate(self.namespace + k, Config.data[k])
+    end
+end
+
+---@private
+function ModuleController:deactivate()
+    for k, module in next, self.modules do
+        module:Deactivate()
+    end
+end
+
+---@private
+function ModuleController:reactivate()
+    self:activate()
+    self:deactivate()
+end
+
+---@public
+function ModuleController:Activate()
+    self:prefix()
+    self:activate()
+    self:postfix()
+end
+
+---@public
+function ModuleController:Deactivate()
+    self:prefix()
+    self:deactivate()
+    self:postfix()
+end
+
+---@public
+function ModuleController:Reactivate()
+    self:prefix()
+    self:reactivate()
+    self:postfix()
+end
+
+if  SERVER or
+    Game.IsSingleplayer
+then
     local allOrderData
 
     local function saveAllOrderData()
@@ -114,47 +190,62 @@ do
         allOrderData = nil
     end
 
-    function SBAI.Control.Activate()
-        saveAllOrderData()
-        
-        for k in next, SBAI.Config.defaults.CONFIG do
-            modules[k]:Activate(namespace + k, SBAI.Config.data[k])
+    do
+        local oldSave = Config.Save
+        function Config.Save(reactivate)
+            oldSave()
+            if reactivate == nil or reactivate then
+                SBAI.Control.Reactivate()
+            end
         end
+    end
 
-        loadAllOrderData()
+    if not File.Exists(Constants.ConfigPath) then Config.Save(false) end
+    SBAI.Server = ModuleController.new(saveAllOrderData, loadAllOrderData, namespace + "Server")
+end
+
+if CLIENT or Game.IsSingleplayer then
+    SBAI.Client = ModuleController.new(nil, nil, namespace + "Client")
+end
+
+SBAI.Control = {}
+
+do
+    local CONF_UPDATE
+    local ActivateLater
+    local DeactivateLater
+
+    if CLIENT then
+        CONF_UPDATE = networking.MSG.CONF_UPDATE
+
+        ActivateLater = util.functools.Partial1(SBAI.Client.Activate, SBAI.Client)
+        DeactivateLater = util.functools.Partial1(SBAI.Client.Deactivate, SBAI.Client)
+    end
+
+    function SBAI.Control.Activate()
+        if SBAI.Server then
+            Config.Load()
+            SBAI.Server:Activate()
+        end
+        if SBAI.Client then
+            networking.member:AddTempHandler(networking.MSG.CONF_UPDATE, ActivateLater)
+        end
     end
 
     function SBAI.Control.Deactivate()
-        local loadOrders
-
-        if allOrderData then
-            loadOrders = false
-        else
-            saveAllOrderData()
-            loadOrders = true
+        if SBAI.Server then
+            Config.Load()
+            SBAI.Server:Deactivate()
         end
-
-        for k in next, SBAI.Config.defaults.CONFIG do
-            modules[k]:Deactivate()
+        if SBAI.Client then
+            networking.member:AddTempHandler(CONF_UPDATE, DeactivateLater)
         end
-
-        if loadOrders then loadAllOrderData() end
     end
 end
 
-if SERVER or Game.IsSingleplayer then
-    local oldSave = SBAI.Config.Save
-
-    SBAI.Config.Save = function(reactivate)
-        oldSave()
-        if reactivate == nil or reactivate then
-            SBAI.Control.Deactivate()
-            SBAI.Control.Activate()
-        end
-    end
-
-    SBAI.Config.Load()
-    if not File.Exists(SBAI.Constants.ConfigPath) then SBAI.Config.Save(false) end
+function SBAI.Control.Reactivate()
+    SBAI.Control.Deactivate()
+    SBAI.Control.Activate()
 end
 
 return SBAI

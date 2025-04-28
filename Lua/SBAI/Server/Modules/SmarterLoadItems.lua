@@ -208,7 +208,7 @@ local function activate(self)
                             not container.HasTag(refillerTag) and
                             IsSpecifiedContainer(container, containableTag)
                         then
-                            local fullItem = FindItem(ptable["character"], destContainer.Inventory.FindAllItems(), itemTag, 100) --[[@type Barotrauma.Item]]
+                            local fullItem = FindItem(ptable["character"], destContainer.Inventory.GetAllItems(true), itemTag, 100) --[[@type Barotrauma.Item]]
                             local targetContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
                             
                             if fullItem and targetContainer then

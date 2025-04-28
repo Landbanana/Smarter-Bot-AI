@@ -385,7 +385,6 @@ end
 ---@param options table
 function Types.Module:Activate(namespace, options)
     self:Deactivate()
-
     if not options.enable then return end
     
     self.namespace = namespace
@@ -439,7 +438,7 @@ do
     ---@param ... T
     function Types.Module:DoOption(name, func, ...)
         local newNamespace = self.namespace + name
-        local options = Get(self.options, newNamespace, 1)
+        local options = Get(self.options, newNamespace, 2)
 
         if options then
             local args = {...}
@@ -465,18 +464,18 @@ Types.TimedCharacterData = {}
 Types.TimedCharacterData.__index = Types.TimedCharacterData
 
 do
-    local Timer = Types.Timer
+    local new = Types.Timer.new
 
     ---@public
     ---@param character Barotrauma.Character
     function Types.TimedCharacterData:Add(character)
-        self[character] = {timer=Timer.new(self.timeBetween)}
+        self[character] = {timer=new(self.timeBetween)}
     end
 end
 
 ---@public
 ---@param character Barotrauma.Character
----@return { timer: Types.Timer }
+---@return {timer:Types.Timer}
 function Types.TimedCharacterData:Get(character)
     if not self[character] then
         self:Add(character)
@@ -499,6 +498,128 @@ do
         local t = module:RegisterTable(init, "ROUND_END", "CHARACTER_DEATH")
 
         return setmetatable(t, Types.TimedCharacterData)
+    end
+end
+
+---@class Types.NetworkMember
+---@field private handlers table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Types.Set}>
+Types.NetworkMember = {}
+Types.NetworkMember.__index = Types.NetworkMember
+
+do
+    local Initialize = Networking.Initialize
+    local parse = json.parse
+
+    ---@protected
+    ---@param self Types.Set
+    ---@param data Barotrauma.Networking.IReadMessage
+    ---@param client? Barotrauma.Networking.Client
+    ---@return any
+    local function BaseHandler(self, data, client)
+        local dataString = data.ReadString()
+        local jsonData
+
+        if dataString and dataString ~= "" then
+            jsonData = parse(dataString)
+        end
+
+        for func in next, self do
+            func(jsonData, client)
+        end
+    end
+
+    local new = Types.Set.new
+    local Partial1 = util.functools.Partial1
+    local Receive = Networking.Receive
+
+    local handlersMT = {
+        ---@param t table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Types.Set}>
+        ---@param k MSG
+        ---@return {base:fun(data:any),set:Types.Set}
+        __index=function(t, k)
+            t[k] = {set=new()}
+            
+            local handler = Partial1(BaseHandler, t[k].set)
+
+            t[k].base=handler
+
+            Receive(k, handler)
+            return t[k]
+        end
+    }
+
+    ---@public
+    ---@return Types.NetworkMember
+    function Types.NetworkMember.new()
+        Initialize()
+
+        local t = {
+            handlers=setmetatable({}, handlersMT)
+        }
+        return setmetatable(t, Types.NetworkMember)
+    end
+end
+
+---@public
+---@param msg MSG
+---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
+function Types.NetworkMember:AddHandler(msg, func)
+    self.handlers[msg].set:Add(func)
+end
+
+---@public
+---@param msg MSG
+---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
+function Types.NetworkMember:AddTempHandler(msg, func)
+    local handlers = self.handlers[msg].set
+    local bouncer
+
+    function bouncer(...)
+        handlers:Remove(bouncer)
+        return func(...)
+    end
+
+    handlers:Add(bouncer)
+end
+
+---@public
+---@param msg MSG
+---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
+function Types.NetworkMember:RemoveHandler(msg, func)
+    self.handlers[msg].set:Remove(func)
+end
+
+do
+    local serialize = json.serialize
+    local Send2 = Networking.Send
+    local Start = Networking.Start
+
+    if CLIENT then
+        local oldSend = Send2
+
+        ---@param data Barotrauma.Networking.IWriteMessage
+        ---@param client Barotrauma.Networking.Client
+        ---@param deliveryMethod Barotrauma.Networking.DeliveryMethod
+        function Send2(data, client, deliveryMethod)
+            return oldSend(data, deliveryMethod)
+        end
+    end
+
+    ---@public
+    ---@param msg MSG
+    ---@param client? Barotrauma.Networking.Client
+    ---@param deliveryMethod? Barotrauma.Networking.DeliveryMethod
+    ---@param jsonData table
+    function Types.NetworkMember:Send(msg, client, deliveryMethod, jsonData)
+        local data = Start(msg)
+
+        deliveryMethod = deliveryMethod or DeliveryMethod.Reliable
+
+        if jsonData then
+            data.WriteString(serialize(jsonData))
+        end
+
+        return Send2(data, client and client.Connection or nil, deliveryMethod)
     end
 end
 

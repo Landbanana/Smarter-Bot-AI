@@ -152,9 +152,9 @@ local function activate(self)
                         for loadData in allLoadData do
                             local itemTag, _, refillerTag, isFungible, minCon, _, fullItemPredicate, targetItemPredicate = unpack(loadData)
 
-                            local targetItem = FindItem(character, character.Inventory.FindAllItems(nil, true), itemTag, {0, minCon}, targetItemPredicate)
+                            local targetItem = FindItem(character, character.Inventory.GetAllItems(true), itemTag, {0, minCon}, targetItemPredicate)
                             
-                            targetItem = targetItem or FindItem(character, character.Inventory.FindAllItems(nil, true), itemTag, {0, minCon},
+                            targetItem = targetItem or FindItem(character, character.Inventory.GetAllItems(true), itemTag, {0, minCon},
                             function(c, i)
                                 if i.Container then
                                     return targetItemPredicate(c, i)

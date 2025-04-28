@@ -1,5 +1,7 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
+local Config = require("SBAI.Shared.config")
+local Constants = require("SBAI.Shared.constants")
 
 local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
 
@@ -294,7 +296,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
     local function processNumber(defaults, option, value, optionType)
         MakeNamedCut(defaults, option)
 
-        local configRef = util.config.Get(SBAI.Config.data, -namespace)
+        local configRef = util.config.Get(Config.data, -namespace)
         local key = namespace.stack[#namespace.stack]
         local numberInput = GUI.NumberInput(
             GUI.RectTransform(
@@ -302,7 +304,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
                 currentOptionCut.Content.RectTransform,
                 GUI.Anchor.CenterLeft
             ),
-            optionType == SBAI.Config.OPTION_TYPE.float and NumberType.Float or optionType == SBAI.Config.OPTION_TYPE.int and NumberType.Int,
+            optionType == Config.OPTION_TYPE.float and NumberType.Float or optionType == Config.OPTION_TYPE.int and NumberType.Int,
             nil,
             GUI.Alignment.Left
         )
@@ -310,7 +312,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
         local zeroCheck = false
         local forcedDefault = false
 
-        if optionType == SBAI.Config.OPTION_TYPE.float then
+        if optionType == Config.OPTION_TYPE.float then
             numberInput.MinValueFloat = defaults.min
             numberInput.MaxValueFloat = defaults.max
             numberInput.FloatValue = value
@@ -372,12 +374,12 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
 
     ---@type table<OptionType|"table", fun(defaults:ConfigSection|ConfigOption, option:table, value:`optionType`|table)>
     typeTable = {
-        [SBAI.Config.OPTION_TYPE.string]=function(defaults, option, value) --[[@cast value string]]
+        [Config.OPTION_TYPE.string]=function(defaults, option, value) --[[@cast value string]]
         
         end,
-        [SBAI.Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, SBAI.Config.OPTION_TYPE.float) end,
-        [SBAI.Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, SBAI.Config.OPTION_TYPE.int) end,
-        [SBAI.Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
+        [Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.float) end,
+        [Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.int) end,
+        [Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
             if option == "enable" then
                 xSpacing = xSpacing - 4*D_PADDING
                 MakeNamedCut(defaults, namespace.stack[#namespace.stack - 1])
@@ -386,7 +388,8 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
                 MakeNamedCut(defaults, option)
             end
             
-            local configRef = util.config.Get(SBAI.Config.data, -namespace)
+            local configRef = util.config.Get(Config.data, -namespace)
+            
             local key = namespace.stack[#namespace.stack]
             local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
             ---@param button Barotrauma.GUIButton
@@ -408,7 +411,7 @@ local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
             xSpacing = xSpacing - 4*D_PADDING
         end
     }
-    LoadOptionsRecurse(SBAI.Config.defaults.CONFIG[sectionName], sectionName, SBAI.Config.data[sectionName])
+    LoadOptionsRecurse(Config.defaults.CONFIG[sectionName], sectionName, Config.data[sectionName])
 end
 
 ---@param sectionList Barotrauma.GUIListBox
@@ -416,7 +419,7 @@ local function LoadConfigSectionsToGUI(sectionList)
     local oldSelectionText = sectionList.SelectedComponent and sectionList.SelectedComponent.Text.SanitizedValue --[[@type Barotrauma.GUITextBlock]]
 
     sectionList.ClearChildren()
-    for sectionName, _ in pairs(SBAI.Config.defaults.CONFIG) do
+    for sectionName, _ in pairs(Config.defaults.CONFIG) do
         local sectionBlock = AddTextBlock(sectionList.Content, Point(sectionList.Content.Rect.Width, clickableSize), GUI.Anchor.TopLeft, sectionName, nil, "SubHeading", GUI.Alignment.Left, false)
         
         sectionBlock.Color = Color.Transparent
@@ -436,7 +439,7 @@ end
 local function AddLoadConfigButton(parent, sectionList, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
     function()
-        SBAI.Config.Load()
+        Config.Load()
         LoadConfigSectionsToGUI(sectionList)
     end)
     button.ToolTip = "Reload the saved config to GUI"
@@ -449,7 +452,7 @@ end
 local function AddSaveButton(parent, anchor)
     local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
     function()
-        SBAI.Config.Save()
+        Config.Save()
     end)
     
     button.ToolTip = "Save and apply config changes"
@@ -541,8 +544,8 @@ local function MakeSBAIMenu(parent)
     
     local availableTextWidth = (bottomRightCut.Rect.Width - D_BIGBRAIN_SIZE.X - D_PADDING)/2
 
-    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, SBAI.Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
-    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, SBAI.Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
+    AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
 
     --combinedSettingsGroupH.AbsoluteSpacing = D_PADDING
 
@@ -566,7 +569,9 @@ local function MakeSBAIMenu(parent)
     --     true
     -- )
 
-    if Game.IsMultiplayer and not Game.Client.HasPermission(ClientPermissions.ManageSettings) then
+    if  Game.IsMultiplayer and
+        not Game.Client.HasPermission(ClientPermissions.ManageSettings)
+    then
         mainFrame.Enabled = false
 		for comp in mainFrame.GetAllChildren() do
 			comp.enabled = false
@@ -577,7 +582,7 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        SBAI.Config.Load()
+        Config.Load()
         return MakeSBAIMenu(parent)
     end
 end
@@ -589,7 +594,7 @@ return function(namespace)
             local pauseFrame = GUI.GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
             local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
 
-            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, SBAI.Constants.Name, "GUIButtonSmall", false,
+            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, Constants.Name, "GUIButtonSmall", false,
             function()
                 return ShowSBAIMenu(GUI.GUI.PauseMenu)
             end)

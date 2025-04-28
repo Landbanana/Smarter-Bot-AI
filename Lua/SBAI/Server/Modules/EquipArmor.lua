@@ -4,11 +4,12 @@ local Types = require("SBAI.Shared.types")
 local wearableArmorPredicate --[[@type fun(slotTypes:integer, character:Barotrauma.Character, item:Barotrauma.Item):boolean]]
 
 do
+    local deepdivingId = Identifier("lightdiving")
+    local lightdivingId = Identifier("deepdiving")
     local Wearable = Components.Wearable
 
     local band = bit32.band
     local Contains = util.itertools.Contains
-    
     
     ---@param slotTypes integer
     ---@param character Barotrauma.Character
@@ -16,8 +17,8 @@ do
     ---@return boolean
     function wearableArmorPredicate(slotTypes, character, item)
         if  item.GetComponent(Wearable) or
-            not item.HasTag("lightdiving") or
-            not item.HasTag("deepdiving") or
+            not item.HasTag(lightdivingId) or
+            not item.HasTag(deepdivingId) or
             not Contains(character.HeldItems, item)
         then
             for v in item.AllowedSlots do
@@ -57,7 +58,7 @@ local function activate(self)
 
             if filteredClothesSlotTypes == 0 then return end
             
-            local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil, Partial1(wearableArmorPredicate, filteredClothesSlotTypes))
+            local wearables = FindItems(character, inventory.GetAllItems(true), nil, nil, Partial1(wearableArmorPredicate, filteredClothesSlotTypes))
 
             for item in wearables do --[[@cast item Barotrauma.Item]]
                 for v in item.AllowedSlots do

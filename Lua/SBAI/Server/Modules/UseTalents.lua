@@ -330,7 +330,6 @@ do
                 character.SetInput(Aim, false, true)
                 character.SetInput(Shoot, false, true)
             else
-                
                 return allCharacterInstrumentData:Reset(character)
             end
         end
@@ -560,6 +559,7 @@ function Assistant.JengaMaster(self, options)
 
     do
         local AIObjectiveGoTo = AIObjectiveGoTo
+        local goToObjId = Identifier("go to")
 
         local FindItems = util.FindItems
         local GetClosest = util.GetClosest
@@ -577,9 +577,9 @@ function Assistant.JengaMaster(self, options)
             then
                 local characterData = allCharacterData:Get(character)
                 
-                if  not characterData["goToObj"] and
-                    characterData.timer:Update(ptable["deltaTime"])
-                then
+                if characterData.timer:Update(ptable["deltaTime"]) then
+                    if not characterData["goToObj"] then return end
+
                     local closestContainer = GetClosest(character.WorldPosition, FindItems(character, set:ToList())) --[[@type Barotrauma.Item]]
 
                     if closestContainer then
@@ -587,7 +587,7 @@ function Assistant.JengaMaster(self, options)
                         ---@nodiscard
                         local function constructor()
                             local objective = AIObjectiveGoTo(closestContainer, character, instance.objectiveManager, false, false, 1, 50.0)
-                            
+
                             objective.SpeakIfFails = false
                             objective.DebugLogWhenFails = false
                             objective.AllowGoingOutside = false
@@ -596,7 +596,6 @@ function Assistant.JengaMaster(self, options)
                         ---@param objective Barotrauma.AIObjectiveGoTo
                         ---@return fun()
                         local function onCompletedGenerator(objective)
-                            ---@type fun()
                             local function onCompleted()
                                 if  set and
                                     not set:IsEmpty() and
@@ -620,7 +619,6 @@ function Assistant.JengaMaster(self, options)
                         ---@param objective Barotrauma.AIObjectiveGoTo
                         ---@return fun()
                         local function onAbandonGenerator(objective)
-                            ---@type fun()
                             local function onAbandon()
                                 characterData["goToObj"] = nil
                                 instance.RemoveSubObjective(AIObjectiveGoTo, objective)
@@ -631,7 +629,7 @@ function Assistant.JengaMaster(self, options)
                         local goToObj --[[@type Barotrauma.AIObjectiveGoTo]]
 
                         for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                            if objective.Identifier == talentId then
+                            if objective.Identifier == goToObjId then
                                 goToObj = objective
                                 break
                             end
