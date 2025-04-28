@@ -4,8 +4,8 @@ local Constants = {
     Version="1.5.2d",
     Path=ToolBox.CleanUpPath(table.pack(...)[1]),
     ModConfigsDirPath=ToolBox.CleanUpPath(Game.SaveFolder.."/ModConfigs"), --[[@type string]]
-    Path=table.pack(...)[1] --[[@type string]],
-    ModConfigsDirPath=Game.SaveFolder.."/ModConfigs", --[[@type string]]
+
+    CLR_TYPE_POSTFIX = CLIENT and "Barotrauma" or "DedicatedServer",
 
     MAX_FLOAT=3.402823E+38,
 

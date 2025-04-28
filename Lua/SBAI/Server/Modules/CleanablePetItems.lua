@@ -23,7 +23,7 @@ local function activate(self)
     local ItemPrefab = ItemPrefab
 
     return util.DoWithTemporaryRegistrations({
-        "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]",
+        "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
     },
     function()
@@ -57,7 +57,7 @@ local function deactivate(self)
     local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
     local sort = table.sort
 
-    return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,Barotrauma]]"},
+    return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]"},
     function()
         for id in next, petItemIds do
             local prefab = ItemPrefab.GetItemPrefab(id)
