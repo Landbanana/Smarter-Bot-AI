@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Orders>
+  <Order name="Ignore Room" identifier="ignoreroom"
+         mustsettarget="true" targetallcharacters="true">
+    <Sprite name="Command_Ignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,640,128,128"/>
+  </Order>
+  <Order name="Unignore Room" identifier="unignoreroom"
+         mustsettarget="true" targetallcharacters="true">
+    <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="896,640,128,128"/>
+  </Order>
+</Orders>
