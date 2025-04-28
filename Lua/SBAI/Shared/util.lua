@@ -21,10 +21,10 @@ function util.itertools.ClearTable(t)
     end
 end
 
----@generic T:table
----@param t1 T
----@param t2? table
----@return T
+---@generic T1:table, T2:table
+---@param t1 T1
+---@param t2? T2
+---@return T1|T2
 function util.itertools.CopyTable(t1, t2)
     t2 = t2 or {}
 
@@ -34,18 +34,18 @@ function util.itertools.CopyTable(t1, t2)
     return t2
 end
 
----@generic T
----@param t table<T,any>
----@param ... T
+---@generic K
+---@param t table<K,any>
+---@param ... K
 function util.itertools.RemoveKeys(t, ...)
     for k in {...} do
         t[k] = nil
     end
 end
 
----@generic T
----@param t table<T,any>
----@param value T
+---@generic V
+---@param t table<any,V>
+---@param value V
 function util.itertools.RemoveValue(t, value)
     for k, v in next, t do
         if v == value then
@@ -55,9 +55,9 @@ function util.itertools.RemoveValue(t, value)
     end
 end
 
----@generic T
----@param t table<T,any>
----@param ... T
+---@generic V
+---@param t table<any,V>
+---@param ... V
 function util.itertools.RemoveValues(t, ...)
     local values = {...}
 
@@ -634,7 +634,7 @@ do
                 local inventory = container.OwnInventory
 
                 if  (not hasEmptySlots or inventory.EmptySlotCount > 0) and
-                    (not targetContainableItemTag or FindItem(nil, inventory.FindAllItems(nil, true), targetContainableItemTag, targetConditionPercentageRange))
+                    (not targetContainableItemTag or FindItem(nil, inventory.GetAllItems(false), targetContainableItemTag, targetConditionPercentageRange))
                         then
                     i = i + 1
                     containers[i] = container
@@ -943,14 +943,40 @@ if CSActive then
         local LuaUserData = LuaUserData
 
         ---@param className string
+        ---@return string[]
+        local function inner(className)
+            local out = {}
+            local i = 0
+
+            for k, v in next, LuaUserData.GetType(className).GetMethods(4 + 8 + 16 + 32) do
+                i = i + 1
+                out[i] = v.Name
+            end
+            return out
+        end
+
+        ---@param className string
+        ---@return string[]
+        function util.debug.GetAllMethodNames(className)
+            return DoWithTemporaryRegistrations({
+                "System.Type",
+                "System.Reflection.RuntimeMethodInfo"
+            }, inner, className)
+        end
+    end
+
+    do
+        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+        local LuaUserData = LuaUserData
+
+        ---@param className string
         ---@param mainFuncName string
         ---@param nestedFuncName string
         ---@return string?
         local function inner(className, mainFuncName, nestedFuncName)
-            local type = LuaUserData.GetType(className)
             local pattern = "<"..mainFuncName..">g__"..nestedFuncName.."|"
 
-            for k, v in next, type.GetMethods(4 + 8 + 16 + 32) do
+            for k, v in next, LuaUserData.GetType(className).GetMethods(4 + 8 + 16 + 32) do
                 local name = v.Name --[[@type string]]
                 
                 if name:match(pattern) then
