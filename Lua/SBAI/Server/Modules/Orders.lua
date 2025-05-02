@@ -13,7 +13,7 @@ local function activate(self)
     if SERVER then
         local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
         local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
-        local ignoredHullData = self:RegisterTable(nil, "ROUND_END") --[[@type {set:Types.Set}]]
+        local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
         local activeOrders
 
         do
@@ -24,8 +24,6 @@ local function activate(self)
 
             self:AddInit(
             function()
-                ignoredHullData.set = new()
-
                 local session = Game.GameSession
 
                 if not session then return end
@@ -38,7 +36,7 @@ local function activate(self)
                         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
     
                         if curOrder.Identifier == ignoreRoomOrderId then
-                            ignoredHullData.set:Add(curOrder.TargetEntity)
+                            ignoredHulls:Add(curOrder.TargetEntity)
                         end
                     end
                 end)
@@ -57,7 +55,7 @@ local function activate(self)
     
                         return instance.AddOrder(order)
                     else
-                        ignoredHullData.set:Add(order.TargetEntity)
+                        ignoredHulls:Add(order.TargetEntity)
                     end
                 elseif id == unignoreRoomOrderId then
                     local targetHull = order.TargetEntity --[[@type Barotrauma.Hull]]
@@ -74,7 +72,7 @@ local function activate(self)
                             break
                         end
                     end
-                    ignoredHullData.set:Remove(targetHull)
+                    ignoredHulls:Remove(targetHull)
                     return true
                 end
             end
@@ -84,7 +82,7 @@ local function activate(self)
         function(instance, ptable)
             ptable.PreventExecution = true
             
-            return instance.avoidStaying or instance.IsWetRoom or (ignoredHullData.set[instance] ~= nil)
+            return instance.avoidStaying or instance.IsWetRoom or (ignoredHulls[instance] ~= nil)
         end, Hook.HookMethodType.Before)
     end
 end
