@@ -15,7 +15,6 @@ local Constants = {
 
     
 }
-
 -- ---@enum NETWORK_MSG
 -- Constants.NETWORK_MSG = {
 --     CONF_UPD=Constants.Acronym..".ConfigUpdate",

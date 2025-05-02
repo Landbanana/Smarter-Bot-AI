@@ -71,8 +71,10 @@ local ModuleController = {}
 ModuleController.__index = ModuleController
 
 do
-    local Exists = File.Exists
     local path = Constants.Path
+    
+    local CleanUpPath = ToolBox.CleanUpPath
+    local Exists = File.Exists
     local True = util.True
 
     ---@public
@@ -89,7 +91,7 @@ do
             postfix=True or postfix
         }
 
-        local specifiedPath = ToolBox.CleanUpPath(path.."/Lua/SBAI/"..lastStack.."/Modules/")
+        local specifiedPath = CleanUpPath(path.."/Lua/SBAI/"..lastStack.."/Modules/")
 
         for k in next, Config.defaults.CONFIG do
             if Exists(specifiedPath..k..".lua") then
@@ -110,7 +112,7 @@ end
 ---@private
 function ModuleController:deactivate()
     for k, module in next, self.modules do
-        module:Deactivate()
+        module:Deactivate(Config.data[k])
     end
 end
 
@@ -193,6 +195,7 @@ then
         local oldSave = Config.Save
         function Config.Save(reactivate)
             oldSave()
+            Config.Load()
             if reactivate == nil or reactivate then
                 SBAI.Control.Reactivate()
             end

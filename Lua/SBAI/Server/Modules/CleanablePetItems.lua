@@ -73,7 +73,7 @@ local function deactivate(self)
         return DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
         function()
             local numIndices = 0
-            local removeIndices = {} --[=[@type number[]]=]
+            local removeIndices = {} --[=[@type integer[]]=]
 
             for i, item in ipairs(cleanableList) do
                 if petItemIds[item.Prefab.Identifier] then
@@ -84,7 +84,7 @@ local function deactivate(self)
 
             sort(removeIndices, function(i1, i2) return i1 > i2 end)
 
-            for i in removeIndices do --[[@cast i number]]
+            for i in removeIndices do --[[@cast i integer]]
                 Item._cleanableItems.RemoveAt(i)
             end
         end)
