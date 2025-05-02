@@ -13,11 +13,10 @@ Types.Set = {type=Types.TYPES.SET}
 Types.Set.__index = Types.Set
 
 ---@return Types.Set
-function Types.Set.new()
-    local t = {}
-
-    setmetatable(t, Types.Set)
-    return t
+function Types.Set.new(t)
+    t = t or {}
+    
+    return setmetatable(t, Types.Set)
 end
 
 do
