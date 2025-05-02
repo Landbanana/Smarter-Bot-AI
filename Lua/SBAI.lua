@@ -96,7 +96,6 @@ do
                 t.modules[k] = require("SBAI."..lastStack..".Modules."..k)
             end
         end
-
         return setmetatable(t, ModuleController)
     end
 end
@@ -215,7 +214,9 @@ do
     local ActivateLater
     local DeactivateLater
 
-    if CLIENT then
+    if  CLIENT and
+        Game.IsMultiplayer
+    then
         CONF_UPDATE = networking.MSG.CONF_UPDATE
 
         ActivateLater = util.functools.Partial1(SBAI.Client.Activate, SBAI.Client)
@@ -224,21 +225,35 @@ do
 
     function SBAI.Control.Activate()
         if SBAI.Server then
-            Config.Load()
             SBAI.Server:Activate()
         end
         if SBAI.Client then
-            networking.member:AddTempHandler(networking.MSG.CONF_UPDATE, ActivateLater)
+            if  CLIENT and
+                Game.IsMultiplayer
+            then
+                networking.member:AddTempHandler(CONF_UPDATE, ActivateLater)
+                Config.Load()
+            else
+                Config.Load()
+                SBAI.Client:Activate()
+            end
         end
     end
 
     function SBAI.Control.Deactivate()
         if SBAI.Server then
-            Config.Load()
             SBAI.Server:Deactivate()
         end
         if SBAI.Client then
-            networking.member:AddTempHandler(CONF_UPDATE, DeactivateLater)
+            if  CLIENT and
+                Game.IsMultiplayer
+            then
+                networking.member:AddTempHandler(CONF_UPDATE, DeactivateLater)
+                Config.Load()
+            else
+                Config.Load()
+                SBAI.Client:Activate()
+            end
         end
     end
 end

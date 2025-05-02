@@ -1,13 +1,20 @@
 SBAI = require("SBAI")
 
-if  SERVER or
-    Game.IsSingleplayer
-then
-    SBAI.Control.Activate()
-end
+local Config = require("SBAI.Shared.config")
 
 if  CLIENT or
     Game.IsSingleplayer
 then
     require("SBAI.Client.configGui")(SBAI.namespace)
+end
+
+Config.Load()
+SBAI.Control.Activate()
+
+
+function testOrders()
+    local xTest = XElement.__new("OrderData")
+
+    Game.GameSession.CrewManager.SaveActiveOrders(xTest)
+    print(xTest)
 end

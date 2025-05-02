@@ -22,6 +22,7 @@ local Constants = {
 --     CONF_REQ=Constants.Acronym..".ConfigRequest"
 -- }
 
+
 Constants.ConfigPath = ToolBox.CleanUpPath(Constants.ModConfigsDirPath.."/"..Constants.Acronym..".json")
 
 Constants.defaultNestedMethodNames = {
