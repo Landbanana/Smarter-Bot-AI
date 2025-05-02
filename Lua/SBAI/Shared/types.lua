@@ -256,6 +256,7 @@ end
 
 ---@class Types.Module
 ---@field private hooks {identifier:string, name:string}[]
+---@field private initializers fun()[]
 ---@field private patches {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}[]
 ---@field private tables {t:table, flags:number}[]
 ---@field private activate fun(self:Types.Module)
@@ -275,7 +276,7 @@ do
     ---@param name? string
     ---@param func fun(...:T):R
     ---@param ... T
-    ---@return R
+    ---@return boolean, R
     function Types.Module:pcall(name, func, ...)
         local results = {pcall(func, self, ...)}
         local success = remove(results, 1)
@@ -284,9 +285,18 @@ do
 
         if not success then
             Logger.LogError(self.namespace()..name..": "..results[1])
+            return false
         else
-            return unpack(results)
+            return true, unpack(results)
         end
+    end
+end
+
+---@private
+function Types.Module:init()
+    if not self.initializers then return end
+    for func in self.initializers do --[[@cast func fun()]]
+        func()
     end
 end
 
@@ -299,6 +309,7 @@ function Types.Module.new(activate, deactivate)
 
     t.activate = activate
     t.deactivate = deactivate
+    t.initializers = {}
 
     return setmetatable(t, Types.Module)
 end
@@ -383,21 +394,39 @@ end
 ---@param namespace Namespace
 ---@param options table
 function Types.Module:Activate(namespace, options)
-    self:Deactivate()
+    self:Deactivate(options)
     if not options.enable then return end
     
     self.namespace = namespace
     self.options = options
 
-    return self:pcall("activate", self.activate)
+    for name, func in next, {activate=self.activate, init=self.init} do
+        if not self:pcall(name, func) then return self:Deactivate(options) end
+    end
+
+    self:AddHook("roundStart", function() return self:init() end)
+end
+
+do
+    local insert = table.insert
+
+    ---@public
+    ---@param func fun()
+    function Types.Module:AddInit(func)
+        if not self.initializers then self.initializers = {} end
+        insert(self.initializers, func)
+    end
 end
 
 do
     local UnregisterTable = util.UnregisterTable
 
     ---@public
-    function Types.Module:Deactivate()
+    ---@param options table
+    function Types.Module:Deactivate(options)
         if self.namespace then
+            self.options = options
+
             for v in self.hooks do --[[@cast v {name:string, identifier:string}]]
                 Hook.Remove(v.name, v.identifier)
             end
@@ -417,6 +446,8 @@ do
             self.namespace = nil
             self.options = nil
         end
+
+        self.initializers = nil
 
         self.hooks = {}
         self.patches = {}
@@ -572,7 +603,7 @@ end
 function Types.NetworkMember:AddTempHandler(msg, func)
     local handlers = self.handlers[msg].set
     local bouncer
-
+    
     function bouncer(...)
         handlers:Remove(bouncer)
         return func(...)
