@@ -46,7 +46,7 @@ local function activate(self)
     local orderCategory --[[@type Barotrauma.OrderCategory]]
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local sprite --[[@type Barotrauma.Sprite]]
-    local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
+    local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
     local activeOrders
     local optionNodes
 

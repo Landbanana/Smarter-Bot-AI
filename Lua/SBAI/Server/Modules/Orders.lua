@@ -13,7 +13,7 @@ local function activate(self)
     if SERVER then
         local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
         local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
-        local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
+        local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
         local activeOrders
 
         do

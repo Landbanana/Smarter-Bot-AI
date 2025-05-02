@@ -7,7 +7,7 @@ Types.TYPES = {
     SET=1
 }
 
----@class Types.Set
+---@class Types.Set<T>: {[T]: true}
 ---@field public type Types.TYPES.SET
 Types.Set = {type=Types.TYPES.SET}
 Types.Set.__index = Types.Set
@@ -15,7 +15,7 @@ Types.Set.__index = Types.Set
 ---@return Types.Set
 function Types.Set.new(t)
     t = t or {}
-    
+
     return setmetatable(t, Types.Set)
 end
 
@@ -28,12 +28,16 @@ do
     end
 end
 
----@param k any
+---@generic T
+---@param self Types.Set<T>
+---@param k T
 function Types.Set:Add(k)
     self[k] = true
 end
 
----@param k any
+---@generic T
+---@param self Types.Set<T>
+---@param k T
 function Types.Set:Remove(k)
     self[k] = nil
 end
@@ -41,7 +45,9 @@ end
 do
     local IsSet = Types.Set.IsSet
 
-    ---@param t any[]|Types.Set
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@param t T[]|Types.Set<T>
     function Types.Set:Update(t)
         if IsSet(t) then
             for k in next, t do
@@ -58,7 +64,9 @@ end
 do
     local new = Types.Set.new
     
-    ---@return Types.Set
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@return Types.Set<T>
     function Types.Set:Copy()
         local out = new()
 
@@ -67,7 +75,9 @@ do
     end
 end
 
----@param t any[]|Types.Set
+---@generic T
+---@param self Types.Set<T>
+---@param t T[]|Types.Set<T>
 function Types.Set:Union(t)
     local out = self:Copy()
     
@@ -80,7 +90,9 @@ do
 
     local new = Types.Set.new
 
-    ---@param t any[]|Types.Set
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@param t T[]|Types.Set<T>
     function Types.Set:Intersection_Update(t)
         if not IsSet(t) then
             local temp = new()
@@ -99,8 +111,10 @@ do
     end
 end
 
----@param t any[]|Types.Set
----@return Types.Set
+---@generic T
+---@param self Types.Set<T>
+---@param t T[]|Types.Set<T>
+---@return Types.Set<T>
 function Types.Set:Intersection(t)
     local out = self:Copy()
 
@@ -111,7 +125,9 @@ end
 do
     local IsSet = Types.Set.IsSet
 
-    ---@param t any[]|Types.Set
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@param t T[]|Types.Set<T>
     function Types.Set:Difference_Update(t)
         if IsSet(t) then
             for k in next, t do
@@ -125,8 +141,10 @@ do
     end
 end
 
----@param t any[]|Types.Set
----@return Types.Set
+---@generic T
+---@param self Types.Set<T>
+---@param t T[]|Types.Set<T>
+---@return Types.Set<T>
 function Types.Set:Difference(t)
     local out = self:Copy()
 
@@ -137,7 +155,9 @@ end
 do
     local IsSet = Types.Set.IsSet
 
-    ---@param t any[]|Types.Set
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@param t T[]|Types.Set<T>
     function Types.Set:Symmetric_Difference_Update(t)
         if IsSet(t) then
             for k in next, t do
@@ -151,7 +171,9 @@ do
     end
 end
 
----@param t any[]|Types.Set
+---@generic T
+---@param self Types.Set<T>
+---@param t T[]|Types.Set<T>
 function Types.Set:Symmetric_Difference(t)
     local out = self:Copy()
 
@@ -159,6 +181,8 @@ function Types.Set:Symmetric_Difference(t)
     return out
 end
 
+---@generic T
+---@param self Types.Set<T>
 ---@return boolean
 function Types.Set:IsEmpty()
     for _ in next, self do
@@ -170,12 +194,16 @@ end
 do
     local ClearTable = util.itertools.ClearTable
 
+    ---@generic T
+    ---@param self Types.Set<T>
     function Types.Set:Clear()
         return ClearTable(self)
     end
 end
 
----@return any[]
+---@generic T
+---@param self Types.Set<T>
+---@return T[]
 function Types.Set:ToList()
     local out = {}
     local i = 0
