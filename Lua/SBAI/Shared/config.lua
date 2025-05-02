@@ -71,7 +71,7 @@ end
 ---@class (exact) ConfigSection: ConfigBase
 ---@field public new fun():ConfigSection
 ---@field public CreateOption fun(self:ConfigSection, name:string, default:string|boolean|number, optionType:Config.OPTION_TYPE, min:number?, max:number?):ConfigOption
----@field public CreateSection fun(self:ConfigSection, name:string):ConfigSection
+---@field public CreateSection fun(self:ConfigSection, name:string, default:boolean?):ConfigSection
 ---@field public Flatten fun(self:ConfigSection):table
 ---@field public [string] ConfigSection|ConfigOption
 local ConfigSection = {}
@@ -87,9 +87,11 @@ function ConfigSection:CreateOption(name, default, optionType, min, max)
     return self[name]
 end
 
-function ConfigSection:CreateSection(name)
+function ConfigSection:CreateSection(name, default)
+    if default == nil then default = true end
+
     self[name] = ConfigSection.new()
-    self[name]:CreateOption("enable", true, "boolean")
+    self[name]:CreateOption("enable", default, "boolean")
     return self[name]
 end
 
