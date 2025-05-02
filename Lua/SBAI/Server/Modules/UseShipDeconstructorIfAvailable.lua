@@ -10,7 +10,27 @@ LuaUserData.RegisterType("Barotrauma.AIObjectiveDeconstructItem")
 local function activate(self)
     local playerDeconData = self:RegisterTable(nil, "ROUND_END") --[=[@type {n:integer?, list:Barotrauma.Item[]?}]=]
 
-    local anyDeconOrder
+    do
+        local Character = Character
+        local LuaUserData = LuaUserData
+        
+        local Any = util.itertools.Any
+
+        self:AddInit(
+        function()
+            local AIObjectiveDeconstructItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
+
+            if Any(Character.CharacterList,
+            function(character)
+                return character.IsHuman and
+                    character.IsBot and
+                    character.IsOnPlayerTeam and
+                    character.AIController.objectiveManager.HasOrder(AIObjectiveDeconstructItem)
+            end) then
+                playerDeconData()
+            end
+        end)
+    end
 
     do
         local Deconstructor = Components.Deconstructor
@@ -73,22 +93,23 @@ local function activate(self)
         self:AddPatch("Barotrauma.AIObjectiveDeconstructItem", "FindDeconstructor", nil,
         function(instance, ptable)
             local character = instance.character
-            local playerDeconList, n = playerDeconData() --[[@type Barotrauma.Item[], integer]]
-            
-            if  n > 0 and
-                character.IsOnPlayerTeam
-            then
-                ---@type Barotrauma.Item
-                local closestDeconItem = GetClosest(character.WorldPosition, FindItems(nil, playerDeconList, nil, nil,
-                function(_, i)
-                    return i.GetComponent(Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
-                        i.HasAccess(character) and
-                        PoweredItemHasNeededPower(i)
-                end))
 
-                ptable.PreventExecution = true
+            if character.IsOnPlayerTeam then
+                local playerDeconList, n = playerDeconData() --[[@type Barotrauma.Item[], integer]]
                 
-                return closestDeconItem and closestDeconItem.GetComponent(Deconstructor) or nil
+                if n > 0 then
+                    ---@type Barotrauma.Item
+                    local closestDeconItem = GetClosest(character.WorldPosition, FindItems(nil, playerDeconList, nil, nil,
+                    function(_, i)
+                        return i.GetComponent(Deconstructor).InputContainer.Inventory.CanBePut(instance.Item) and
+                            i.HasAccess(character) and
+                            PoweredItemHasNeededPower(i)
+                    end))
+
+                    ptable.PreventExecution = true
+                    
+                    return closestDeconItem and closestDeconItem.GetComponent(Deconstructor) or nil
+                end
             end
         end, Hook.HookMethodType.Before)
     end
