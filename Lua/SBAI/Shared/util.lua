@@ -95,25 +95,52 @@ function util.itertools.RemoveSpecifiedItems(t, predicate)
 end
 
 ---@generic V
----@param predicate fun(v:V):boolean
----@param t? V[]
----@param ... V
+---@param t V[]
+---@param predicate? fun(v:V):boolean
 ---@return boolean
-function util.itertools.Any(predicate, t, ...)
-    for obj in (t ~= nil and t or {...}) do
-        if predicate(obj) then return true end
+function util.itertools.Any(t, predicate)
+    if predicate then
+        for v in t do
+            if predicate(v) then return true end
+        end
+    else
+        for v in t do
+            if v then return true end
+        end
     end
     return false
 end
 
 ---@generic V
----@param predicate fun(v:V):boolean
----@param t? V[]
----@param ... V
+---@param t V[]
+---@param predicate? fun(v:V):boolean
 ---@return boolean
-function util.itertools.All(predicate, t, ...)
-    for obj in (t or {...}) do
-        if not predicate(obj) then return false end
+function util.itertools.All(t, predicate)
+    if predicate then
+        for v in t do
+            if not predicate(v) then return false end
+        end
+    else
+        for v in t do
+            if not v then return false end
+        end
+    end
+    return true
+end
+
+---@generic V
+---@param t V[]
+---@param predicate? fun(v:V):boolean
+---@return boolean
+function util.itertools.None(t, predicate)
+    if predicate then
+        for v in t do
+            if predicate(v) then return false end
+        end
+    else
+        for v in t do
+            if v then return false end
+        end
     end
     return true
 end
@@ -642,6 +669,36 @@ do
             end
         end
         return containers
+    end
+end
+
+do
+    local pi = math.pi
+    
+    local cos = math.cos
+    local sin = math.sin
+    local Vector2 = Vector2
+
+    ---@param center Microsoft.Xna.Framework.Vector2
+    ---@param radius number
+    ---@param points integer
+    ---@param firstAngle number
+    ---@return Microsoft.Xna.Framework.Vector2[]
+    function util.GetPointsOnCircumference(center, radius, points, firstAngle)
+        local maxAngle = 2*pi
+        local angleStep = maxAngle/points;
+
+        local coordinates = {}
+        for i=1,points,1 do
+            local angle = firstAngle + (i*angleStep)
+            
+            if angle > maxAngle then angle = angle - maxAngle end
+            coordinates[i] = Vector2(
+                center.X + radius*cos(angle),
+                center.Y + radius*sin(angle)
+            )
+        end
+        return coordinates;
     end
 end
 
