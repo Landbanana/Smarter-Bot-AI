@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Orders>
-  <Order name="Ignore Room" identifier="ignoreroom"
-         mustsettarget="true" targetallcharacters="true">
+  <Order name="Ignore Room" identifier="sbai_ignoreroom"
+         mustsettarget="true" targetallcharacters="true"
+		 color="255,105,180,255">
     <Sprite name="Command_Ignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,640,128,128"/>
   </Order>
-  <Order name="Unignore Room" identifier="unignoreroom"
-         mustsettarget="true" targetallcharacters="true">
+  <Order name="Unignore Room" identifier="sbai_unignoreroom"
+         mustsettarget="true" targetallcharacters="true"
+		 color="255,105,180,255">
     <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="896,640,128,128"/>
+  </Order>
+  <Order name="Smarter Bot AI" identifier="sbai">
+    <Sprite name="Command_Category_SBAI" texture="%ModDir%/Images/BigBrainOrderCategory.png" sourcerect="0,0,128,128"/>
   </Order>
 </Orders>

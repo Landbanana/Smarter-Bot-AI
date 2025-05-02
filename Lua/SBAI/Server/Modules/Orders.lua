@@ -1,100 +1,153 @@
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
----@param self Types.Module
-local function activateIgnoreRoom(self)
-    -- local allHullData = self:RegisterTable(nil, "ROUND_END") --[[@type {set:Types.Set}]]
-    self:AddPatch("Barotrauma.Hull", "get_AvoidStaying", nil,
-    function(instance, ptable)
-        return true
-    end, Hook.HookMethodType.After)
-    -- do
-    --     local new = Types.Set.new
+LuaUserData.RegisterType("Barotrauma.CrewManager+ActiveOrder")
 
-    --     setmetatable(allHullData,{
-    --         ---@param t {set:Types.Set}
-    --         ---@return Types.Set
-    --         __call=function(t)
-    --             if not t.set then
-    --                 t.set = new()
-    --             end
-    --             return t.set
-    --         end
-    --     })
-    -- end
-    
-    -- if CLIENT then
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
-    --     LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "contextualOrders")
-    --     LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "itemContext")
-
-    --     local ignoreRoomId = Identifier("ignoreroom")
-    --     local unignoreRoomId = Identifier("unignoreroom")
-
-    --     do
-            
-    --         local ignoreRoomPrefab = OrderPrefab.Prefabs[ignoreRoomId]
-    --         local unignoreRoomPrefab = OrderPrefab.Prefabs[unignoreRoomId]
-    --         local Character = Character
-    --         local playerTeamId = Submarine.MainSub.TeamID
-
-    --         local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-
-    --         local contextualOrders
-            
-    --         self:AddNestedPatch("Barotrauma.CrewManager", "CreateContextualOrderNodes", "AddIgnoreOrder", nil,
-    --         function(instance, ptable)
-    --             local item = instance.itemContext
-                
-    --             if  item then
-    --                 local hull = item.CurrentHull
-
-    --                 if  hull and
-    --                     hull.Submarine.TeamID == playerTeamId
-    --                 then
-    --                     local prefab = allHullData.set[hull] and unignoreRoomPrefab or ignoreRoomPrefab
-    --                     print(prefab.Identifier)
-    --                     local order = Order.__new(allHullData.set[hull] and unignoreRoomPrefab or ignoreRoomPrefab, hull, nil, Character.Controlled)
-                        
-    --                     if contextualOrders then
-    --                         contextualOrders.Add(order)
-    --                     else
-    --                         DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Order]]"},
-    --                         function()
-    --                             contextualOrders = instance.contextualOrders
-    --                             return contextualOrders.Add(order)
-    --                         end)
-    --                     end
-    --                 end
-    --             end
-    --         end, Hook.HookMethodType.Before)
-    --     end
-
-    --     self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
-    --     function(instance, ptable)
-    --         local order = ptable["order"] --[[@type Barotrauma.Order]]
-    --         local orderId = order.Identifier
-    --         local hull = order.TargetEntity --[[@type Barotrauma.Hull]]
-            
-    --         if orderId == ignoreRoomId then
-    --             allHullData.set:Add(hull)
-    --         elseif orderId == unignoreRoomId then
-    --             allHullData.set:Remove(hull)
-    --         end
-    --     end, Hook.HookMethodType.Before)
-
-    --     self:AddPatch("Barotrauma.Order", "GetChatMessage", nil,
-    --     function(instance, ptable)
-    --         print(ptable.ReturnValue == "")
-    --     end, Hook.HookMethodType.After)
-    
-    -- end
-    -- allHullData()
-end
+local orderCategoryId = Identifier("sbai")
+local orderCategoryPrefix = orderCategoryId.Value.."_" --[[@type string]]
 
 ---@param self Types.Module
 local function activate(self)
-    self:DoOption("ignoreRoom", activateIgnoreRoom)
+    if SERVER then
+        local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
+        local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
+        local ignoredHullData = self:RegisterTable(nil, "ROUND_END") --[[@type {set:Types.Set}]]
+        local activeOrders
+
+        do
+            local Game = Game
+
+            local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+            local new = Types.Set.new
+
+            self:AddInit(
+            function()
+                ignoredHullData.set = new()
+
+                local session = Game.GameSession
+
+                if not session then return end
+                DoWithTemporaryRegistrations({
+                    "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"
+                },
+                function()
+                    activeOrders = session.CrewManager.ActiveOrders
+                    for activeOrder in activeOrders do
+                        local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+    
+                        if curOrder.Identifier == ignoreRoomOrderId then
+                            ignoredHullData.set:Add(curOrder.TargetEntity)
+                        end
+                    end
+                end)
+            end)
+        end
+
+        self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
+        function(instance, ptable)
+            local order = ptable["order"] --[[@type Barotrauma.Order]]
+            local id = order.Identifier --[[@type Barotrauma.Identifier]]
+
+            if id:StartsWith(orderCategoryPrefix) then
+                if id == ignoreRoomOrderId then
+                    if ptable["fadeOutTime"] then
+                        ptable.PreventExecution = true
+    
+                        return instance.AddOrder(order)
+                    else
+                        ignoredHullData.set:Add(order.TargetEntity)
+                    end
+                elseif id == unignoreRoomOrderId then
+                    local targetHull = order.TargetEntity --[[@type Barotrauma.Hull]]
+
+                    ptable.PreventExecution = true
+
+                    for activeOrder in activeOrders do
+                        local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+                        if  curOrder.Identifier == ignoreRoomOrderId and
+                            curOrder.TargetEntity == targetHull
+                        then
+                            activeOrders.Remove(activeOrder)
+                            break
+                        end
+                    end
+                    ignoredHullData.set:Remove(targetHull)
+                    return true
+                end
+            end
+        end, Hook.HookMethodType.Before)
+
+        self:AddPatch("Barotrauma.Hull", "get_AvoidStaying", nil,
+        function(instance, ptable)
+            ptable.PreventExecution = true
+            
+            return instance.avoidStaying or instance.IsWetRoom or (ignoredHullData.set[instance] ~= nil)
+        end, Hook.HookMethodType.Before)
+    end
 end
 
-return Types.Module.new(activate)
+---@param self Types.Module
+local function deactivate(self)
+    if SERVER then
+        if self.options.enable then return end
+
+        util.DoWithTemporaryRegistrations(
+        {"System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"},
+        function()
+            local session = Game.GameSession
+
+            if not session then return end
+
+            do
+                local ActiveOrders = session.CrewManager.ActiveOrders --[[@type System.Collections.Generic.List*1Barotrauma*CrewManager*ActiveOrder]]
+                local removeIndices = {}
+                local i = 0
+                local j = 0
+
+                for order in ActiveOrders do
+                    local orderId = order.Order.Identifier --[[@type Barotrauma.Identifier]]
+
+                    if orderId:StartsWith(orderCategoryPrefix) then
+                        j = j + 1
+                        removeIndices[j] = i
+                    end
+                    i = i + 1
+                end
+
+                table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
+                for k in removeIndices do --[[@cast k integer]]
+                    ActiveOrders.RemoveAt(k)
+                end
+            end
+
+            for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
+                if character.IsHuman then
+                    local CurrentOrders = character.AIController.ObjectiveManager.CurrentOrders --[[@type System.Collections.Generic.List*1Barotrauma*Order]]
+                    local removeIndices = {}
+                    local i = 0
+                    local j = 0
+
+                    for order in CurrentOrders do
+                        local orderId = order.Identifier --[[@type Barotrauma.Identifier]]
+
+                        if orderId:StartsWith(orderCategoryPrefix) then
+                            j = j + 1
+                            removeIndices[j] = i
+                        end
+                        i = i + 1
+                    end
+
+                    table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
+                    for k in removeIndices do --[[@cast k integer]]
+                        CurrentOrders.RemoveAt(k)
+                    end
+                end
+            end
+        end)
+    end
+end
+
+return Types.Module.new(activate, deactivate)

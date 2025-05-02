@@ -124,8 +124,7 @@ do
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
-    section = defaults:CreateSection("Orders")
-    section:CreateOption("ignoreRoom", true, Config.OPTION_TYPE.boolean)
+    section = defaults:CreateSection("Orders", false)
 
     defaults:CreateSection("PreventAttackingHandcuffed")
 

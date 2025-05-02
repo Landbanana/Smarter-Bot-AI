@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+  <orderdialog.sbai_ignoreroom>Don't wander in [roomname]!</orderdialog.sbai_ignoreroom>
+  <ordername.sbai_ignoreroom>Avoid Wandering in Room</ordername.sbai_ignoreroom>
+  <orderdialog.sbai_unignoreroom>You can wander in [roomname] again.</orderdialog.sbai_unignoreroom>
+  <ordername.sbai_unignoreroom>Allow Wandering in Room</ordername.sbai_unignoreroom>
+  <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
+</infotexts>
