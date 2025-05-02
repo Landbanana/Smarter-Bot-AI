@@ -753,6 +753,22 @@ do
     end
 end
 
+do
+    local Game = Game
+    local XElement = XElement
+
+    function util.debug.PrintOrders()
+        local session = Game.GameSession
+
+        if not session then return end
+
+        local orderData = XElement.__new("OrderData")
+
+        session.CrewManager.SaveActiveOrders(orderData)
+        print(orderData)
+    end
+end
+
 ---@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
 util.UnregisteredStaticDescriptors = setmetatable({}, {
     __index=function(t, typeName)

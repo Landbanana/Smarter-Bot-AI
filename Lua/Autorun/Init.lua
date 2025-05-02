@@ -10,11 +10,3 @@ end
 
 Config.Load()
 SBAI.Control.Activate()
-
-
-function testOrders()
-    local xTest = XElement.__new("OrderData")
-
-    Game.GameSession.CrewManager.SaveActiveOrders(xTest)
-    print(xTest)
-end
