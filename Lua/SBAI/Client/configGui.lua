@@ -248,170 +248,207 @@ local function CloseSBAIMenu()
     end
 end
 
----@param optionsFrame Barotrauma.GUIFrame
----@param sectionName string
-local function LoadSectionOptionsToGUI(optionsFrame, sectionName)
-    optionsFrame.ClearChildren()
-    
-    local namespace = SBAI.namespace
-    local xMax = optionsFrame.Rect.Width
-    local xSpacing = 0 --[[@type number?]]
-    local currentOptionCut --[[@type Barotrauma.GUIScissorComponent?]]
-    -- local currentOption --[[@type string]]
-    -- local currentValue --[[@type string|number|boolean|table]]
+local LoadSectionOptionsToGUI
 
-    local typeTable --[[@type table<OptionType|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
-
+do
     local match = string.match
     local endsWith = string.endsWith
     local sub = string.sub
 
-    ---@param defaults ConfigSection|ConfigOption
-    ---@param option string
-    local function MakeNamedCut(defaults, option)
-        local font = xSpacing > 0 and "SubHeadingFont" or "LargeFont"
-        local xText = GUI.Style.Fonts[Identifier(font)].MeasureString(option..":", false).X + 2*D_PADDING
+    local RadioButtonGroup = LuaUserData.CreateStatic("Barotrauma.GUIRadioButtonGroup") --[[@type Barotrauma.GUIRadioButtonGroup]]
 
-        currentOptionCut = CutComponent(optionsFrame, Point(xMax - xSpacing, clickableSize))
-        currentOptionCut.RectTransform.Translate(Point(xSpacing, 0))
-
-        local textBlock = AddTextBlock(currentOptionCut.Content, Point(xText, clickableSize), GUI.Anchor.CenterLeft, option..":", "", font, GUI.Alignment.Center, false, true)
-
-        textBlock.ForceUpperCase = ForceUpperCase.No
-        --textBlock.ToolTip = defaults.description
+    ---@param optionsFrame Barotrauma.GUIFrame
+    ---@param sectionName string
+    function LoadSectionOptionsToGUI(optionsFrame, sectionName)
+        optionsFrame.ClearChildren()
         
-        local textTag = "GUI.tooltips."..match(namespace(), "^SBAI%.(.+)$")
+        local namespace = SBAI.namespace
+        local xMax = optionsFrame.Rect.Width
+        local xSpacing = 0 --[[@type number?]]
+        local currentOptionCut --[[@type Barotrauma.GUIScissorComponent?]]
+        -- local currentOption --[[@type string]]
+        -- local currentValue --[[@type string|number|boolean|table]]
+
+        local typeTable --[[@type table<OptionType|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
+        local mainFontIds = {Identifier("LargeFont"), Identifier("SubHeadingFont")}
+
         
-        if endsWith(textTag, ".enable") then
-            textTag = sub(textTag, 1, #textTag - 7)
+
+        ---@param defaults ConfigSection|ConfigOption
+        ---@param option string
+        local function MakeNamedCut(defaults, option)
+            local font = mainFontIds[xSpacing > 0 and 2 or 1]
+            local xText = GUI.Style.Fonts[font].MeasureString(option..":", false).X + 2*D_PADDING
+
+            currentOptionCut = CutComponent(optionsFrame, Point(xMax - xSpacing, clickableSize))
+            currentOptionCut.RectTransform.Translate(Point(xSpacing, 0))
+
+            local textBlock = AddTextBlock(currentOptionCut.Content, Point(xText, clickableSize), GUI.Anchor.CenterLeft, option..":", "", font, GUI.Alignment.Center, false, true)
+
+            textBlock.ForceUpperCase = ForceUpperCase.No
+            --textBlock.ToolTip = defaults.description
+            
+            local textTag = "GUI.tooltips."..match(namespace(), "^SBAI%.(.+)$")
+            
+            if endsWith(textTag, ".enable") then
+                textTag = sub(textTag, 1, #textTag - 7)
+            end
+
+            if textTag ~= nil then textBlock.ToolTip = TextManager.get(textTag) end
         end
 
-        if textTag ~= nil then textBlock.ToolTip = TextManager.get(textTag) end
-    end
+        ---@param defaults ConfigSection|ConfigOption
+        ---@param option string
+        ---@param value number
+        ---@param optionType OptionType
+        local function processNumber(defaults, option, value, optionType)
+            MakeNamedCut(defaults, option)
 
-    ---@param defaults ConfigSection|ConfigOption
-    ---@param option string
-    ---@param value number
-    ---@param optionType OptionType
-    local function processNumber(defaults, option, value, optionType)
-        MakeNamedCut(defaults, option)
-
-        local configRef = util.config.Get(Config.data, -namespace)
-        local key = namespace.stack[#namespace.stack]
-        local numberInput = GUI.NumberInput(
-            GUI.RectTransform(
-                Point(2*clickableSize, clickableSize),
-                currentOptionCut.Content.RectTransform,
-                GUI.Anchor.CenterLeft
-            ),
-            optionType == Config.OPTION_TYPE.float and NumberType.Float or optionType == Config.OPTION_TYPE.int and NumberType.Int,
-            nil,
-            GUI.Alignment.Left
-        )
-
-        local zeroCheck = false
-        local forcedDefault = false
-
-        if optionType == Config.OPTION_TYPE.float then
-            numberInput.MinValueFloat = defaults.min
-            numberInput.MaxValueFloat = defaults.max
-            numberInput.FloatValue = value
-
-            ---@param numberIn Barotrauma.GUINumberInput
-            numberInput.OnValueEntered = function(numberIn)
-                if forcedDefault then
-                    numberIn.FloatValue = defaults.value
-                    forcedDefault = false
-                end
-
-                configRef[key] = numberIn.FloatValue
-            end
-
-            ---@param numberIn Barotrauma.GUINumberInput
-            numberInput.OnValueChanged = function(numberIn)
-                local oldZeroCheck = zeroCheck
-                
-                zeroCheck = numberIn.FloatValue == 0
-                forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
-            end
-        else
-            numberInput.MinValueInt = defaults.min
-            numberInput.MaxValueInt = defaults.max
-            numberInput.IntValue = value
-            
-            ---@param numberIn Barotrauma.GUINumberInput
-            numberInput.OnValueEntered = function(numberIn)
-                if forcedDefault then
-                    numberIn.IntValue = defaults.value
-                    forcedDefault = false
-                end
-
-                configRef[key] = numberIn.IntValue
-            end
-
-            ---@param numberIn Barotrauma.GUINumberInput
-            numberInput.OnValueChanged = function(numberIn)
-                local oldZeroCheck = zeroCheck
-
-                zeroCheck = numberIn.IntValue == 0
-                forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
-            end
-        end
-        
-        --AssignColors(numberInput)
-        --numberInput.
-        numberInput.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
-    end
-    
-    ---@param defaults ConfigSection|ConfigOption
-    ---@param option string
-    ---@param value `OptionType`|table
-    local function LoadOptionsRecurse(defaults, option, value)
-        namespace = namespace + option
-        typeTable[defaults.optionType or "table"](defaults, option, value)
-        namespace = -namespace
-    end
-
-    ---@type table<OptionType|"table", fun(defaults:ConfigSection|ConfigOption, option:table, value:`optionType`|table)>
-    typeTable = {
-        [Config.OPTION_TYPE.string]=function(defaults, option, value) --[[@cast value string]]
-        
-        end,
-        [Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.float) end,
-        [Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.int) end,
-        [Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
-            if option == "enable" then
-                xSpacing = xSpacing - 4*D_PADDING
-                MakeNamedCut(defaults, namespace.stack[#namespace.stack - 1])
-                xSpacing = xSpacing + 4*D_PADDING
-            else
-                MakeNamedCut(defaults, option)
-            end
-            
             local configRef = util.config.Get(Config.data, -namespace)
-            
             local key = namespace.stack[#namespace.stack]
-            local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
-            ---@param button Barotrauma.GUIButton
-            ---@param obj any
-            ---@return boolean
-            function(button, obj)
-                button.Selected = not button.Selected
-                configRef[key] = button.Selected
-                return button.Selected
-            end)
-            button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
-            button.Selected = value
-        end,
-        ["table"]=function(defaults, option, value) --[[@cast value table]]
-            xSpacing = xSpacing + 4*D_PADDING
-            for k, v in pairs(defaults) do --[[@cast v ConfigSection|ConfigOption]]
-                LoadOptionsRecurse(v, k, value[k])
+
+            if optionType == Config.OPTION_TYPE.int and defaults.specialType == "radio" then
+                local radioGroup = RadioButtonGroup()
+                local layoutGroupRect = AddLayoutGroup(currentOptionCut.Content, Point(currentOptionCut.Content.Rect.Width - currentOptionCut.Content.GetChild(Int32(currentOptionCut.Content.CountChildren - 1)).Rect.Width, currentOptionCut.Content.Rect.Height), GUI.Anchor.CenterRight, nil, true, GUI.Anchor.CenterLeft).RectTransform
+
+                for i, o in ipairs(defaults.specialData) do
+                    local font = GUI.Style.Fonts[Identifier("SmallFont")]
+                    local xText = font.MeasureString(o, false).X + D_PADDING + clickableSize
+                    local tickBox = GUI.TickBox(
+                        GUI.RectTransform(
+                            Point(xText, clickableSize),
+                            layoutGroupRect),
+                            o,
+                            font
+                        )
+
+                    radioGroup.AddRadioButton(i, tickBox)
+                    --tickBox.ResizeBox()
+                end
+                
+                radioGroup.Selected = value
+                radioGroup.OnSelect = function(rbg, val)
+                    print(val)
+                    configRef[key] = val
+                end
+                return
             end
-            xSpacing = xSpacing - 4*D_PADDING
+
+            local numberInput = GUI.NumberInput(
+                GUI.RectTransform(
+                    Point(2*clickableSize, clickableSize),
+                    currentOptionCut.Content.RectTransform,
+                    GUI.Anchor.CenterLeft
+                ),
+                optionType == Config.OPTION_TYPE.float and NumberType.Float or optionType == Config.OPTION_TYPE.int and NumberType.Int,
+                nil,
+                GUI.Alignment.Left
+            )
+
+            local zeroCheck = false
+            local forcedDefault = false
+
+            if optionType == Config.OPTION_TYPE.float then
+                numberInput.MinValueFloat = defaults.min
+                numberInput.MaxValueFloat = defaults.max
+                numberInput.FloatValue = value
+
+                ---@param numberIn Barotrauma.GUINumberInput
+                numberInput.OnValueEntered = function(numberIn)
+                    if forcedDefault then
+                        numberIn.FloatValue = defaults.value
+                        forcedDefault = false
+                    end
+
+                    configRef[key] = numberIn.FloatValue
+                end
+
+                ---@param numberIn Barotrauma.GUINumberInput
+                numberInput.OnValueChanged = function(numberIn)
+                    local oldZeroCheck = zeroCheck
+                    
+                    zeroCheck = numberIn.FloatValue == 0
+                    forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                end
+            else
+                numberInput.MinValueInt = defaults.min
+                numberInput.MaxValueInt = defaults.max
+                numberInput.IntValue = value
+                
+                ---@param numberIn Barotrauma.GUINumberInput
+                numberInput.OnValueEntered = function(numberIn)
+                    if forcedDefault then
+                        numberIn.IntValue = defaults.value
+                        forcedDefault = false
+                    end
+
+                    configRef[key] = numberIn.IntValue
+                end
+
+                ---@param numberIn Barotrauma.GUINumberInput
+                numberInput.OnValueChanged = function(numberIn)
+                    local oldZeroCheck = zeroCheck
+
+                    zeroCheck = numberIn.IntValue == 0
+                    forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                end
+            end
+            
+            --AssignColors(numberInput)
+            --numberInput.
+            numberInput.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
         end
-    }
-    LoadOptionsRecurse(Config.defaults.CONFIG[sectionName], sectionName, Config.data[sectionName])
+        
+        ---@param defaults ConfigSection|ConfigOption
+        ---@param option string
+        ---@param value `OptionType`|table
+        local function LoadOptionsRecurse(defaults, option, value)
+            namespace = namespace + option
+            typeTable[defaults.optionType or "table"](defaults, option, value)
+            namespace = -namespace
+        end
+
+        ---@type table<OptionType|"table", fun(defaults:ConfigSection|ConfigOption, option:table, value:`optionType`|table)>
+        typeTable = {
+            [Config.OPTION_TYPE.string]=function(defaults, option, value) --[[@cast value string]]
+            
+            end,
+            [Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.float) end,
+            [Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.int) end,
+            [Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
+                if option == "enable" then
+                    xSpacing = xSpacing - 4*D_PADDING
+                    MakeNamedCut(defaults, namespace.stack[#namespace.stack - 1])
+                    xSpacing = xSpacing + 4*D_PADDING
+                else
+                    MakeNamedCut(defaults, option)
+                end
+                
+                local configRef = util.config.Get(Config.data, -namespace)
+                
+                local key = namespace.stack[#namespace.stack]
+                local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
+                ---@param button Barotrauma.GUIButton
+                ---@param obj any
+                ---@return boolean
+                function(button, obj)
+                    button.Selected = not button.Selected
+                    configRef[key] = button.Selected
+                    return button.Selected
+                end)
+                button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
+                button.Selected = value
+            end,
+            ["table"]=function(defaults, option, value) --[[@cast value table]]
+                xSpacing = xSpacing + 4*D_PADDING
+                for k, v in pairs(defaults) do --[[@cast v ConfigSection|ConfigOption]]
+                    LoadOptionsRecurse(v, k, value[k])
+                end
+                xSpacing = xSpacing - 4*D_PADDING
+            end
+        }
+        LoadOptionsRecurse(Config.defaults.CONFIG[sectionName], sectionName, Config.data[sectionName])
+    end
 end
 
 ---@param sectionList Barotrauma.GUIListBox
