@@ -51,7 +51,9 @@ local function activate(self)
             for item in wearables do --[[@cast item Barotrauma.Item]]
                 for v in item.AllowedSlots do
                     if testSlot(v) then
-                        if inventory.TryPutItem(item, character, {v}, true, true) then return end
+                        if inventory.TryPutItem(item, character, {v}, true, true) then
+                            return character.OnWearablesChanged()
+                        end
                     end
                 end
             end
