@@ -146,51 +146,6 @@ end
 if  SERVER or
     Game.IsSingleplayer
 then
-    local allOrderData
-
-    local function saveAllOrderData()
-        if allOrderData then error("allOrderData must not be set", 2) end
-
-        allOrderData = {}
-
-        for character in Character.CharacterList do --[[@cast character Barotrauma.Character?]]
-            if  character and
-                character.IsBot
-            then
-                local info = character.Info
-
-                if info then
-                    local orderData = XElement.__new("orders")
-                    
-                    CharacterInfo.SaveOrderData(info, orderData)
-                    allOrderData[character] = orderData
-                end
-            end
-        end
-    end
-
-    local function loadAllOrderData()
-        if not allOrderData then error("allOrderData must be set first", 2) end
-
-        for character in Character.CharacterList do --[[@cast character Barotrauma.Character?]]
-            if  character and
-                character.IsBot
-            then
-                local orderData = allOrderData[character]
-
-                if orderData then
-                    local info = character.Info
-
-                    if info then
-                        CharacterInfo.ApplyOrderData(character, orderData)
-                    end
-                end
-            end
-        end
-
-        allOrderData = nil
-    end
-
     do
         local oldSave = Config.Save
         function Config.Save(reactivate)
@@ -203,7 +158,7 @@ then
     end
 
     if not File.Exists(Constants.ConfigPath) then Config.Save(false) end
-    SBAI.Server = ModuleController.new(saveAllOrderData, loadAllOrderData, namespace + "Server")
+    SBAI.Server = ModuleController.new(util.SaveOrders, util.LoadOrders, namespace + "Server")
 end
 
 if CLIENT or Game.IsSingleplayer then

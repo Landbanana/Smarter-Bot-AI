@@ -1095,4 +1095,41 @@ if CSActive then
     end
 end
 
+do
+    local Character = Character
+    local CharacterInfo = CharacterInfo
+    local CrewManager = CrewManager
+    local XElement = XElement
+
+    local allOrders
+    
+    function util.SaveOrders()
+        allOrders = {
+            CrewOrders=XElement.__new("Orders"),
+            CharacterOrders={}
+        }
+        
+        CrewManager.SaveActiveOrders(allOrders.CrewOrders)
+
+        for charInfo in CrewManager.GetCharacterInfos() do
+            local xElement = XElement.__new("Orders")
+
+            CharacterInfo.SaveOrderData(charInfo, xElement)
+            allOrders.CharacterOrders[charInfo.Name] = xElement
+        end
+        return allOrders
+    end
+
+    function util.LoadOrders()
+        if allOrders == nil then error("allOrders cannot be nil") end
+        
+        CrewManager.LoadActiveOrders(allOrders.CrewOrders)
+
+        for character in Character.CharacterList do
+            CharacterInfo.ApplyOrderData(character, allOrders.CharacterOrders[character.Name])
+        end
+        allOrders = nil
+    end
+end
+
 return util
