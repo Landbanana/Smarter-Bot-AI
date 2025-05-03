@@ -61,9 +61,6 @@ local function activate(self)
     local orderCategory --[[@type Barotrauma.OrderCategory]]
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local sprite --[[@type Barotrauma.Sprite]]
-    local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
-    local activeOrders
-    local optionNodes
 
     for v in OrderCategory do
         orderCategory = (v > (orderCategory or -1)) and v or orderCategory
@@ -263,6 +260,113 @@ local function activate(self)
         
         return instance.avoidStaying or instance.IsWetRoom or (ignoredHulls[instance] ~= nil)
     end, Hook.HookMethodType.Before)
+
+--     -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", ".ctor", nil,
+--     -- function(instance, ptable)
+--     --     print("Hi")
+--     --     print(ptable["character"].Name)
+--     --     print(ptable["item"])
+--     -- end, Hook.HookMethodType.Before)
+
+--     LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
+
+--     local instrumentData = setmetatable({}, {
+--         ---@param t {[Barotrauma.Identifier]:{slotTypes:Barotrauma.InvSlotType[]}}
+--         ---@param k Barotrauma.Identifier
+--         __index=function(t, k)
+--             local prefab = ItemPrefab.Prefabs[k]
+
+--             if prefab then
+--                 local holdable = prefab.ConfigElement.GetChildElement("Holdable")
+            
+--                 if holdable then
+--                     local slotString = holdable.GetAttributeString("slots")
+                    
+--                     if slotString then
+--                         local allowedSlots = {}
+--                         local i = 0
+            
+--                         for slotCombination in slotString:gmatch("([^,]+),?") do
+--                             if slotCombination:lower() ~= "any" then
+--                                 local slots = 0
+            
+--                                 i = i + 1
+--                                 for specSlotString in slotCombination:gmatch("([^%+]+)%+?") do
+--                                     specSlotString = specSlotString:match("(%a+)")
+                                    
+--                                     if specSlotString:lower() == "bothhands" then
+--                                         slots = InvSlotType.LeftHand + InvSlotType.RightHand
+--                                     end
+            
+--                                     slots = slots + InvSlotType[specSlotString]
+--                                 end
+--                                 allowedSlots[i] = slots
+--                             end
+--                         end
+--                         if i > 0 then
+--                             t[k] = {slotTypes=allowedSlots}
+--                             return t[k]
+--                         end
+--                     end
+--                 end
+--             end
+--             error("Unable to find instrument: "..k, 2)
+--         end
+--     })
+
+--     self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
+--     function(instance, ptable)
+--         local order = ptable["order"] --[[@type Barotrauma.Order]]
+--         local id = order.Identifier --[[@type Barotrauma.Identifier]]
+
+--         if id:StartsWith(orderCategoryPrefix) then
+--             if id == performId then
+--                 local success, targetComponent = order.TryGetTargetItemComponent(order.TargetEntity, Components.RangedWeapon)
+--                 local newObj = AIObjectiveOperateItem(targetComponent, instance.character, instance, "", true)
+--                 newObj.Identifier = order.Identifier
+                
+                
+--                 print(order.TargetEntity)
+--                 print(order.TargetEntity.GetComponent(Components.RangedWeapon))
+--                 --
+--                 --local newObj = AIObjectiveGetItem(instance.character, order.Option, instance, true, true, nil, false)
+
+                
+--                 --newObj.EquipSlotType = instrumentData[order.Option]
+--                 --newObj.Completed.add(
+--                     return newObj
+--             end
+--         end
+--     end, Hook.HookMethodType.Before)
+    
+--     local Contains = util.itertools.Contains
+
+--     self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
+--     function(instance, ptable)
+--         local obj = ptable["objective"]
+
+--         if obj.Identifier == performId then
+--             local item = instance.Item
+--             local character = ptable["character"] --[[@type Barotrauma.Character]]
+
+--             character.AIController.SteeringManager.Reset()
+--             if  Contains(character.HeldItems, item) or
+--                 character.inventory.TryPutItem(item, character, instrumentData[item.Prefab.Identifier].slotTypes, true, false)
+--             then
+--                 character.SetInput(InputType.Aim, false, true)
+--                 character.SetInput(InputType.Shoot, false, true)
+--             end
+--             return true
+--         end
+--     end, Hook.HookMethodType.Before)
+
+--     self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
+--     function(instance, ptable)
+--         if instance.Identifier == performId then
+--             ptable.PreventExecution = true
+--             return false
+--         end
+--     end, Hook.HookMethodType.Before)
 end
 
 ---@param self Types.Module

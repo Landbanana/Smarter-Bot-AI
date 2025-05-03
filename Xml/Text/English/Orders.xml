@@ -5,4 +5,5 @@
   <orderdialog.sbai_unignoreroom>You can wander in [roomname] again.</orderdialog.sbai_unignoreroom>
   <ordername.sbai_unignoreroom>Allow Wandering in Room</ordername.sbai_unignoreroom>
   <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
+  <!-- <ordername.sbai_perform>Play Instrument</ordername.sbai_perform> -->
 </infotexts>
