@@ -629,8 +629,7 @@ end
 
 -- ---@param parent Barotrauma.GUIComponent
 -- function MakeCrewPolicyMenu(parent)
---     local policyFrame = AddFrame(parent, parent.Rect.Size + Point(-parent.Rect.Width/5, parent.Rect.Height/3), GUI.Anchor.Center, "Parchment")
-
+--     local policyFrame = AddFrame(parent, parent.Rect.Size + Point(-parent.Rect.Width/5, parent.Rect.Height/3), GUI.Anchor.Center, "ItemUI")
     
     
 -- end

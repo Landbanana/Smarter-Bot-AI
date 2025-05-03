@@ -11,6 +11,13 @@
 		 color="255,105,180,255">
     <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="896,640,128,128"/>
   </Order>
+
+  <!-- <Order name="Fabricate Items" identifier="sbai_fabricateitems"
+         mustmanuallyassign="true" mustsettarget="true"
+         targetitemtype="Fabricator"
+		 color="255,105,180,255">
+    <Sprite name="Command_Category_Maintenance" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,512,128,128"/>
+  </Order> -->
   
   <!-- <Order name="Perform" identifier="sbai_perform" -->
 		 <!-- targetitems="accordion,guitar,harmonica,bikehorn" targetitemtype="rangedweapon" -->

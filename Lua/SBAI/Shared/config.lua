@@ -161,6 +161,8 @@ do
 
     defaults:CreateSection("CleanablePetItems")
 
+    --defaults:CreateSection("CombatTweaks")
+
     defaults:CreateSection("CrewStaysInSub")
 
     section = defaults:CreateSection("EquipArmor")

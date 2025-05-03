@@ -41,6 +41,7 @@ local orderCategoryPrefix = orderCategoryId.Value.."_" --[[@type string]]
 ---@param self Types.Module
 local function activate(self)
     local Character = Character
+    -- local fabricateItemsId = Identifier("sbai_fabricateitems")
     local Game = Game
     local HotPink = Color.HotPink
     local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
@@ -198,6 +199,9 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
+    -- local mainFrame = GUI.Frame(GUI.RectTransform(Vector2.One))
+    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "OnResolutionChanged")
+    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "ReloadGuiFrame")
     self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
@@ -215,6 +219,34 @@ local function activate(self)
                 then
                     instance.AddOrder(order.Clone().WithTargetEntity(targetHull))
                 end
+            -- elseif id == fabricateItemsId then
+            --     local frame = GUI.Frame(GUI.RectTransform(Vector2(1, 1), mainFrame.RectTransform, GUI.Anchor.Center),"ItemUi")
+            --     local closeButton = GUI.Button(GUI.RectTransform(Vector2(1, 1), frame.RectTransform, GUI.Anchor.Center), "", GUI.Alignment.Center, nil)
+            --     local identifier = self.namespace()
+
+                
+            --     --order.TargetItemComponent.GuiFrame.RectTransform.Parent = frame.RectTransform
+            --     order.TargetItemComponent.ReloadGuiFrame()
+            --     order.TargetItemComponent.CreateGUI()
+
+            --     order.TargetItemComponent.GuiFrame.RectTransform.Parent = frame.RectTransform
+
+            --     self:AddPatch("Barotrauma.GameScreen", "AddToGUIUpdateList", nil,
+            --     function(instance, ptable)
+            --         frame.AddToGUIUpdateList()
+            --     end, Hook.HookMethodType.Before)
+            --     order.TargetItemComponent.OnResolutionChanged()
+                
+
+            --     closeButton.OnClicked = function()
+            --         print("close")
+            --         frame = nil
+            --         Hook.RemovePatch(identifier, "Barotrauma.GameScreen", "AddToGUIUpdateList", Hook.HookMethodType.Before)
+            --         order.TargetItemComponent.ReloadGuiFrame()
+            --         order.TargetItemComponent.CreateGUI()
+            --         order.TargetItemComponent.OnResolutionChanged()
+            --     end
+
             end
         end
     end, Hook.HookMethodType.Before)
@@ -367,6 +399,14 @@ local function activate(self)
 --             return false
 --         end
 --     end, Hook.HookMethodType.Before)
+
+    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "CreateGUI")
+    
+
+    -- self:AddPatch("Barotrauma.Items.Components.Fabricator", "CreateGUI", nil,
+    -- function(instance, ptable)
+
+    -- end, Hook.HookMethodType.After)
 end
 
 ---@param self Types.Module
