@@ -11,6 +11,7 @@
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/Orders.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/OperateReactorTweaks.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/PreventAttackingHandcuffed.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/ReplenishInventory.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/SmarterLoadItems.lua" />

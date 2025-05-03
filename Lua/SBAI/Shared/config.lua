@@ -169,6 +169,11 @@ do
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
+    section = defaults:CreateSection("OperateReactorTweaks")
+    section:CreateOption("behavior", "vanilla;*fuelOnlyWhenController;fuelOnly", Config.OPTION_TYPE.int, "radio")
+    section:CreateOption("numFuelRods", 1, Config.OPTION_TYPE.int, nil, 1, 4)
+    section:CreateOption("minimumCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
     section = defaults:CreateSection("Orders", false)
 
     defaults:CreateSection("PreventAttackingHandcuffed")

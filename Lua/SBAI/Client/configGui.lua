@@ -328,7 +328,6 @@ do
                 
                 radioGroup.Selected = value
                 radioGroup.OnSelect = function(rbg, val)
-                    print(val)
                     configRef[key] = val
                 end
                 return
