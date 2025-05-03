@@ -6,6 +6,11 @@
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
   <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
+  <GUI.tooltips.operatereactortweaks>Adjust some behavior with the "Operate Reactor" order</GUI.tooltips.operatereactortweaks>
+  <GUI.tooltips.operatereactortweaks.behavior>Change the behavior related to actually operating the reactor, optionally only allowing refuelling if a reactor control circuit is detected or just permanently</GUI.tooltips.operatereactortweaks.behavior>
+  <GUI.tooltips.operatereactortweaks.minimumcondition>How low fuel rods can get before they are considered empty</GUI.tooltips.operatereactortweaks.minimumcondition>
+  <GUI.tooltips.operatereactortweaks.numfuelrods>How many fuel rods the reactor should have</GUI.tooltips.operatereactortweaks.numfuelrods>
+  <GUI.tooltips.orders>CLIENT-SIDE: Add custom orders to the middle-mouse order menu</GUI.tooltips.orders>
   <GUI.tooltips.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.preventattackinghandcuffed>
   <GUI.tooltips.replenishinventory>AI will refill some of their empty reloadables while idling/waiting</GUI.tooltips.replenishinventory>
   <GUI.tooltips.replenishinventory.idle>Allow an AI that has no active order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.idle>
