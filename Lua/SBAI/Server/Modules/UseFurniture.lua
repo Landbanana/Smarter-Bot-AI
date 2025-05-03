@@ -3,7 +3,7 @@ local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "Act")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "Act")
 
 ---@class Barotrauma.Item
 ---@field _chairItems System.Collections.Generic.List*1Barotrauma*Item
@@ -101,7 +101,7 @@ local function activateAutoUseWhenIdle(self, options)
 end
 
 ---@param self Types.Module
-local function activateStayInBedIfHurt(self)
+local function activateStayInBedIfHurt(self, options)
     local HumanInSafeHull = util.HumanInSafeHull
     local bedIds = ids[FURNITURE.BED]
 

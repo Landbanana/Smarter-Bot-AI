@@ -10,9 +10,3 @@ end
 
 Config.Load()
 SBAI.Control.Activate()
-
-local util = require("SBAI.Shared.util")
-
--- for s in util.debug.GetAllMethodNames("Barotrauma.AIObjectiveContainItem") do
---     print(s)
--- end

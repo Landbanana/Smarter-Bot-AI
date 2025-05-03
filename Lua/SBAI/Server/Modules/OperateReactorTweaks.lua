@@ -1,8 +1,8 @@
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "TooMuchFuel")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "NeedMoreFuel")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "TooMuchFuel")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "NeedMoreFuel")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "signalControlledTargetFissionRate")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "signalControlledTargetTurbineOutput")

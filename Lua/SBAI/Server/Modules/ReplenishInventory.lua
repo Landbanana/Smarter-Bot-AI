@@ -102,7 +102,7 @@ local function activate(self)
 
     if #allLoadData <= 0 then return end
 
-    local AIObjectiveMoveItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveMoveItem")
+    local AIObjectiveMoveItem = self:CreateStatic("Barotrauma.AIObjectiveMoveItem")
     local ItemContainer = Components.ItemContainer
 
     local unpack = table.unpack

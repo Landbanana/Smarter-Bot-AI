@@ -838,6 +838,17 @@ util.UnregisteredStaticDescriptors = setmetatable({}, {
     end
 })
 
+do
+    local Descriptors = Descriptors
+    local LuaUserData = LuaUserData
+
+    ---@param className string
+    ---@return MoonSharp.Interpreter.Interop.IUserDataDescriptor
+    function util.RegisterClassIfNot(className)
+        return Descriptors[className] or LuaUserData.RegisterType(className)
+    end
+end
+
 ---@param ... string
 function util.RegisterAll(...)
     for typeName in {...} do

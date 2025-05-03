@@ -12,13 +12,12 @@ local function activate(self)
 
     do
         local Character = Character
-        local LuaUserData = LuaUserData
         
         local Any = util.itertools.Any
 
         self:AddInit(
         function()
-            local AIObjectiveDeconstructItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
+            local AIObjectiveDeconstructItem = self:CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
 
             if Any(Character.CharacterList,
             function(character)
@@ -62,26 +61,6 @@ local function activate(self)
             end
         })
     end
-
-    do
-        local Character = Character
-        local AIObjectiveDeconstructItem = LuaUserData.CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
-
-        ---@return number
-        function anyDeconOrder()
-            for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
-                if  character.IsHuman and
-                    character.IsBot and
-                    character.IsOnPlayerTeam and
-                    character.AIController.objectiveManager.HasOrder(AIObjectiveDeconstructItem)
-                then
-                    return playerDeconData()
-                end
-            end
-        end
-    end
-
-    self:AddHook("roundStart", anyDeconOrder)
     
     do
         local Deconstructor = Components.Deconstructor
@@ -113,8 +92,6 @@ local function activate(self)
             end
         end, Hook.HookMethodType.Before)
     end
-
-    return anyDeconOrder()
 end
 
 return Types.Module.new(activate)

@@ -311,7 +311,7 @@ do
         name = name == nil and "" or "."..name
 
         if not success then
-            Logger.LogError(self.namespace()..name..": "..results[1])
+            Logger.LogError(self.namespace()..name..": "..unpack(results))
             return false
         else
             return true, unpack(results)
@@ -351,24 +351,57 @@ function Types.Module:AddHook(name, func)
     Hook.Add(name, identifier, func)
 end
 
----@public
----@generic T
----@param className `T`
----@param methodName string
----@param parameterTypes? string[]
----@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
----@param hookType Barotrauma.LuaCsHook.HookMethodType
-function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hookType)
-    local identifier = self.namespace()
+do
+    local LuaUserData = LuaUserData
 
-    if not hookType then
-        hookType = patch
-        patch = parameterTypes
-        parameterTypes = nil
+    local concat = table.concat
+    local insert = table.insert
+    local RegisterClassIfNot = util.RegisterClassIfNot
+    local remove = table.remove
+    local unpack = table.unpack
+
+    ---@public
+    ---@generic T
+    ---@param className `T`
+    ---@param methodName string
+    ---@param parameterTypes? string[]
+    ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    ---@param hookType Barotrauma.LuaCsHook.HookMethodType
+    function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hookType)
+        local identifier = self.namespace()
+        local success, results
+        local descriptor = RegisterClassIfNot(className)
+
+        if not hookType then
+            hookType = patch
+            patch = parameterTypes
+            parameterTypes = nil
+        end
+
+        results = {pcall(Hook.Patch, identifier, className, methodName, parameterTypes, patch, hookType)}
+        success = remove(results, 1)
+
+        if not success then
+            if  methodName:startsWith("get_") or
+                methodName:startsWith("set_")
+            then
+                results = {pcall(LuaUserData.MakePropertyAccessible, descriptor, methodName:sub(5))}
+                success = remove(results, 1)
+            else
+                results = {pcall(LuaUserData.MakeMethodAccessible, descriptor, methodName)}
+                success = remove(results, 1)
+            end
+
+            if not success then error(results ~= nil and concat(results) or "", 2) end
+
+            results = {pcall(Hook.Patch, identifier, className, methodName, parameterTypes, patch, hookType)}
+            success = remove(results, 1)
+
+            if not success then error(results ~= nil and concat(results) or "", 2) end
+        end
+
+        insert(self.patches, {identifier=identifier, className=className, methodName=methodName, parameterTypes=parameterTypes, hookType=hookType})
     end
-
-    table.insert(self.patches, {identifier=identifier, className=className, methodName=methodName, parameterTypes=parameterTypes, hookType=hookType})
-    Hook.Patch(identifier, className, methodName, parameterTypes, patch, hookType)
 end
 
 do
@@ -389,6 +422,32 @@ do
         local methodName = CheckNestedMethodName(className, mainMethodName, nestedMethodName, defaultNestedMethodNames[className.."["..pattern.."]"])
 
         return self:AddPatch(className, methodName, parameterTypes, patch, hookType)
+    end
+end
+
+
+
+do
+    local LuaUserData = LuaUserData
+
+    local RegisterClassIfNot = util.RegisterClassIfNot
+
+
+    local statics = setmetatable({}, {
+        __index=function(t, k)
+            t[k] = LuaUserData.CreateStatic(k)
+
+            return t[k]
+        end
+    })
+
+    ---@generic T
+    ---@param className `T`
+    ---@return T
+    function Types.Module:CreateStatic(className)
+        RegisterClassIfNot(className)
+
+        return statics[className]
     end
 end
 

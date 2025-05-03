@@ -1,4 +1,3 @@
-local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
@@ -9,7 +8,7 @@ LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
 --LuaUserData.RegisterType("System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "isContextual")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "commandFrame")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "contextualOrders")
@@ -18,18 +17,18 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "wallCont
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "characterContext")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "itemContext")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeSize")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetTargetSubmarine")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CanCharacterBeHeard")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetCircumferencePointCount")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNode")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNode")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodes")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetTargetSubmarine")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CanCharacterBeHeard")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetCircumferencePointCount")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNodes")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNode")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNodes")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNode")
+-- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodes")
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodeIcon",
 {"Microsoft.Xna.Framework.Vector2", "Barotrauma.RectTransform", "Barotrauma.Sprite", "Microsoft.Xna.Framework.Color", "Barotrauma.LocalizedString"})
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeDistance")
@@ -146,7 +145,7 @@ local function activate(self)
     do
         local defaultTargetType = OrderPrefab.OrderTargetType.Entity
         local keyMap = {Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9}
-        local OptionNode = LuaUserData.CreateStatic("Barotrauma.CrewManager+OptionNode")
+        local OptionNode = self:CreateStatic("Barotrauma.CrewManager+OptionNode")
         local prefabs = {}
         local Zero = Vector2.Zero
         local Character = Character
