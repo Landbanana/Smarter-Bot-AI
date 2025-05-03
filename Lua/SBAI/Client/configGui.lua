@@ -513,6 +513,8 @@ local function AddCloseButton(parent, anchor)
     return button
 end
 
+local MakeCrewPolicyMenu
+
 ---@param parent Barotrauma.GUIComponent
 local function MakeSBAIMenu(parent)
     local framePadding = Point(2*D_PADDING, 2*D_PADDING)
@@ -577,6 +579,8 @@ local function MakeSBAIMenu(parent)
         "BigBrain"
     )
     bigBrain.ToolTip = "big brain"
+
+    -- bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
     
     local availableTextWidth = (bottomRightCut.Rect.Width - D_BIGBRAIN_SIZE.X - D_PADDING)/2
 
@@ -623,6 +627,14 @@ local function ShowSBAIMenu(parent)
     end
 end
 
+-- ---@param parent Barotrauma.GUIComponent
+-- function MakeCrewPolicyMenu(parent)
+--     local policyFrame = AddFrame(parent, parent.Rect.Size + Point(-parent.Rect.Width/5, parent.Rect.Height/3), GUI.Anchor.Center, "Parchment")
+
+    
+    
+-- end
+
 ---@param namespace Namespace
 return function(namespace)
     Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {}, function(instance, ptable)
@@ -647,3 +659,4 @@ return function(namespace)
         end
     end, Hook.HookMethodType.After)
 end
+
