@@ -11,6 +11,10 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots"
 
 ---@param self Types.Module
 local function activate(self)
+    local containItemId = Identifier("contain item")
+    local operateReactorId = Identifier("operatereactor")
+    local powerUpId = Identifier("powerup")
+
     local numFuelRods = self.options["numFuelRods"] --[[@type integer]]
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
     local behavior = self.options["behavior"] --[[@type integer]]
@@ -80,65 +84,55 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
-    do
-        local operateReactorId = Identifier("operatereactor")
-        local powerUpId = Identifier("powerup")
-        local containItemId = Identifier("contain item")
+    self:AddPatch("Barotrauma.AIObjective", "AddSubObjective", nil,
+    function(instance, ptable)
+        local id = instance.Identifier
 
-        self:AddPatch("Barotrauma.AIObjective", "AddSubObjective", nil,
-        function(instance, ptable)
-            local id = instance.Identifier
+        if  id == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
+            local curOrder = instance.objectiveManager.CurrentOrder
 
-            if  id == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
-                local curOrder = instance.objectiveManager.CurrentOrder
+            if  curOrder and
+                curOrder.Identifier == operateReactorId and
+                instance.Option == powerUpId
+            then
+                local objective = ptable["objective"]
+                
+                if objective.Identifier == containItemId then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
+                    objective.ConditionLevel = minimumCondition
+                    objective.RemoveEmpty = true
+                    objective.RemoveExistingWhenNecessary = true
 
-                if  curOrder and
-                    curOrder.Identifier == operateReactorId and
-                    instance.Option == powerUpId
-                then
-                    local objective = ptable["objective"]
-                    
-                    if objective.Identifier == containItemId then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
-                        objective.ConditionLevel = minimumCondition
-                        objective.RemoveEmpty = true
-                        objective.RemoveExistingWhenNecessary = true
+                    local i = 0
 
-                        local i = 0
-
-                        for slot in objective.container.Inventory.slots do --[[@cast slot Barotrauma.Inventory.ItemSlot]]
-                            if  slot.Empty() or
-                                slot.First().ConditionPercentage < minimumCondition
-                            then
-                                objective.TargetSlot = i
-                                break
-                            end
-                            i = i + 1
+                    for slot in objective.container.Inventory.slots do --[[@cast slot Barotrauma.Inventory.ItemSlot]]
+                        if  slot.Empty() or
+                            slot.First().ConditionPercentage < minimumCondition
+                        then
+                            objective.TargetSlot = i
+                            break
                         end
+                        i = i + 1
                     end
                 end
             end
-        end, Hook.HookMethodType.Before)
-    end
-    do
-        local operateReactorId = Identifier("operatereactor")
-        local powerUpId = Identifier("powerup")
-        
-        self:AddPatch("Barotrauma.AIObjectiveContainItem", "<Act>b__75_4", nil,
-        function(instance, ptable)
-            local sourceObj = instance.SourceObjective
+        end
+    end, Hook.HookMethodType.Before)
 
-            if  sourceObj.Identififer == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
-                local curOrder = instance.objectiveManager.CurrentOrder
+    self:AddPatch("Barotrauma.AIObjectiveContainItem", "<Act>b__75_4", nil,
+    function(instance, ptable)
+        local sourceObj = instance.SourceObjective
 
-                if  curOrder and
-                    curOrder.Identifier == operateReactorId and
-                    sourceObj.Option == powerUpId
-                then
-                    ptable.ReturnValue.TargetCondition = 1
-                end
+        if  sourceObj.Identififer == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
+            local curOrder = instance.objectiveManager.CurrentOrder
+
+            if  curOrder and
+                curOrder.Identifier == operateReactorId and
+                sourceObj.Option == powerUpId
+            then
+                ptable.ReturnValue.TargetCondition = 1
             end
-        end, Hook.HookMethodType.After)
-    end
+        end
+    end, Hook.HookMethodType.After)
 end
 
 return Types.Module.new(activate)

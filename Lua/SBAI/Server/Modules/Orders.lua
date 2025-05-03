@@ -11,37 +11,34 @@ local orderCategoryPrefix = orderCategoryId.Value.."_" --[[@type string]]
 ---@param self Types.Module
 local function activate(self)
     if SERVER then
+        local Game = Game
         local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
         local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
+        
+        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+
         local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
         local activeOrders
 
-        do
-            local Game = Game
+        self:AddInit(
+        function()
+            local session = Game.GameSession
 
-            local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-            local new = Types.Set.new
-
-            self:AddInit(
+            if not session then return end
+            DoWithTemporaryRegistrations({
+                "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"
+            },
             function()
-                local session = Game.GameSession
+                activeOrders = session.CrewManager.ActiveOrders
+                for activeOrder in activeOrders do
+                    local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
 
-                if not session then return end
-                DoWithTemporaryRegistrations({
-                    "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"
-                },
-                function()
-                    activeOrders = session.CrewManager.ActiveOrders
-                    for activeOrder in activeOrders do
-                        local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-    
-                        if curOrder.Identifier == ignoreRoomOrderId then
-                            ignoredHulls:Add(curOrder.TargetEntity)
-                        end
+                    if curOrder.Identifier == ignoreRoomOrderId then
+                        ignoredHulls:Add(curOrder.TargetEntity)
                     end
-                end)
+                end
             end)
-        end
+        end)
 
         self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
         function(instance, ptable)

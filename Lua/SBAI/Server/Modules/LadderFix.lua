@@ -5,9 +5,9 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"]
 
 ---@param self Types.Module
 local function activate(self)
-    local allCharacterData = Types.TimedCharacterData.new(self)
-
     local Distance = Vector2.Distance
+
+    local allCharacterData = Types.TimedCharacterData.new(self)
 
     self:AddPatch("Barotrauma.IndoorsSteeringManager", "Update", nil,
     function(instance, ptable)

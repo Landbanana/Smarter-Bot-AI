@@ -1,6 +1,6 @@
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
+--LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "TargetEliminated")
 
 ---@param self Types.Module
 local function activate(self)

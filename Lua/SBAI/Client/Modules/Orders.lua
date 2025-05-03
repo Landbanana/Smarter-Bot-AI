@@ -17,18 +17,18 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "wallCont
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "characterContext")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "itemContext")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeSize")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetTargetSubmarine")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CanCharacterBeHeard")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetCircumferencePointCount")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNodes")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNode")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNodes")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNode")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodes")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetTargetSubmarine")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CanCharacterBeHeard")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetCircumferencePointCount")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNodes")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNode")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNodes")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNode")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodes")
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodeIcon",
 {"Microsoft.Xna.Framework.Vector2", "Barotrauma.RectTransform", "Barotrauma.Sprite", "Microsoft.Xna.Framework.Color", "Barotrauma.LocalizedString"})
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeDistance")
@@ -40,8 +40,24 @@ local orderCategoryPrefix = orderCategoryId.Value.."_" --[[@type string]]
 
 ---@param self Types.Module
 local function activate(self)
+    local Character = Character
+    local Game = Game
+    local HotPink = Color.HotPink
     local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
+    local One = Vector2.One
+    local OptionNode = self:CreateStatic("Barotrauma.CrewManager+OptionNode")
+    local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
     local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
+    local Zero = Vector2.Zero
+
+    local Any = util.itertools.Any
+    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+    local GetPointsOnCircumference = util.GetPointsOnCircumference
+    local None = util.itertools.None
+
+    local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
+    local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
+    local optionNodes --[=[@type Barotrauma.CrewManager.OptionNode[]]=]
     local orderCategory --[[@type Barotrauma.OrderCategory]]
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local sprite --[[@type Barotrauma.Sprite]]
@@ -60,187 +76,151 @@ local function activate(self)
         end
     end
 
-    do
-        local Game = Game
+    self:AddInit(
+    function()
+        local session = Game.GameSession
 
-        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-        local new = Types.Set.new
-
-        self:AddInit(
+        if not session then return end
+        DoWithTemporaryRegistrations({
+            "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
+            "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
+        },
         function()
-            local session = Game.GameSession
+            optionNodes = session.CrewManager.optionNodes
+            activeOrders = session.CrewManager.ActiveOrders
+            for activeOrder in activeOrders do
+                local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
 
-            if not session then return end
-            DoWithTemporaryRegistrations({
-                "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
-                "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
-            },
-            function()
-                optionNodes = session.CrewManager.optionNodes
-                activeOrders = session.CrewManager.ActiveOrders
-                for activeOrder in activeOrders do
-                    local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-
-                    if curOrder.Identifier == ignoreRoomOrderId then
-                        ignoredHulls:Add(curOrder.TargetEntity)
-                    end
+                if curOrder.Identifier == ignoreRoomOrderId then
+                    ignoredHulls:Add(curOrder.TargetEntity)
                 end
-            end)
+            end
         end)
-    end
+    end)
 
-    do
-        local offsets --[=[@type Microsoft.Xna.Framework.Vector2[]]=]
-        local offsetIndex --[[@type integer]]
+    local offsets --[=[@type Microsoft.Xna.Framework.Vector2[]]=]
+    local offsetIndex --[[@type integer]]
 
-        do
-            local firstAngle = math.rad(197.5)
-            local Zero = Vector2.Zero
+    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
+    function(instance, ptable)
+        offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, #instance.availableCategories + 1, math.rad(197.5))
+        offsetIndex = 1
+    end, Hook.HookMethodType.Before)
 
-            local GetPointsOnCircumference = util.GetPointsOnCircumference
-
-            self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
-            function(instance, ptable)
-                offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, #instance.availableCategories + 1, firstAngle)
-                offsetIndex = 1
-            end, Hook.HookMethodType.Before)
+    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNode", nil,
+    function(instance, ptable)
+        if offsets then
+            ptable["offset"] = offsets[offsetIndex].ToPoint()
+            offsetIndex = offsetIndex + 1
         end
-    
-        self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNode", nil,
-        function(instance, ptable)
-            if offsets then
-                ptable["offset"] = offsets[offsetIndex].ToPoint()
-                offsetIndex = offsetIndex + 1
-            end
-        end, Hook.HookMethodType.Before)
+    end, Hook.HookMethodType.Before)
 
-        do
-            local One = Vector2.One
-            local HotPink = Color.HotPink
+    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
+    function(instance, ptable)
+        if offsets then
+            local offset = offsets[offsetIndex].ToPoint()
+            
+            offsets = nil
+            instance.CreateOrderCategoryNode(orderCategory, offset, offsetIndex)
+            offsetIndex = nil
 
-            self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
-            function(instance, ptable)
-                if offsets then
-                    local offset = offsets[offsetIndex].ToPoint()
-                    
-                    offsets = nil
-                    instance.CreateOrderCategoryNode(orderCategory, offset, offsetIndex)
-                    offsetIndex = nil
+            local optionNodes = instance.optionNodes
 
-                    local optionNodes = instance.optionNodes
-
-                    optionNode = optionNodes[#optionNodes]
-                end
-                local tooltip = TextManager.Get("ordercategorytitle."..orderCategoryId.Value)
-
-                instance.CreateNodeIcon(One, optionNode.Button.RectTransform, sprite, HotPink, tooltip)
-
-                local button = optionNode.Button --[[@type Barotrauma.GUIButton]]
-
-                button.GetChild(Int32(button.CountChildren - 2)).RectTransform.SetAsLastChild() --[[@type Barotrauma.GUIImage]]
-            end, Hook.HookMethodType.After)
+            optionNode = optionNodes[#optionNodes]
         end
-    end
+        local tooltip = TextManager.Get("ordercategorytitle."..orderCategoryId.Value)
 
-    do
-        local defaultTargetType = OrderPrefab.OrderTargetType.Entity
-        local keyMap = {Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9}
-        local OptionNode = self:CreateStatic("Barotrauma.CrewManager+OptionNode")
-        local prefabs = {}
-        local Zero = Vector2.Zero
-        local Character = Character
-        
-        local Any = util.itertools.Any
-        local GetPointsOnCircumference = util.GetPointsOnCircumference
-        local None = util.itertools.None
+        instance.CreateNodeIcon(One, optionNode.Button.RectTransform, sprite, HotPink, tooltip)
 
-        self:AddPatch("Barotrauma.CrewManager", "CreateOrderNodes", nil,
-        function(instance, ptable)
-            if ptable["orderCategory"] == orderCategory then
-                local currentCharacter = Character.Controlled
-                local targetHull = currentCharacter.CurrentHull
+        local button = optionNode.Button --[[@type Barotrauma.GUIButton]]
 
-                ptable.PreventExecution = true
+        button.GetChild(Int32(button.CountChildren - 2)).RectTransform.SetAsLastChild() --[[@type Barotrauma.GUIImage]]
+    end, Hook.HookMethodType.After)
 
-                local i = 0
+    local keyMap = {Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9}
+    local prefabs = {}
 
-                for prefab in OrderPrefab.Prefabs do
-                    local id = prefab.Identifier
+    self:AddPatch("Barotrauma.CrewManager", "CreateOrderNodes", nil,
+    function(instance, ptable)
+        if ptable["orderCategory"] == orderCategory then
+            local currentCharacter = Character.Controlled
+            local targetHull = currentCharacter.CurrentHull
 
-                    if  id:StartsWith(orderCategoryPrefix) and
-                        not prefab.IsReport and
-                        instance.IsOrderAvailable(prefab)
+            ptable.PreventExecution = true
+
+            local i = 0
+
+            for prefab in OrderPrefab.Prefabs do
+                local id = prefab.Identifier
+
+                if  id:StartsWith(orderCategoryPrefix) and
+                    not prefab.IsReport and
+                    instance.IsOrderAvailable(prefab)
+                then
+                    if  (id == ignoreRoomOrderId and
+                        (targetHull == nil or
+                        targetHull.Submarine.TeamID ~= currentCharacter.TeamID or
+                        ignoredHulls[targetHull])) or
+                        (id == unignoreRoomOrderId and
+                        (targetHull == nil or
+                        not ignoredHulls[targetHull]))
                     then
-                        if  (id == ignoreRoomOrderId and
-                            (targetHull == nil or
-                            targetHull.Submarine.TeamID ~= currentCharacter.TeamID or
-                            ignoredHulls[targetHull])) or
-                            (id == unignoreRoomOrderId and
-                            (targetHull == nil or
-                            not ignoredHulls[targetHull]))
-                        then
-                            goto continue
-                        end
-                        i = i + 1
-                        prefabs[i] = prefab
+                        goto continue
                     end
-                    ::continue::
+                    i = i + 1
+                    prefabs[i] = prefab
                 end
-
-                local order
-                local disableNode
-                local offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, instance.GetCircumferencePointCount(i), instance.GetFirstNodeAngle(i))
-
-                for j=1,i,1 do
-                    local prefab = prefabs[j]
-                    local id = prefab.Identifier
-
-                    if  id == ignoreRoomOrderId or
-                        id == unignoreRoomOrderId
-                    then
-                        order = Order(prefab, targetHull, nil, Character.Controlled)
-                    else
-                        order = prefab.CreateInstance(defaultTargetType) --[[@type Barotrauma.Order]]
-                    end
-                    disableNode = (not instance.CanCharacterBeHeard()) or
-                        (order.MustSetTarget and (
-                            order.ItemComponentType ~= nil or
-                            Any(order.GetTargetItems()) or
-                            Any(order.RequireItems)
-                        ) and None(order.GetMatchingItems(true, instance.characterContext or Character.Controlled)))
-                    optionNodes.Add(OptionNode(
-                        instance.CreateOrderNode(instance.nodeSize, instance.commandFrame.RectTransform, offsets[j].ToPoint(), order, j % 10, disableNode, false),
-                        (not disableNode) and keyMap[j + 1 % 10] or Keys.None))
-                end
+                ::continue::
             end
-        end, Hook.HookMethodType.Before)
-    end
 
-    do
-        local Character = Character
+            local order
+            local disableNode
+            local offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, instance.GetCircumferencePointCount(i), instance.GetFirstNodeAngle(i))
 
-        self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
-        function(instance, ptable)
-            local order = ptable["order"] --[[@type Barotrauma.Order]]
-            local id = order.Identifier
+            for j=1,i,1 do
+                local prefab = prefabs[j]
+                local id = prefab.Identifier
 
-            if id:StartsWith(orderCategoryPrefix) then
                 if  id == ignoreRoomOrderId or
                     id == unignoreRoomOrderId
                 then
-                    local currentCharacter = Character.Controlled
-                    local targetHull = currentCharacter.CurrentHull
+                    order = Order(prefab, targetHull, nil, Character.Controlled)
+                else
+                    order = prefab.CreateInstance(OrderTargetTypeEntity) --[[@type Barotrauma.Order]]
+                end
+                disableNode = (not instance.CanCharacterBeHeard()) or
+                    (order.MustSetTarget and (
+                        order.ItemComponentType ~= nil or
+                        Any(order.GetTargetItems()) or
+                        Any(order.RequireItems)
+                    ) and None(order.GetMatchingItems(true, instance.characterContext or Character.Controlled)))
+                optionNodes.Add(OptionNode(
+                    instance.CreateOrderNode(instance.nodeSize, instance.commandFrame.RectTransform, offsets[j].ToPoint(), order, j % 10, disableNode, false),
+                    (not disableNode) and keyMap[j + 1 % 10] or Keys.None))
+            end
+        end
+    end, Hook.HookMethodType.Before)
 
-                    if  targetHull ~= nil and 
-                        targetHull.Submarine.TeamID == currentCharacter.TeamID
-                    then
-                        instance.AddOrder(order.Clone().WithTargetEntity(targetHull))
-                    end
+    self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
+    function(instance, ptable)
+        local order = ptable["order"] --[[@type Barotrauma.Order]]
+        local id = order.Identifier
+
+        if id:StartsWith(orderCategoryPrefix) then
+            if  id == ignoreRoomOrderId or
+                id == unignoreRoomOrderId
+            then
+                local currentCharacter = Character.Controlled
+                local targetHull = currentCharacter.CurrentHull
+
+                if  targetHull ~= nil and 
+                    targetHull.Submarine.TeamID == currentCharacter.TeamID
+                then
+                    instance.AddOrder(order.Clone().WithTargetEntity(targetHull))
                 end
             end
-        end, Hook.HookMethodType.Before)
-    end
-
+        end
+    end, Hook.HookMethodType.Before)
     
     self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
     function(instance, ptable)

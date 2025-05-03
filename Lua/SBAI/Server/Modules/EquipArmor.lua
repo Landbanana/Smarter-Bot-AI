@@ -3,70 +3,60 @@ local Types = require("SBAI.Shared.types")
 
 ---@param self Types.Module
 local function activate(self)
-    local wearableArmorPredicate --[[@type fun(slotTypes:integer, character:Barotrauma.Character, item:Barotrauma.Item):boolean]]
-
-    do
-        local deepdivingId = Identifier("lightdiving")
-        local lightdivingId = Identifier("deepdiving")
-        local Wearable = Components.Wearable
+    local deepdivingId = Identifier("lightdiving")
+    local lightdivingId = Identifier("deepdiving")
+    local Wearable = Components.Wearable
         
-        local Contains = util.itertools.Contains
-        local Any = util.itertools.Any
+    local Any = util.itertools.Any
+    local band = bit32.band
+    local FindItems = util.FindItems
+    local Contains = util.itertools.Contains
+
+    local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
+    local allCharacterData = Types.TimedCharacterData.new(self)
+
+    self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
+    function(instance, ptable)
+        local character = instance.character --[[@type Barotrauma.Character]]
         
-        ---@param slotTypeCheck fun(slot:Barotrauma.InvSlotType):boolean
-        ---@param character Barotrauma.Character
-        ---@param item Barotrauma.Item
-        ---@return boolean
-        function wearableArmorPredicate(slotTypeCheck, character, item)
-            return item.GetComponent(Wearable) ~= nil and
-                not item.HasTag(lightdivingId) and
-                not item.HasTag(deepdivingId) and
-                not Contains(character.HeldItems, item) and
-                Any(item.AllowedSlots, slotTypeCheck)
-        end
-    end
+        if  character.IsHuman and
+            allCharacterData:Get(character).timer:Update(ptable["deltaTime"])
+        then
+            local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
+            local filteredClothesSlotTypes = 0
 
-    do
-        local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes}
-        local allCharacterData = Types.TimedCharacterData.new(self)
-
-        local band = bit32.band
-        local FindItems = util.FindItems
-        local Partial1 = util.functools.Partial1
-
-        self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
-        function(instance, ptable)
-            local character = instance.character --[[@type Barotrauma.Character]]
-            
-            if  character.IsHuman and
-                allCharacterData:Get(character).timer:Update(ptable["deltaTime"])
-            then
-                local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
-                local filteredClothesSlotTypes = 0
-
-                for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
-                    if not inventory.GetItemInLimbSlot(slotType) then
-                        filteredClothesSlotTypes = filteredClothesSlotTypes + slotType
-                    end
+            for slotType in clothesSlotTypes do --[[@cast slotType Barotrauma.InvSlotType]]
+                if not inventory.GetItemInLimbSlot(slotType) then
+                    filteredClothesSlotTypes = filteredClothesSlotTypes + slotType
                 end
+            end
 
-                if filteredClothesSlotTypes == 0 then return end
-                
-                local wearables = FindItems(character, inventory.GetAllItems(true), nil, nil, Partial1(wearableArmorPredicate,
-                function(slot)
-                    return band(filteredClothesSlotTypes, slot) == slot
-                end))
+            if filteredClothesSlotTypes == 0 then return end
 
-                for item in wearables do --[[@cast item Barotrauma.Item]]
-                    for v in item.AllowedSlots do
-                        if band(filteredClothesSlotTypes, v) == v then
-                            if inventory.TryPutItem(item, character, {v}, true, true) then return end
-                        end
+            ---@param slot Barotrauma.InvSlotType
+            ---@return boolean
+            local function testSlot(slot)
+                return band(filteredClothesSlotTypes, slot) == slot
+            end
+            
+            local wearables = FindItems(character, inventory.GetAllItems(true), nil, nil,
+            function(character, item)
+                return item.GetComponent(Wearable) ~= nil and
+                    not item.HasTag(lightdivingId) and
+                    not item.HasTag(deepdivingId) and
+                    not Contains(character.HeldItems, item) and
+                    Any(item.AllowedSlots, testSlot)
+            end)
+
+            for item in wearables do --[[@cast item Barotrauma.Item]]
+                for v in item.AllowedSlots do
+                    if testSlot(v) then
+                        if inventory.TryPutItem(item, character, {v}, true, true) then return end
                     end
                 end
             end
-        end, Hook.HookMethodType.Before)
-    end
+        end
+    end, Hook.HookMethodType.Before)
 end
 
 return Types.Module.new(activate)
