@@ -8,6 +8,9 @@
   <!-- <ordername.sbai_fabricateitems>Fabricate Items</ordername.sbai_fabricateitems> -->
 
   <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
+
+  <orderdialogself.operatereactor.powerup.sbai>Reactor automation is working well! I'll stick to fuel and repairs.</orderdialogself.operatereactor.powerup.sbai>
+ 
   <ordername.sbai_perform>Perform</ordername.sbai_perform>
   <orderoptions.sbai_perform>Play Instrument</orderoptions.sbai_perform>
 </infotexts>

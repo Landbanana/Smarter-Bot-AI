@@ -54,7 +54,8 @@ local function activate(self)
                 local id = instance.Identifier
 
                 if  id == operateReactorId then
-                    local characterData = allCharacterData:Get(instance.character)
+                    local character = instance.character
+                    local characterData = allCharacterData:Get(character)
                     
                     if characterData.timer:Update(ptable["deltaTime"]) then
                         local item = instance.Component.Item
@@ -76,11 +77,14 @@ local function activate(self)
                         if buffer >= 2 then
                             isAutoReactorOn = not isAutoReactorOn
                             buffer = 0
-                            
                         end
 
                         if isAutoReactorOn then
                             reactor.AutoTemp = false
+                            if not characterData["isAutoReactorOn"] then 
+                                character.Speak(TextManager.Get("orderdialogself.operatereactor.powerup.sbai").Value, ChatMessageType.Default, 1.0,
+                                Identifier("orderdialogself.operatereactor.powerup.sbai"), 30.0)
+                            end
                         end
 
                         characterData["isAutoReactorOn"] = isAutoReactorOn
