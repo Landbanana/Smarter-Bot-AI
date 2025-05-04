@@ -513,7 +513,7 @@ local function AddCloseButton(parent, anchor)
     return button
 end
 
-local MakeCrewPolicyMenu
+-- local MakeCrewPolicyMenu
 
 ---@param parent Barotrauma.GUIComponent
 local function MakeSBAIMenu(parent)
@@ -633,6 +633,8 @@ end
     
     
 -- end
+
+
 
 ---@param namespace Namespace
 return function(namespace)

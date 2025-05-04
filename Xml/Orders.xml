@@ -19,11 +19,17 @@
     <Sprite name="Command_Category_Maintenance" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,512,128,128"/>
   </Order> -->
   
-  <!-- <Order name="Perform" identifier="sbai_perform" -->
-		 <!-- targetitems="accordion,guitar,harmonica,bikehorn" targetitemtype="rangedweapon" -->
-		 <!-- color="255,105,180,255"> -->
-    <!-- <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/> -->
-  <!-- </Order> -->
+  <Order name="Perform" identifier="sbai_perform"
+		     targetitemtype="RangedWeapon" mustsettarget="true"
+		     targetitems="accordion,guitar,harmonica;bikehorn" AutoDismiss="true"
+		     options="playinstrument" hiddenoptions="honk"
+		     optionnames="Play Instrument" cantypebesubclass="true"
+         AssignmentPriority="90" color="255,105,180,255">
+    <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
+	  <OptionSprites>
+      <Sprite name="Command_Perform_Play_Instrument" texture="%ModDir%/Images/PerformOrderPlayInstrument.png" sourcerect="0,0,128,128"/>
+    </OptionSprites>
+  </Order>
   
   <Order name="Smarter Bot AI" identifier="sbai">
     <Sprite name="Command_Category_SBAI" texture="%ModDir%/Images/BigBrainOrderCategory.png" sourcerect="0,0,128,128"/>

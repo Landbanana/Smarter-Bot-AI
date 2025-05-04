@@ -1,8 +1,9 @@
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
+local activateShared, deactivateShared, ID_ORDER = require("SBAI.Shared.Modules.Orders")
+
 LuaUserData.RegisterType("Barotrauma.CrewManager+OptionNode")
-LuaUserData.RegisterType("Barotrauma.CrewManager+ActiveOrder")
 LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
@@ -35,33 +36,46 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeDist
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "availableCategories")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "optionNodes")
 
-local orderCategoryId = Identifier("sbai")
-local orderCategoryPrefix = orderCategoryId.Value.."_" --[[@type string]]
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
+
+local IGNORE_ROOM = ID_ORDER.IGNORE_ROOM
+local FABRICATE_ITEMS = ID_ORDER.FABRICATE_ITEMS
+local PERFORM = ID_ORDER.PERFORM
+local SBAI_CATEGORY = ID_ORDER.SBAI_CATEGORY
+local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
+
+local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
 
 ---@param self Types.Module
 local function activate(self)
+    local AIObjectiveOperateItem = AIObjectiveOperateItem
     local Character = Character
     -- local fabricateItemsId = Identifier("sbai_fabricateitems")
     local Game = Game
     local HotPink = Color.HotPink
-    local ignoreRoomOrderId = Identifier("sbai_ignoreroom")
     local One = Vector2.One
     local OptionNode = self:CreateStatic("Barotrauma.CrewManager+OptionNode")
+    local OrderPrefab = OrderPrefab
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
-    local unignoreRoomOrderId = Identifier("sbai_unignoreroom")
+    local performId = Identifier("sbai_perform")
+    local RangedWeapon = Components.RangedWeapon
+    local TextManager = TextManager
     local Zero = Vector2.Zero
 
     local Any = util.itertools.Any
-    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+    
     local GetPointsOnCircumference = util.GetPointsOnCircumference
+    local GetTypedObj = util.GetTypedObj
     local None = util.itertools.None
+    local sort = table.sort
 
-    local ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
     local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
     local optionNodes --[=[@type Barotrauma.CrewManager.OptionNode[]]=]
-    local orderCategory --[[@type Barotrauma.OrderCategory]]
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
+    local orderCategory --[[@type Barotrauma.OrderCategory]]
     local sprite --[[@type Barotrauma.Sprite]]
+
+    local ignoredHulls = activateShared(self)
 
     for v in OrderCategory do
         orderCategory = (v > (orderCategory or -1)) and v or orderCategory
@@ -79,21 +93,35 @@ local function activate(self)
         local session = Game.GameSession
 
         if not session then return end
-        DoWithTemporaryRegistrations({
-            "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
-            "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
-        },
-        function()
-            optionNodes = session.CrewManager.optionNodes
-            activeOrders = session.CrewManager.ActiveOrders
-            for activeOrder in activeOrders do
-                local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+        activeOrders = GetTypedObj(function() return session.CrewManager.ActiveOrders end,
+        "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
 
-                if curOrder.Identifier == ignoreRoomOrderId then
-                    ignoredHulls:Add(curOrder.TargetEntity)
-                end
+        optionNodes = GetTypedObj(function() return session.CrewManager.optionNodes end,
+        "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
+
+        for activeOrder in activeOrders do
+            local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+            if curOrder.Identifier == IGNORE_ROOM then
+                ignoredHulls:Add(curOrder.TargetEntity)
             end
-        end)
+        end
+
+        -- DoWithTemporaryRegistrations({
+        --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
+        --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
+        -- },
+        -- function()
+        --     optionNodes = session.CrewManager.optionNodes
+        --     activeOrders = session.CrewManager.ActiveOrders
+        --     for activeOrder in activeOrders do
+        --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+        --         if curOrder.Identifier == ignoreRoomOrderId then
+        --             ignoredHulls:Add(curOrder.TargetEntity)
+        --         end
+        --     end
+        -- end)
     end)
 
     local offsets --[=[@type Microsoft.Xna.Framework.Vector2[]]=]
@@ -126,7 +154,7 @@ local function activate(self)
 
             optionNode = optionNodes[#optionNodes]
         end
-        local tooltip = TextManager.Get("ordercategorytitle."..orderCategoryId.Value)
+        local tooltip = TextManager.Get("ordercategorytitle."..SBAI_CATEGORY.Value)
 
         instance.CreateNodeIcon(One, optionNode.Button.RectTransform, sprite, HotPink, tooltip)
 
@@ -155,11 +183,11 @@ local function activate(self)
                     not prefab.IsReport and
                     instance.IsOrderAvailable(prefab)
                 then
-                    if  (id == ignoreRoomOrderId and
+                    if  (id == IGNORE_ROOM and
                         (targetHull == nil or
                         targetHull.Submarine.TeamID ~= currentCharacter.TeamID or
                         ignoredHulls[targetHull])) or
-                        (id == unignoreRoomOrderId and
+                        (id == UNIGNORE_ROOM and
                         (targetHull == nil or
                         not ignoredHulls[targetHull]))
                     then
@@ -171,6 +199,8 @@ local function activate(self)
                 ::continue::
             end
 
+            sort(prefabs, function(p1, p2) return p1.Identifier < p2.Identifier end)
+
             local order
             local disableNode
             local offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, instance.GetCircumferencePointCount(i), instance.GetFirstNodeAngle(i))
@@ -179,13 +209,14 @@ local function activate(self)
                 local prefab = prefabs[j]
                 local id = prefab.Identifier
 
-                if  id == ignoreRoomOrderId or
-                    id == unignoreRoomOrderId
+                if  id == IGNORE_ROOM or
+                    id == UNIGNORE_ROOM
                 then
                     order = Order(prefab, targetHull, nil, Character.Controlled)
                 else
                     order = prefab.CreateInstance(OrderTargetTypeEntity) --[[@type Barotrauma.Order]]
                 end
+
                 disableNode = (not instance.CanCharacterBeHeard()) or
                     (order.MustSetTarget and (
                         order.ItemComponentType ~= nil or
@@ -202,24 +233,26 @@ local function activate(self)
     -- local mainFrame = GUI.Frame(GUI.RectTransform(Vector2.One))
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "OnResolutionChanged")
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "ReloadGuiFrame")
+
     self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier
 
         if id:StartsWith(orderCategoryPrefix) then
-            if  id == ignoreRoomOrderId or
-                id == unignoreRoomOrderId
+            if  id == IGNORE_ROOM or
+                id == UNIGNORE_ROOM
             then
                 local currentCharacter = Character.Controlled
                 local targetHull = currentCharacter.CurrentHull
 
-                if  targetHull ~= nil and 
+                if  targetHull ~= nil and
                     targetHull.Submarine.TeamID == currentCharacter.TeamID
                 then
                     instance.AddOrder(order.Clone().WithTargetEntity(targetHull))
                 end
-            -- elseif id == fabricateItemsId then
+
+            -- elseif id == FABRICATE_ITEMS then
             --     local frame = GUI.Frame(GUI.RectTransform(Vector2(1, 1), mainFrame.RectTransform, GUI.Anchor.Center),"ItemUi")
             --     local closeButton = GUI.Button(GUI.RectTransform(Vector2(1, 1), frame.RectTransform, GUI.Anchor.Center), "", GUI.Alignment.Center, nil)
             --     local identifier = self.namespace()
@@ -250,155 +283,31 @@ local function activate(self)
             end
         end
     end, Hook.HookMethodType.Before)
-    
-    self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
+
+    self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier --[[@type Barotrauma.Identifier]]
 
         if id:StartsWith(orderCategoryPrefix) then
-            if id == ignoreRoomOrderId then
-                if ptable["fadeOutTime"] then
-                    ptable.PreventExecution = true
-
-                    return instance.AddOrder(order)
-                else
-                    ignoredHulls:Add(order.TargetEntity)
-                end
-            elseif id == unignoreRoomOrderId then
-                local targetHull = order.TargetEntity --[[@type Barotrauma.Hull]]
-
+            if id == performId then
                 ptable.PreventExecution = true
 
-                for activeOrder in activeOrders do
-                    local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+                local targetItemComponent = order.TargetItemComponent or order.TargetEntity.GetComponent(RangedWeapon)
+                local newObj = AIObjectiveOperateItem(targetItemComponent, instance.character, instance, order.Option, true)
 
-                    if  curOrder.Identifier == ignoreRoomOrderId and
-                        curOrder.TargetEntity == targetHull
-                    then
-                        activeOrders.Remove(activeOrder)
-                        break
-                    end
+                newObj.Identifier = order.Identifier
+
+                ---@param operateObj Barotrauma.AIObjective
+                ---@return boolean
+                function newObj.AbortCondition(operateObj)
+                    return false
                 end
-                ignoredHulls:Remove(targetHull)
-                return true
+                
+                return newObj
             end
         end
     end, Hook.HookMethodType.Before)
-
-    self:AddPatch("Barotrauma.Hull", "get_AvoidStaying", nil,
-    function(instance, ptable)
-        ptable.PreventExecution = true
-        
-        return instance.avoidStaying or instance.IsWetRoom or (ignoredHulls[instance] ~= nil)
-    end, Hook.HookMethodType.Before)
-
---     -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", ".ctor", nil,
---     -- function(instance, ptable)
---     --     print("Hi")
---     --     print(ptable["character"].Name)
---     --     print(ptable["item"])
---     -- end, Hook.HookMethodType.Before)
-
---     LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
-
---     local instrumentData = setmetatable({}, {
---         ---@param t {[Barotrauma.Identifier]:{slotTypes:Barotrauma.InvSlotType[]}}
---         ---@param k Barotrauma.Identifier
---         __index=function(t, k)
---             local prefab = ItemPrefab.Prefabs[k]
-
---             if prefab then
---                 local holdable = prefab.ConfigElement.GetChildElement("Holdable")
-            
---                 if holdable then
---                     local slotString = holdable.GetAttributeString("slots")
-                    
---                     if slotString then
---                         local allowedSlots = {}
---                         local i = 0
-            
---                         for slotCombination in slotString:gmatch("([^,]+),?") do
---                             if slotCombination:lower() ~= "any" then
---                                 local slots = 0
-            
---                                 i = i + 1
---                                 for specSlotString in slotCombination:gmatch("([^%+]+)%+?") do
---                                     specSlotString = specSlotString:match("(%a+)")
-                                    
---                                     if specSlotString:lower() == "bothhands" then
---                                         slots = InvSlotType.LeftHand + InvSlotType.RightHand
---                                     end
-            
---                                     slots = slots + InvSlotType[specSlotString]
---                                 end
---                                 allowedSlots[i] = slots
---                             end
---                         end
---                         if i > 0 then
---                             t[k] = {slotTypes=allowedSlots}
---                             return t[k]
---                         end
---                     end
---                 end
---             end
---             error("Unable to find instrument: "..k, 2)
---         end
---     })
-
---     self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
---     function(instance, ptable)
---         local order = ptable["order"] --[[@type Barotrauma.Order]]
---         local id = order.Identifier --[[@type Barotrauma.Identifier]]
-
---         if id:StartsWith(orderCategoryPrefix) then
---             if id == performId then
---                 local success, targetComponent = order.TryGetTargetItemComponent(order.TargetEntity, Components.RangedWeapon)
---                 local newObj = AIObjectiveOperateItem(targetComponent, instance.character, instance, "", true)
---                 newObj.Identifier = order.Identifier
-                
-                
---                 print(order.TargetEntity)
---                 print(order.TargetEntity.GetComponent(Components.RangedWeapon))
---                 --
---                 --local newObj = AIObjectiveGetItem(instance.character, order.Option, instance, true, true, nil, false)
-
-                
---                 --newObj.EquipSlotType = instrumentData[order.Option]
---                 --newObj.Completed.add(
---                     return newObj
---             end
---         end
---     end, Hook.HookMethodType.Before)
-    
---     local Contains = util.itertools.Contains
-
---     self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
---     function(instance, ptable)
---         local obj = ptable["objective"]
-
---         if obj.Identifier == performId then
---             local item = instance.Item
---             local character = ptable["character"] --[[@type Barotrauma.Character]]
-
---             character.AIController.SteeringManager.Reset()
---             if  Contains(character.HeldItems, item) or
---                 character.inventory.TryPutItem(item, character, instrumentData[item.Prefab.Identifier].slotTypes, true, false)
---             then
---                 character.SetInput(InputType.Aim, false, true)
---                 character.SetInput(InputType.Shoot, false, true)
---             end
---             return true
---         end
---     end, Hook.HookMethodType.Before)
-
---     self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
---     function(instance, ptable)
---         if instance.Identifier == performId then
---             ptable.PreventExecution = true
---             return false
---         end
---     end, Hook.HookMethodType.Before)
 
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "CreateGUI")
     
@@ -409,63 +318,4 @@ local function activate(self)
     -- end, Hook.HookMethodType.After)
 end
 
----@param self Types.Module
-local function deactivate(self)
-    if self.options.enable then return end
-
-    util.DoWithTemporaryRegistrations(
-    {"System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"},
-    function()
-        local session = Game.GameSession
-
-        if not session then return end
-
-        do
-            local ActiveOrders = session.CrewManager.ActiveOrders --[[@type System.Collections.Generic.List*1Barotrauma*CrewManager*ActiveOrder]]
-            local removeIndices = {}
-            local i = 0
-            local j = 0
-
-            for order in ActiveOrders do
-                local orderId = order.Order.Identifier --[[@type Barotrauma.Identifier]]
-
-                if orderId:StartsWith(orderCategoryPrefix) then
-                    j = j + 1
-                    removeIndices[j] = i
-                end
-                i = i + 1
-            end
-
-            table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
-            for k in removeIndices do --[[@cast k integer]]
-                ActiveOrders.RemoveAt(k)
-            end
-        end
-
-        for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
-            if character.IsHuman then
-                local CurrentOrders = character.AIController.ObjectiveManager.CurrentOrders --[[@type System.Collections.Generic.List*1Barotrauma*Order]]
-                local removeIndices = {}
-                local i = 0
-                local j = 0
-
-                for order in CurrentOrders do
-                    local orderId = order.Identifier --[[@type Barotrauma.Identifier]]
-
-                    if orderId:StartsWith(orderCategoryPrefix) then
-                        j = j + 1
-                        removeIndices[j] = i
-                    end
-                    i = i + 1
-                end
-
-                table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
-                for k in removeIndices do --[[@cast k integer]]
-                    CurrentOrders.RemoveAt(k)
-                end
-            end
-        end
-    end)
-end
-
-return Types.Module.new(activate, deactivate)
+return Types.Module.new(activate, deactivateShared)

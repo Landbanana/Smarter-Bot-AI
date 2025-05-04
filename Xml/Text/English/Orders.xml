@@ -8,5 +8,6 @@
   <!-- <ordername.sbai_fabricateitems>Fabricate Items</ordername.sbai_fabricateitems> -->
 
   <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
-  <!-- <ordername.sbai_perform>Play Instrument</ordername.sbai_perform> -->
+  <ordername.sbai_perform>Perform</ordername.sbai_perform>
+  <orderoptions.sbai_perform>Play Instrument</orderoptions.sbai_perform>
 </infotexts>
