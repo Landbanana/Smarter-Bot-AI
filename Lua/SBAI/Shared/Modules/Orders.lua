@@ -19,16 +19,17 @@ local SBAI_CATEGORY = ID_ORDER.SBAI_CATEGORY
 local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 
 local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
-local ignoredHulls
+
 
 ---@param self Types.Module
 local function activate(self)
+    local ignoredHulls
+
     if ignoredHulls then return ignoredHulls end
+    ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
 
     local Contains = util.itertools.Contains
     local GetTypedObj = util.GetTypedObj
-
-    ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
     
     local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
@@ -164,12 +165,12 @@ local function deactivate(self)
         if not session then return end
 
         do
-            local ActiveOrders = session.CrewManager.ActiveOrders --[[@type System.Collections.Generic.List*1Barotrauma*CrewManager*ActiveOrder]]
+            local activeOrders = session.CrewManager.ActiveOrders --[[@type System.Collections.Generic.List*1Barotrauma*CrewManager*ActiveOrder]]
             local removeIndices = {}
             local i = 0
             local j = 0
 
-            for order in ActiveOrders do
+            for order in activeOrders do
                 local orderId = order.Order.Identifier --[[@type Barotrauma.Identifier]]
 
                 if orderId:StartsWith(orderCategoryPrefix) then
@@ -181,7 +182,7 @@ local function deactivate(self)
 
             table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
             for k in removeIndices do --[[@cast k integer]]
-                ActiveOrders.RemoveAt(k)
+                activeOrders.RemoveAt(k)
             end
         end
 

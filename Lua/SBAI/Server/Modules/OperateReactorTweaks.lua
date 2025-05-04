@@ -4,11 +4,13 @@ local Types = require("SBAI.Shared.types")
 -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "TooMuchFuel")
 -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "NeedMoreFuel")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "meltDownTimer")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedTurbineOutputSignalTime")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedFissionRateSignalTime")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
 
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "GetGeneratedHeat")
 ---@param self Types.Module
 local function activate(self)
     local containItemId = Identifier("contain item")
@@ -82,8 +84,8 @@ local function activate(self)
                         if isAutoReactorOn then
                             reactor.AutoTemp = false
                             if not characterData["isAutoReactorOn"] then 
-                                character.Speak(TextManager.Get("orderdialogself.operatereactor.powerup.sbai").Value, ChatMessageType.Default, 1.0,
-                                Identifier("orderdialogself.operatereactor.powerup.sbai"), 30.0)
+                                character.Speak(TextManager.Get("orderdialogself.operatereactor.powerup.sbai").Value, nil, 0.0,
+                                Identifier("orderdialogself.operatereactor.powerup.sbai"), 300.0)
                             end
                         end
 
@@ -158,8 +160,14 @@ local function activate(self)
         if instance.Item.InPlayerSubmarine then
             ptable.PreventExecution = true
 
-            return getNumFuelRods(instance) < numFuelRods and
-                instance.fireTimer <= 0.0
+            if  getNumFuelRods(instance) < numFuelRods and
+                instance.PowerOn
+            then
+                return (instance.GetGeneratedHeat(instance.FissionRate) - instance.TurbineOutput - instance.Temperature) < 5.0 and
+                    instance.fireTimer <= 0.0 and
+                    instance.meltDownTimer <= 0.0
+            end
+            return false
         end
     end, Hook.HookMethodType.Before)
 

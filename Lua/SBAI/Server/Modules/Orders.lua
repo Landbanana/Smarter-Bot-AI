@@ -22,8 +22,6 @@ local function activate(self)
     local activeOrders
 
     local ignoredHulls = activateShared(self)
-    
-
 
     self:AddInit(
     function()
