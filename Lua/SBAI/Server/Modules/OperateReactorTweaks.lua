@@ -4,8 +4,8 @@ local Types = require("SBAI.Shared.types")
 -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "TooMuchFuel")
 -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "NeedMoreFuel")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "signalControlledTargetFissionRate")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "signalControlledTargetTurbineOutput")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedTurbineOutputSignalTime")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedFissionRateSignalTime")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
 
@@ -19,23 +19,84 @@ local function activate(self)
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
     local behavior = self.options["behavior"] --[[@type integer]]
 
-    if behavior ~= 1 then
-        local preventOperate
+    local getNumFuelRods
 
-        if behavior == 2 then
-            ---@param instance Barotrauma.Items.Components.Reactor
-            ---@return boolean
-            function preventOperate(instance)
-                return instance.signalControlledTargetFissionRate ~= nil or instance.signalControlledTargetTurbineOutput ~= nil
-            end
+    if behavior ~= 1 then
+        local allCharacterData
+
+        if  behavior ~= 2 then
+            local dummyTable = {isAutoReactorOn=true}
+
+            allCharacterData = setmetatable({
+                Get=function(t, character)
+                    return t.character
+                end
+            }, {
+                __index=function(t, k)
+                    t[k] = dummyTable
+                    return t[k]
+                end
+            })
         else
-            preventOperate = util.True
+            local Powered = Components.Powered
+            local Reactor = Components.Reactor
+            local new = Types.Timer.new
+
+            allCharacterData = Types.TimedCharacterData.new(self, 10.0, {
+                ---@param self Types.TimedCharacterData
+                ---@param character Barotrauma.Character
+                Add=function(self, character)
+                    self[character] = {timer=new(self.timeBetween), isAutoReactorOn=false, buffer=0, lastTurbine=0, lastFission=0}
+                end})
+
+            self:AddPatch("Barotrauma.AIObjectiveOperateItem", "Act", nil,
+            function(instance, ptable)
+                local id = instance.Identifier
+
+                if  id == operateReactorId then
+                    local characterData = allCharacterData:Get(instance.character)
+                    
+                    if characterData.timer:Update(ptable["deltaTime"]) then
+                        local item = instance.Component.Item
+                        local reactor = item.GetComponent(Reactor) --[[@type Barotrauma.Items.Components.Reactor]]
+                        local isAutoReactorOn = characterData["isAutoReactorOn"] --[[@type boolean]]
+                        local buffer = characterData["buffer"] --[[@type integer]]
+                        local turbineTime = reactor.lastReceivedTurbineOutputSignalTime
+                        local fissionTime = reactor.lastReceivedFissionRateSignalTime
+
+                        if  isAutoReactorOn then
+                            buffer = (buffer + 1)*((turbineTime == characterData["lastTurbine"] or fissionTime == characterData["lastFission"]) and
+                            item.GetComponent(Powered).CurrPowerConsumption < 0 and
+                            1 or 0)
+                        else
+                            buffer = (buffer + 1)*((turbineTime ~= characterData["lastTurbine"] and fissionTime ~= characterData["lastFission"]) and
+                            1 or 0)
+                        end
+                        
+                        if buffer >= 2 then
+                            isAutoReactorOn = not isAutoReactorOn
+                            buffer = 0
+                            
+                        end
+
+                        if isAutoReactorOn then
+                            reactor.AutoTemp = false
+                        end
+
+                        characterData["isAutoReactorOn"] = isAutoReactorOn
+                        characterData["buffer"] = buffer
+                        characterData["lastTurbine"] = turbineTime
+                        characterData["lastFission"] = fissionTime
+                    end
+                end
+            end, Hook.HookMethodType.Before)
         end
 
         self:AddPatch("Barotrauma.Items.Components.Reactor", "set_AutoTemp", nil,
         function(instance, ptable)
             if  instance.Item.InPlayerSubmarine and
-                preventOperate(instance)
+                instance.LastAIUser ~= nil and
+                allCharacterData:Get(instance.LastAIUser).isAutoReactorOn
             then
                 ptable.PreventExecution = true
             end
@@ -44,17 +105,31 @@ local function activate(self)
         self:AddPatch("Barotrauma.Items.Components.Reactor", "UpdateAutoTemp", nil,
         function(instance, ptable)
             if  instance.Item.InPlayerSubmarine and
-                preventOperate(instance) and
+                instance.LastAIUser ~= nil and
+                allCharacterData:Get(instance.LastAIUser).isAutoReactorOn and
                 ptable["speed"] < 100.0
             then
                 ptable.PreventExecution = true
+            end
+        end, Hook.HookMethodType.Before)
+
+        self:AddPatch("Barotrauma.AIObjectiveOperateItem", "GetPriority", nil,
+        function(instance, ptable)
+            if  instance.Identifier == operateReactorId and
+                allCharacterData:Get(instance.character).isAutoReactorOn and
+                getNumFuelRods(instance.Component) == numFuelRods
+            then
+                ptable.PreventExecution = true
+
+                instance.Priority = 0
+                return instance.Priority
             end
         end, Hook.HookMethodType.Before)
     end
 
     ---@param instance Barotrauma.Items.Components.Reactor
     ---@return integer
-    local function getNumFuelRods(instance)
+    function getNumFuelRods(instance)
         local i = 0
 
         for item in instance.Item.OwnInventory.GetAllItems(false) do
@@ -97,7 +172,7 @@ local function activate(self)
             then
                 local objective = ptable["objective"]
                 
-                if objective.Identifier == containItemId then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
+                if  objective.Identifier == containItemId then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
                     objective.ConditionLevel = minimumCondition
                     objective.RemoveEmpty = true
                     objective.RemoveExistingWhenNecessary = true
@@ -122,7 +197,7 @@ local function activate(self)
     function(instance, ptable)
         local sourceObj = instance.SourceObjective
 
-        if  sourceObj.Identififer == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
+        if  sourceObj.Identifier == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
             local curOrder = instance.objectiveManager.CurrentOrder
 
             if  curOrder and

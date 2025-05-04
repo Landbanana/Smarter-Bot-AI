@@ -5,7 +5,6 @@ local function activate(self)
     self:AddPatch("Barotrauma.Level", "ShouldSpawnCrewInsideOutpost", nil,
     function(instance, ptable)
         ptable.PreventExecution = true
-        
         return false
     end, Hook.HookMethodType.Before)
 end

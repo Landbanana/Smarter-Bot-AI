@@ -227,6 +227,11 @@ do
     local clock = os.clock
     local D_TIMER_NOISE = Constants.D_TIMER_NOISE
 
+    ---@private
+    function Types.Timer:ResetNoNoise()
+        self.time = self.delay
+    end
+
     ---@public
     ---@param delay Types.Timer
     ---@param noise number
@@ -237,6 +242,10 @@ do
             delay=delay,
             noise=noise or D_TIMER_NOISE
         }
+
+        if not noise or noise <= 0 then
+            t.Reset = Types.Timer.ResetNoNoise
+        end
 
         setmetatable(t, Types.Timer)
         t:Reset()
@@ -610,7 +619,6 @@ do
     function Types.TimedCharacterData.new(module, timeBetween, init)
         init = init and CopyTable(init) or {}
         init.timeBetween = timeBetween or module.options["timeBetween"]
-        
         local t = module:RegisterTable(init, "ROUND_END", "CHARACTER_DEATH")
 
         return setmetatable(t, Types.TimedCharacterData)
