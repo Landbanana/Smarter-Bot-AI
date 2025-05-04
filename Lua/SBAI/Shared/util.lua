@@ -849,24 +849,29 @@ do
     end
 end
 
----@param ... string
-function util.RegisterAll(...)
-    for typeName in {...} do
-        local success, _ = pcall(LuaUserData.RegisterType, typeName)
+do
+    local Logger = Logger
+    local LuaUserData = LuaUserData
 
-        if not success then
-            Logger.LogError("Can't register typeName: "..typeName)
+    ---@param ... string
+    function util.RegisterAll(...)
+        for typeName in {...} do
+            local success = pcall(LuaUserData.RegisterType, typeName)
+
+            if not success then
+                Logger.LogError("Can't register typeName: "..typeName)
+            end
         end
     end
-end
 
----@param ... string
-function util.UnregisterAll(...)
-    for typeName in {...} do
-        local success, _ = pcall(LuaUserData.UnregisterType, typeName)
+    ---@param ... string
+    function util.UnregisterAll(...)
+        for typeName in {...} do
+            local success = pcall(LuaUserData.UnregisterType, typeName)
 
-        if not success then
-            Logger.LogError("Can't unregister typeName: "..typeName)
+            if not success then
+                Logger.LogError("Can't unregister typeName: "..typeName)
+            end
         end
     end
 end
@@ -898,6 +903,25 @@ do
         end
         
         return results
+    end
+end
+
+do
+    local RegisterAll = util.RegisterAll
+    local UnregisterAll = util.UnregisterAll
+
+    ---@generic T
+    ---@param generator fun():T
+    ---@param typeName `T`
+    ---@param ... string
+    ---@return T
+    function util.GetTypedObj(generator, typeName, ...)
+        RegisterAll(typeName, ...)
+
+        local result = generator()
+
+        UnregisterAll(typeName, ...)
+        return result
     end
 end
 
