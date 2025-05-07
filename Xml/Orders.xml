@@ -3,13 +3,13 @@
   <Order name="Ignore Room" identifier="sbai_ignoreroom"
          mustsettarget="true" targetallcharacters="true"
 		     color="255,105,180,255">
-    <Sprite name="Command_Ignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,640,128,128"/>
+    <Sprite name="Command_Ignore_Room" texture="%ModDir%/Images/IgnoreRoomOrder.png" sourcerect="0,0,128,128"/>
   </Order>
   
   <Order name="Unignore Room" identifier="sbai_unignoreroom"
          mustsettarget="true" targetallcharacters="true"
 		     color="255,105,180,255">
-    <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="896,640,128,128"/>
+    <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128"/>
   </Order>
 
   <!-- <Order name="Fabricate Items" identifier="sbai_fabricateitems"
@@ -27,7 +27,7 @@
          AssignmentPriority="90" color="255,105,180,255">
     <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
 	  <OptionSprites>
-      <Sprite name="Command_Perform_Play_Instrument" texture="%ModDir%/Images/PerformOrderPlayInstrument.png" sourcerect="0,0,128,128"/>
+      <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
     </OptionSprites>
   </Order>
   
