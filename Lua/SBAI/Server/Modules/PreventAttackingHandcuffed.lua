@@ -4,9 +4,22 @@ local Types = require("SBAI.Shared.types")
 
 ---@param self Types.Module
 local function activate(self)
+    local paralysisId = Identifier("paralysis")
+
     self:AddPatch("Barotrauma.AIObjectiveCombat", "get_TargetEliminated", nil,
     function(instance, ptable)
-        return ptable.ReturnValue or (instance.character.IsOnPlayerTeam and instance.Enemy.IsHandcuffed)
+        if instance.character.IsOnPlayerTeam then
+            local enemy = instance.Enemy
+
+            if enemy.IsHuman then
+                ptable.PreventExecution = true
+
+                if ptable.returnValue or enemy.IsHandcuffed then return true end
+                local paralysis = enemy.CharacterHealth.GetAffliction(paralysisId, false)
+                
+                return paralysis ~= nil and paralysis.Strength >= 99.0
+            end
+        end
     end, Hook.HookMethodType.Before)
 end
 
