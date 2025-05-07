@@ -20,38 +20,48 @@ local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 
 local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
 
+local ignoredHulls
 
 ---@param self Types.Module
 local function activate(self)
-    local ignoredHulls
-
     if ignoredHulls then return ignoredHulls end
     ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
-
+    
     local Contains = util.itertools.Contains
-    local GetTypedObj = util.GetTypedObj
     
     local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
-    self:AddInit(
-    function()
-        local session = Game.GameSession
-
-        if not session then return end
-        activeOrders = GetTypedObj(function() return session.CrewManager.ActiveOrders end,
-        "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
-
-        -- optionNodes = GetTypedObj(function() return session.CrewManager.optionNodes end,
-        -- "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
-
-        for activeOrder in activeOrders do
+    self:RegisterStrongRef("Game.GameSession.CrewManager", "ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", true, false,
+    function(strongRef)
+        activeOrders = strongRef
+        for activeOrder in strongRef do
             local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-
+    
             if curOrder.Identifier == IGNORE_ROOM then
                 ignoredHulls:Add(curOrder.TargetEntity)
             end
         end
     end)
+
+    -- self:AddInit(
+    -- function()
+    --     local session = Game.GameSession
+
+    --     if not session then return end
+    --     activeOrders = GetStrongRef(function() return session.CrewManager.ActiveOrders end,
+    --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
+
+    --     -- optionNodes = GetStrongRef(function() return session.CrewManager.optionNodes end,
+    --     -- "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
+
+    --     for activeOrder in activeOrders do
+    --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+    --         if curOrder.Identifier == IGNORE_ROOM then
+    --             ignoredHulls:Add(curOrder.TargetEntity)
+    --         end
+    --     end
+    -- end)
 
     self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
     function(instance, ptable)
@@ -71,7 +81,7 @@ local function activate(self)
                 local targetHull = order.TargetEntity --[[@type Barotrauma.Hull]]
 
                 ptable.PreventExecution = true
-
+                
                 for activeOrder in activeOrders do
                     local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
 
@@ -156,6 +166,8 @@ end
 ---@param self Types.Module
 local function deactivate(self)
     if self.options.enable then return end
+
+    ignoredHulls = nil
 
     util.DoWithTemporaryRegistrations(
     {"System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"},

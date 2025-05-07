@@ -51,25 +51,23 @@ local function activate(self)
     local AIObjectiveOperateItem = AIObjectiveOperateItem
     local Character = Character
     -- local fabricateItemsId = Identifier("sbai_fabricateitems")
-    local Game = Game
     local HotPink = Color.HotPink
     local One = Vector2.One
-    local OptionNode = self:CreateStatic("Barotrauma.CrewManager+OptionNode")
+    local OptionNode = self:RegisterStatic("Barotrauma.CrewManager+OptionNode")
     local OrderPrefab = OrderPrefab
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
     local performId = Identifier("sbai_perform")
     local RangedWeapon = Components.RangedWeapon
+    local Sprite = Sprite
     local TextManager = TextManager
     local Zero = Vector2.Zero
 
     local Any = util.itertools.Any
     
     local GetPointsOnCircumference = util.GetPointsOnCircumference
-    local GetTypedObj = util.GetTypedObj
     local None = util.itertools.None
     local sort = table.sort
 
-    local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
     local optionNodes --[=[@type Barotrauma.CrewManager.OptionNode[]]=]
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local orderCategory --[[@type Barotrauma.OrderCategory]]
@@ -88,41 +86,57 @@ local function activate(self)
         end
     end
 
-    self:AddInit(
-    function()
-        local session = Game.GameSession
+    -- self:RegisterStrongRef("Game.GameSession.CrewManager", "ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", true, false,
+    -- function(strongRef)
+    --     for activeOrder in strongRef do
+    --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+    
+    --         if curOrder.Identifier == IGNORE_ROOM then
+    --             ignoredHulls:Add(curOrder.TargetEntity)
+    --         end
+    --     end
+    -- end)
 
-        if not session then return end
-        activeOrders = GetTypedObj(function() return session.CrewManager.ActiveOrders end,
-        "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
-
-        optionNodes = GetTypedObj(function() return session.CrewManager.optionNodes end,
-        "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
-
-        for activeOrder in activeOrders do
-            local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-
-            if curOrder.Identifier == IGNORE_ROOM then
-                ignoredHulls:Add(curOrder.TargetEntity)
-            end
-        end
-
-        -- DoWithTemporaryRegistrations({
-        --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
-        --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
-        -- },
-        -- function()
-        --     optionNodes = session.CrewManager.optionNodes
-        --     activeOrders = session.CrewManager.ActiveOrders
-        --     for activeOrder in activeOrders do
-        --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-
-        --         if curOrder.Identifier == ignoreRoomOrderId then
-        --             ignoredHulls:Add(curOrder.TargetEntity)
-        --         end
-        --     end
-        -- end)
+    self:RegisterStrongRef("Game.GameSession.CrewManager", "optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", true, false,
+    function(strongRef)
+        optionNodes = strongRef
     end)
+
+    -- self:AddInit(
+    -- function()
+    --     local session = Game.GameSession
+
+    --     if not session then return end
+    --     activeOrders = GetStrongRef(function() return session.CrewManager.ActiveOrders end,
+    --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
+
+    --     optionNodes = GetStrongRef(function() return session.CrewManager.optionNodes end,
+    --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
+
+    --     for activeOrder in activeOrders do
+    --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+    --         if curOrder.Identifier == IGNORE_ROOM then
+    --             ignoredHulls:Add(curOrder.TargetEntity)
+    --         end
+    --     end
+
+    --     -- DoWithTemporaryRegistrations({
+    --     --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]",
+    --     --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]"
+    --     -- },
+    --     -- function()
+    --     --     optionNodes = session.CrewManager.optionNodes
+    --     --     activeOrders = session.CrewManager.ActiveOrders
+    --     --     for activeOrder in activeOrders do
+    --     --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+    --     --         if curOrder.Identifier == ignoreRoomOrderId then
+    --     --             ignoredHulls:Add(curOrder.TargetEntity)
+    --     --         end
+    --     --     end
+    --     -- end)
+    -- end)
 
     local offsets --[=[@type Microsoft.Xna.Framework.Vector2[]]=]
     local offsetIndex --[[@type integer]]
@@ -298,11 +312,11 @@ local function activate(self)
 
                 newObj.Identifier = order.Identifier
 
-                ---@param operateObj Barotrauma.AIObjective
-                ---@return boolean
-                function newObj.AbortCondition(operateObj)
-                    return false
-                end
+                -- ---@param operateObj Barotrauma.AIObjective
+                -- ---@return boolean
+                -- function newObj.AbortCondition(operateObj)
+                --     return false
+                -- end
                 
                 return newObj
             end
