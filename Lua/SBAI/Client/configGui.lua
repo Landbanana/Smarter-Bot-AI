@@ -5,11 +5,9 @@ local Constants = require("SBAI.Shared.constants")
 
 local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
 
-local descriptor = Descriptors["Barotrauma.GUITextBlock"]
-LuaUserData.MakeMethodAccessible(descriptor, "MeasureText", {"System.String"})
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.GUITextBlock"], "MeasureText", {"System.String"})
 
-descriptor = Descriptors["Barotrauma.RectTransform"]
-LuaUserData.MakeFieldAccessible(descriptor, "ChildrenChanged")
+LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.RectTransform"], "ChildrenChanged")
 
 local D_BUTTON_TEXT_ALIGN = GUI.Alignment.Center
 local D_BUTTON_STYLE = "GUIButton"
@@ -364,10 +362,15 @@ do
 
                 ---@param numberIn Barotrauma.GUINumberInput
                 numberInput.OnValueChanged = function(numberIn)
-                    local oldZeroCheck = zeroCheck
-                    
-                    zeroCheck = numberIn.FloatValue == 0
-                    forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                    if numberInput.TextBox.Selected then
+                        local oldZeroCheck = zeroCheck
+                        
+                        zeroCheck = numberIn.FloatValue == 0
+                        forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                    else
+                        configRef[key] = numberIn.FloatValue
+                        forcedDefault = false
+                    end
                 end
             else
                 numberInput.MinValueInt = defaults.min
@@ -380,16 +383,21 @@ do
                         numberIn.IntValue = defaults.value
                         forcedDefault = false
                     end
-
+                    
                     configRef[key] = numberIn.IntValue
                 end
 
                 ---@param numberIn Barotrauma.GUINumberInput
                 numberInput.OnValueChanged = function(numberIn)
-                    local oldZeroCheck = zeroCheck
-
-                    zeroCheck = numberIn.IntValue == 0
-                    forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                    if numberInput.TextBox.Selected then
+                        local oldZeroCheck = zeroCheck
+                        
+                        zeroCheck = numberIn.IntValue == 0
+                        forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
+                    else
+                        configRef[key] = numberIn.IntValue
+                        forcedDefault = false
+                    end
                 end
             end
             
