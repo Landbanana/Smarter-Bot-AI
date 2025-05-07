@@ -21,7 +21,7 @@ local function activate(self)
 
     self:AddInit(
     function()
-        local AIObjectiveDeconstructItem = self:CreateStatic("Barotrauma.AIObjectiveDeconstructItem")
+        local AIObjectiveDeconstructItem = self:RegisterStatic("Barotrauma.AIObjectiveDeconstructItem")
 
         if Any(Character.CharacterList,
         function(character)

@@ -14,6 +14,28 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjec
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
+do
+    ---@param success boolean
+    ---@param err any
+    ---@param ... any
+    ---@return ...
+    local function addLevel(success, err, ...)
+        if success then return err, ... end
+        if type(err) == "string" then err = err:sub(8) end
+        error(err, 4)
+    end
+
+    ---@generic T:any...
+    ---@generic R:any...
+    ---@param func fun(args:T):R
+    ---@param ... T
+    ---@return R
+    function util.debug.upcall(func, ...)
+        return addLevel(pcall(func, ...))
+    end
+end
+local upcall = util.debug.upcall
+
 ---@param t table
 function util.itertools.ClearTable(t)
     for k in next, t do
@@ -826,52 +848,39 @@ do
     end
 end
 
----@type table<string, {Descriptor:MoonSharp.Interpreter.Interop.IUserDataDescriptor, Static:System.Object}>
-util.UnregisteredStaticDescriptors = setmetatable({}, {
-    __index=function(t, typeName)
-        t[typeName] = {
-            Descriptor=LuaUserData.RegisterType(typeName),
-            Static=LuaUserData.CreateStatic(typeName)
-        }
-        LuaUserData.UnregisterType(typeName)
-        return t[typeName]
-    end
-})
+
 
 do
     local Descriptors = Descriptors
-    local LuaUserData = LuaUserData
+    
+    local IsRegistered = LuaUserData.IsRegistered
+    local RegisterType = LuaUserData.RegisterType
 
-    ---@param className string
+    ---@param typeName string
     ---@return MoonSharp.Interpreter.Interop.IUserDataDescriptor
-    function util.RegisterClassIfNot(className)
-        return Descriptors[className] or LuaUserData.RegisterType(className)
+    function util.AutoRegisterType(typeName)
+        return IsRegistered(typeName) and Descriptors[typeName] or upcall(RegisterType, typeName)
     end
 end
 
 do
-    local Logger = Logger
-    local LuaUserData = LuaUserData
+    local AutoRegisterType = util.AutoRegisterType
 
     ---@param ... string
     function util.RegisterAll(...)
         for typeName in {...} do
-            local success = pcall(LuaUserData.RegisterType, typeName)
-
-            if not success then
-                Logger.LogError("Can't register typeName: "..typeName)
-            end
+            upcall(AutoRegisterType, typeName)
         end
     end
+end
+
+do
+    local UnregisterType = LuaUserData.UnregisterType
 
     ---@param ... string
     function util.UnregisterAll(...)
         for typeName in {...} do
-            local success = pcall(LuaUserData.UnregisterType, typeName)
-
-            if not success then
-                Logger.LogError("Can't unregister typeName: "..typeName)
-            end
+            upcall(UnregisterType, typeName)
         end
     end
 end
@@ -880,7 +889,6 @@ do
     local unpack = table.unpack
     local RegisterAll = util.RegisterAll
     local UnregisterAll = util.UnregisterAll
-    
 
     ---@generic T:any...
     ---@generic R:any...
@@ -889,41 +897,27 @@ do
     ---@param ... T
     ---@return R
     function util.DoWithTemporaryRegistrations(typeNames, func, ...)
-        RegisterAll(unpack(typeNames))
+        upcall(RegisterAll, unpack(typeNames))
 
-        local out = {pcall(func, ...)}
+        local out = {upcall(func, ...)}
 
-        UnregisterAll(unpack(typeNames))
-
-        local success = out[1]
-        local results = select(2, unpack(out))
-
-        if not success then
-            error(results, 2)
-        end
-        
-        return results
+        upcall(UnregisterAll, unpack(typeNames))
+        return unpack(out)
     end
 end
 
-do
-    local RegisterAll = util.RegisterAll
-    local UnregisterAll = util.UnregisterAll
+-- do
+--     DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
 
-    ---@generic T
-    ---@param generator fun():T
-    ---@param typeName `T`
-    ---@param ... string
-    ---@return T
-    function util.GetTypedObj(generator, typeName, ...)
-        RegisterAll(typeName, ...)
-
-        local result = generator()
-
-        UnregisterAll(typeName, ...)
-        return result
-    end
-end
+--     ---@generic T
+--     ---@param generator fun():T
+--     ---@param typeName `T`
+--     ---@param ... string
+--     ---@return T
+--     function util.GetStrongRef(generator, typeName, ...)
+--         return 
+--     end
+-- end
 
 ---@param config table
 ---@param optionString string
@@ -956,7 +950,6 @@ end
 
 do
     local Get = util.config.Get
-    local match = string.match
 
     ---@param config table
     ---@param optionString string
@@ -969,7 +962,7 @@ do
             return
         end
 
-        local preOptionString, subOptionString = match(optionString, "(.+[^%.]+)%.([^%.]+)$")
+        local preOptionString, subOptionString = optionString:match("(.+[^%.]+)%.([^%.]+)$")
 
         Get(config, preOptionString, skip)[subOptionString] = value
     end
@@ -1048,7 +1041,7 @@ end
 if CSActive then
     do
         local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-        local LuaUserData = LuaUserData
+        local GetType = LuaUserData.GetType
 
         ---@param className string
         ---@return string[]
@@ -1056,7 +1049,7 @@ if CSActive then
             local out = {}
             local i = 0
 
-            for k, v in next, LuaUserData.GetType(className).GetMethods(4 + 8 + 16 + 32) do
+            for k, v in next, GetType(className).GetMethods(4 + 8 + 16 + 32) do
                 i = i + 1
                 out[i] = v.Name
             end
@@ -1064,8 +1057,7 @@ if CSActive then
         end
 
         ---@param className string
-        ---@return string[]
-        function util.debug.GetAllMethodNames(className)
+        function util.debug.PrintAllMethodNames(className)
             return DoWithTemporaryRegistrations({
                 "System.Type",
                 "System.Reflection.RuntimeMethodInfo"
@@ -1075,7 +1067,7 @@ if CSActive then
 
     do
         local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-        local LuaUserData = LuaUserData
+        local GetType = LuaUserData.GetType
 
         ---@param className string
         ---@param mainFuncName string
@@ -1084,7 +1076,7 @@ if CSActive then
         local function inner(className, mainFuncName, nestedFuncName)
             local pattern = "<"..mainFuncName..">g__"..nestedFuncName.."|"
 
-            for k, v in next, LuaUserData.GetType(className).GetMethods(4 + 8 + 16 + 32) do
+            for k, v in next, GetType(className).GetMethods(4 + 8 + 16 + 32) do
                 local name = v.Name --[[@type string]]
                 
                 if name:match(pattern) then

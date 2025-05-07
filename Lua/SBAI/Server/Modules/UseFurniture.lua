@@ -60,44 +60,35 @@ end
 ---@param self Types.Module
 ---@param options table
 local function activateAutoUseWhenIdle(self, options)
-    local idleFurnitureIds = Types.Set.new()
-    local loadChairItems
+    local Item = Item
 
-    do
-        local optionToFURNITURE = {
-            beds=FURNITURE.BED,
-            chairs=FURNITURE.CHAIR
-        }
-        for k, v in next, options do
-            if  k ~= "enable" and
-                v == true
-            then
-                idleFurnitureIds:Update(ids[optionToFURNITURE[k]])
-            end
+    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+    local Partial2 = util.functools.Partial2
+
+    local idleFurnitureIds = Types.Set.new()
+    local optionToFURNITURE = {
+        beds=FURNITURE.BED,
+        chairs=FURNITURE.CHAIR
+    }
+
+    for k, v in next, options do
+        if  k ~= "enable" and
+            v == true
+        then
+            idleFurnitureIds:Update(ids[optionToFURNITURE[k]])
         end
     end
 
-    do
-        local Item = Item
+    self:RegisterStrongRef("Item", "_chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", true, false,
+    function(strongRef)
+        local chairItems = strongRef
 
-        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-        local Partial2 = util.functools.Partial2
-
-        loadChairItems = Partial2(DoWithTemporaryRegistrations, {"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
-        function()
-            local chairItems = Item._chairItems
-
-            chairItems.Clear()
-            for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
-                if idleFurnitureIds[item.Prefab.Identifier] then
-                    chairItems.Add(item)
-                end
+        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
+            if idleFurnitureIds[item.Prefab.Identifier] then
+                chairItems.Add(item)
             end
-        end)
-    end
-
-    self:AddHook("roundStart", loadChairItems)
-    loadChairItems()
+        end
+    end)
 end
 
 ---@param self Types.Module

@@ -350,6 +350,90 @@ function Types.Module.new(activate, deactivate)
     return setmetatable(t, Types.Module)
 end
 
+do
+    local AutoRegisterType = util.AutoRegisterType
+    local CreateStatic = LuaUserData.CreateStatic
+    local upcall = util.debug.upcall
+
+    local statics = {} --[[@type table<string,System.Object>]]
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T
+    local function addStatic(typeName)
+        upcall(AutoRegisterType, typeName)
+
+        local static = upcall(CreateStatic, typeName)
+
+        statics[typeName] = static
+        return static
+    end
+
+    ---@public
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T
+    function Types.Module:RegisterStatic(typeName)
+        return statics[typeName] or upcall(addStatic, typeName)
+    end
+end
+
+do
+    local G = _G
+
+    local AutoRegisterType = util.AutoRegisterType
+    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+    local Game = Game
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local upcall = util.debug.upcall
+
+    ---@public
+    ---@generic T
+    ---@param globalOrClassName string
+    ---@param refName string
+    ---@param refType? `T`
+    ---@param isGlobal? boolean
+    ---@param isProperty? boolean
+    ---@param callBack fun(strongRef:T)
+    ---@return T
+    function Types.Module:RegisterStrongRef(globalOrClassName, refName, refType, isGlobal, isProperty, callBack)
+        local doCallBack
+
+        if isGlobal then
+            function doCallBack()
+                if not Game.GameSession then return end
+                DoWithTemporaryRegistrations({refType},
+                function()
+                    local classObj = G
+
+                    for field in globalOrClassName:gmatch("([^%.]+)%.?") do
+                        classObj = classObj[field]
+                    end
+
+                    return callBack(classObj[refName])
+                end)
+            end
+        else
+            local fullName = globalOrClassName.."."..refName
+
+            upcall(isProperty and MakePropertyAccessible or MakeFieldAccessible, upcall(AutoRegisterType, globalOrClassName), fullName)
+
+            local classObj = self:RegisterStatic(globalOrClassName)
+
+            if not classObj then error("Unable to find globalOrClassName: "..(globalOrClassName or "nil")) end
+            function doCallBack()
+                if not Game.GameSession then return end
+                DoWithTemporaryRegistrations({refType},
+                function()
+                    return callBack(classObj[refName])
+                end)
+            end
+        end
+        self:AddInit(doCallBack)
+    end
+end
+
 ---@public
 ---@param name string
 ---@param func fun(any...):any
@@ -361,13 +445,12 @@ function Types.Module:AddHook(name, func)
 end
 
 do
-    local LuaUserData = LuaUserData
-
-    local concat = table.concat
+    local AutoRegisterType = util.AutoRegisterType
     local insert = table.insert
-    local RegisterClassIfNot = util.RegisterClassIfNot
-    local remove = table.remove
-    local unpack = table.unpack
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    local Patch = Hook.Patch
+    local upcall = util.debug.upcall
 
     ---@public
     ---@generic T
@@ -378,8 +461,8 @@ do
     ---@param hookType Barotrauma.LuaCsHook.HookMethodType
     function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hookType)
         local identifier = self.namespace()
-        local success, results
-        local descriptor = RegisterClassIfNot(className)
+        
+        local descriptor = upcall(AutoRegisterType, className)
 
         if not hookType then
             hookType = patch
@@ -387,26 +470,13 @@ do
             parameterTypes = nil
         end
 
-        results = {pcall(Hook.Patch, identifier, className, methodName, parameterTypes, patch, hookType)}
-        success = remove(results, 1)
-
-        if not success then
-            if  methodName:startsWith("get_") or
-                methodName:startsWith("set_")
-            then
-                results = {pcall(LuaUserData.MakePropertyAccessible, descriptor, methodName:sub(5))}
-                success = remove(results, 1)
+        if not pcall(Patch, identifier, className, methodName, parameterTypes, patch, hookType) then
+            if  methodName:match("^[gs]et_(.+)$") then
+                upcall(MakePropertyAccessible, descriptor, methodName:sub(5))
             else
-                results = {pcall(LuaUserData.MakeMethodAccessible, descriptor, methodName)}
-                success = remove(results, 1)
+                upcall(MakeMethodAccessible, descriptor, methodName)
             end
-
-            if not success then error(results ~= nil and concat(results) or "", 2) end
-
-            results = {pcall(Hook.Patch, identifier, className, methodName, parameterTypes, patch, hookType)}
-            success = remove(results, 1)
-
-            if not success then error(results ~= nil and concat(results) or "", 2) end
+            upcall(Patch, identifier, className, methodName, parameterTypes, patch, hookType)
         end
 
         insert(self.patches, {identifier=identifier, className=className, methodName=methodName, parameterTypes=parameterTypes, hookType=hookType})
@@ -431,32 +501,6 @@ do
         local methodName = CheckNestedMethodName(className, mainMethodName, nestedMethodName, defaultNestedMethodNames[className.."["..pattern.."]"])
 
         return self:AddPatch(className, methodName, parameterTypes, patch, hookType)
-    end
-end
-
-
-
-do
-    local LuaUserData = LuaUserData
-
-    local RegisterClassIfNot = util.RegisterClassIfNot
-
-
-    local statics = setmetatable({}, {
-        __index=function(t, k)
-            t[k] = LuaUserData.CreateStatic(k)
-
-            return t[k]
-        end
-    })
-
-    ---@generic T
-    ---@param className `T`
-    ---@return T
-    function Types.Module:CreateStatic(className)
-        RegisterClassIfNot(className)
-
-        return statics[className]
     end
 end
 
