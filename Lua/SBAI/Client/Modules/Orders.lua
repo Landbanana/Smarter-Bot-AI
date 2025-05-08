@@ -96,7 +96,7 @@ local function activate(self)
     --         end
     --     end
     -- end)
-
+    
     self:RegisterStrongRef("Game.GameSession.CrewManager.optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", nil,
     function(strongRef)
         optionNodes = strongRef

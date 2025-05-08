@@ -57,10 +57,17 @@ do
     end
 end
 
+local _chairItems
+
 ---@param self Types.Module
 ---@param options table
 local function activateAutoUseWhenIdle(self, options)
     local Item = Item
+
+    self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
+    function(strongRef)
+        _chairItems = strongRef
+    end)
 
     local idleFurnitureIds = Types.Set.new()
     local optionToFURNITURE = {
@@ -76,11 +83,10 @@ local function activateAutoUseWhenIdle(self, options)
         end
     end
 
-    self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
-    function(strongRef)
+    self:AddInit(function()
         for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
             if idleFurnitureIds[item.Prefab.Identifier] then
-                strongRef.Add(item)
+                _chairItems.Add(item)
             end
         end
     end)
@@ -154,19 +160,13 @@ end
 
 ---@param self Types.Module
 local function deactivate(self)
-    local Item = Item
-    
-    local FindItems = util.FindItems
-    
-    return util.DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Item]]"},
-    function()
-        local chairItems = Item._chairItems
-
-        chairItems.Clear()
-        for item in FindItems(nil, Item.ItemList, "chair") do
-            chairItems.Add(item)
+    if _chairItems then
+        _chairItems.Clear()
+        for item in util.FindItems(nil, Item.ItemList, "chair") do
+            _chairItems.Add(item)
         end
-    end)
+        _chairItems = nil
+    end
 end
 
 return Types.Module.new(activate, deactivate)

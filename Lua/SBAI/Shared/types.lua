@@ -333,7 +333,14 @@ do
 
     ---@private
     function Types.Module:init()
-        if not self.initializers or not Game.GameSession then return end
+        if not Game.GameSession then return end
+        if self.preInitializers and not self.isPreinitialized then
+            for func in self.preInitializers do --[[@cast func fun()]]
+                func()
+            end
+            self.isPreinitialized = true
+        end
+        if not self.initializers then return end
         for func in self.initializers do --[[@cast func fun()]]
             func()
         end
@@ -349,7 +356,6 @@ function Types.Module.new(activate, deactivate)
 
     t.activate = activate
     t.deactivate = deactivate
-    t.initializers = {}
 
     return setmetatable(t, Types.Module)
 end
@@ -386,20 +392,15 @@ do
     local TypeOf = LuaUserData.TypeOf
     local upcall = util.debug.upcall
 
-    ---@private
-    ---@type table<string,System.Object>
-    local StaticClassVars = setmetatable({}, {
-        ---@generic T
-        ---@param self table<string,System.Object>
-        ---@param varPath string
-        ---@param varType `T`
-        ---@param containingVarType? string
-        ---@return T
-        __call=function(self, varPath, varType, containingVarType)
-            local out = self[varPath]
-
-            if out then return end
-
+    ---@public
+    ---@generic T
+    ---@param varPath string
+    ---@param varType `T`
+    ---@param containingVarType? string
+    ---@param callBack fun(strongRef:T)
+    function Types.Module:RegisterStrongRef(varPath, varType, containingVarType, callBack)
+        return self:AddPreInit(
+        function()
             local globalOrTypeName, varName = varPath:match("^(.+)%.([^%.]+)$") --[[@type string, string]]
             local globalOrStaticVar = G
 
@@ -416,26 +417,12 @@ do
 
             if not pcall(MakeFieldAccessible, descriptor, varName) then upcall(MakePropertyAccessible, descriptor, varName) end
 
-            out = upcall(DoWithTemporaryRegistrations, {varType},
+            local out = upcall(DoWithTemporaryRegistrations, {varType},
             function()
                 return globalOrStaticVar[varName]
             end)
-
-            self[varPath] = out
-        end
-    })
-
-    ---@public
-    ---@generic T
-    ---@param varPath string
-    ---@param varType `T`
-    ---@param containingVarType? string
-    ---@param callBack fun(strongRef:T)
-    ---@return T
-    function Types.Module:RegisterStrongRef(varPath, varType, containingVarType, callBack)
-        StaticClassVars(varPath, varType, containingVarType)
-
-        self:AddInit(function() return callBack(StaticClassVars[varPath]) end)
+            return callBack(out)
+        end)
 
         -- if isGlobal then
         --     function doCallBack()
@@ -580,7 +567,24 @@ function Types.Module:Activate(namespace, options)
         if not self:pcall(name, func) then return self:Deactivate(options) end
     end
 
+    self:AddPatch("Barotrauma.GameMain", "set_GameSession", nil,
+    function(instance, ptable)
+        if ptable["value"] ~= Game.GameSession then
+            self.isPreinitialized = false
+        end
+    end, Hook.HookMethodType.Before)
     self:AddHook("roundStart", function() return self:init() end)
+end
+
+do
+    local insert = table.insert
+
+    ---@public
+    ---@param func fun()
+    function Types.Module:AddPreInit(func)
+        if not self.preInitializers then self.preInitializers = {} end
+        insert(self.preInitializers, func)
+    end
 end
 
 do
@@ -624,6 +628,7 @@ do
         end
 
         self.initializers = nil
+        self.preInitializers = nil
 
         self.hooks = {}
         self.patches = {}

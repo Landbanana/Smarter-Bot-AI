@@ -21,6 +21,7 @@ local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
 
 local ignoredHulls
+local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
 ---@param self Types.Module
 local function activate(self)
@@ -28,13 +29,15 @@ local function activate(self)
     ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
     
     local Contains = util.itertools.Contains
-    
-    local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
     self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", nil,
     function(strongRef)
         activeOrders = strongRef
-        for activeOrder in strongRef do
+    end)
+
+    self:AddInit(
+    function()
+        for activeOrder in activeOrders do
             local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
     
             if curOrder.Identifier == IGNORE_ROOM then
