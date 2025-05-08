@@ -333,13 +333,7 @@ do
 
     ---@private
     function Types.Module:init()
-        if not Game.GameSession then return end
-        if self.preInitializers and not self.isPreinitialized then
-            for func in self.preInitializers do --[[@cast func fun()]]
-                func()
-            end
-            self.isPreinitialized = true
-        end
+        if not Game.GameSession or not self.initializers then return end
         if not self.initializers then return end
         for func in self.initializers do --[[@cast func fun()]]
             func()
@@ -392,6 +386,10 @@ do
     local TypeOf = LuaUserData.TypeOf
     local upcall = util.debug.upcall
 
+    local function getVar(containingVar, varName, varType)
+        return DoWithTemporaryRegistrations({varType}, function() return containingVar[varName] end)
+    end
+
     ---@public
     ---@generic T
     ---@param varPath string
@@ -399,30 +397,46 @@ do
     ---@param containingVarType? string
     ---@param callBack fun(strongRef:T)
     function Types.Module:RegisterStrongRef(varPath, varType, containingVarType, callBack)
-        return self:AddPreInit(
-        function()
-            local globalOrTypeName, varName = varPath:match("^(.+)%.([^%.]+)$") --[[@type string, string]]
-            local globalOrStaticVar = G
+        local globalOrTypeName, varName = varPath:match("^(.+)%.([^%.]+)$") --[[@type string, string]]
+        local globalOrStaticVar = G
+        local fieldList = {}
+        local i = 0
 
-            for field in globalOrTypeName:gmatch("([^%.]+)%.?") do
-                globalOrStaticVar = globalOrStaticVar[field]
+        for field in globalOrTypeName:gmatch("([^%.]+)%.?") do
+            globalOrStaticVar = globalOrStaticVar[field]
 
-                if globalOrStaticVar == nil then
-                    globalOrStaticVar = Statics[globalOrTypeName]
-                    break
-                end
+            if globalOrStaticVar == nil then
+                globalOrStaticVar = Statics[globalOrTypeName]
+                break
             end
-            
-            local descriptor = upcall(AutoRegisterType, containingVarType or TypeOf(globalOrStaticVar))
 
-            if not pcall(MakeFieldAccessible, descriptor, varName) then upcall(MakePropertyAccessible, descriptor, varName) end
+            i = i + 1
+            fieldList[i] = field
+        end
+        
+        local descriptor = upcall(AutoRegisterType, containingVarType or TypeOf(globalOrStaticVar))
 
-            local out = upcall(DoWithTemporaryRegistrations, {varType},
-            function()
-                return globalOrStaticVar[varName]
-            end)
-            return callBack(out)
-        end)
+        if not pcall(MakeFieldAccessible, descriptor, varName) then upcall(MakePropertyAccessible, descriptor, varName) end
+
+        local out
+
+        if containingVarType then
+            function out()
+                local globalVar = G
+
+                for field in fieldList do
+                    globalVar = globalVar[field]
+                end
+
+                return getVar(globalVar, varName, varType)
+            end
+        else
+            function out()
+                return getVar(globalOrStaticVar, varName, varType)
+            end
+        end
+        
+        self:AddInit(function() return callBack(out()) end)
 
         -- if isGlobal then
         --     function doCallBack()
@@ -566,25 +580,8 @@ function Types.Module:Activate(namespace, options)
     for name, func in next, {activate=self.activate, init=self.init} do
         if not self:pcall(name, func) then return self:Deactivate(options) end
     end
-
-    self:AddPatch("Barotrauma.GameMain", "set_GameSession", nil,
-    function(instance, ptable)
-        if ptable["value"] ~= Game.GameSession then
-            self.isPreinitialized = false
-        end
-    end, Hook.HookMethodType.Before)
+    
     self:AddHook("roundStart", function() return self:init() end)
-end
-
-do
-    local insert = table.insert
-
-    ---@public
-    ---@param func fun()
-    function Types.Module:AddPreInit(func)
-        if not self.preInitializers then self.preInitializers = {} end
-        insert(self.preInitializers, func)
-    end
 end
 
 do
@@ -628,7 +625,6 @@ do
         end
 
         self.initializers = nil
-        self.preInitializers = nil
 
         self.hooks = {}
         self.patches = {}
