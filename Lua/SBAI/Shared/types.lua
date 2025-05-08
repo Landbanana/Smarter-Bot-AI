@@ -750,17 +750,17 @@ do
 end
 
 ---@public
----@param msg MSG
+---@param msgType MSG
 ---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
-function Types.NetworkMember:AddHandler(msg, func)
-    self.handlers[msg].set:Add(func)
+function Types.NetworkMember:AddHandler(msgType, func)
+    self.handlers[msgType].set:Add(func)
 end
 
 ---@public
----@param msg MSG
+---@param msgType MSG
 ---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
-function Types.NetworkMember:AddTempHandler(msg, func)
-    local handlers = self.handlers[msg].set
+function Types.NetworkMember:AddTempHandler(msgType, func)
+    local handlers = self.handlers[msgType].set
     local bouncer
     
     function bouncer(...)
@@ -772,10 +772,10 @@ function Types.NetworkMember:AddTempHandler(msg, func)
 end
 
 ---@public
----@param msg MSG
+---@param msgType MSG
 ---@param func fun(data:any, client?:Barotrauma.Networking.Client):any
-function Types.NetworkMember:RemoveHandler(msg, func)
-    self.handlers[msg].set:Remove(func)
+function Types.NetworkMember:RemoveHandler(msgType, func)
+    self.handlers[msgType].set:Remove(func)
 end
 
 do
@@ -797,20 +797,25 @@ do
     end
 
     ---@public
-    ---@param msg MSG
+    ---@param msgType MSG
     ---@param client? Barotrauma.Networking.Client
     ---@param deliveryMethod? Barotrauma.Networking.DeliveryMethod
-    ---@param jsonData table
-    function Types.NetworkMember:Send(msg, client, deliveryMethod, jsonData)
-        local data = Start(msg)
+    ---@param data? table
+    function Types.NetworkMember:Send(msgType, client, deliveryMethod, data)
+        local msg = data
+
+        if  not data or
+            type(data) == "table"
+        then
+            msg = Start(msgType)
+            if data then
+                msg.WriteString(serialize(data))
+            end
+        end
 
         deliveryMethod = deliveryMethod or Reliable
 
-        if jsonData then
-            data.WriteString(serialize(jsonData))
-        end
-
-        return Send2(data, client and client.Connection or nil, deliveryMethod)
+        return Send2(msg, client and client.Connection or nil, deliveryMethod)
     end
 end
 
