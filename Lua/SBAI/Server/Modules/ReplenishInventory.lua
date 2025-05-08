@@ -102,7 +102,7 @@ local function activate(self)
 
     if #allLoadData <= 0 then return end
 
-    local AIObjectiveMoveItem = self:RegisterStatic("Barotrauma.AIObjectiveMoveItem")
+    local AIObjectiveMoveItem = self.Statics["Barotrauma.AIObjectiveMoveItem"]
     local ItemContainer = Components.ItemContainer
 
     local unpack = table.unpack

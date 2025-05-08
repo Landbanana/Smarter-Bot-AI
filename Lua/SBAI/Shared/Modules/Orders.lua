@@ -31,7 +31,7 @@ local function activate(self)
     
     local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
-    self:RegisterStrongRef("Game.GameSession.CrewManager", "ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", true, false,
+    self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", nil,
     function(strongRef)
         activeOrders = strongRef
         for activeOrder in strongRef do

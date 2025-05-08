@@ -643,16 +643,20 @@ do
     end
 end
 
----@param item Barotrauma.Item
----@return boolean
-function util.ParentItemsHaveDontTakeItemsTag(item)
-    local container = item.Container
-    
-    while container do
-        if container.HasTag("donttakeitems") then return true end
-        container = container.Container
+do
+    local dontTakeItemsId = Identifier("donttakeitems")
+
+    ---@param item Barotrauma.Item
+    ---@return boolean
+    function util.ParentItemsHaveDontTakeItemsTag(item)
+        local container = item.Container
+        
+        while container do
+            if container.HasTag(dontTakeItemsId) then return true end
+            container = container.Container
+        end
+        return false
     end
-    return false
 end
 
 do

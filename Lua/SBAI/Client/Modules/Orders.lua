@@ -53,7 +53,7 @@ local function activate(self)
     -- local fabricateItemsId = Identifier("sbai_fabricateitems")
     local HotPink = Color.HotPink
     local One = Vector2.One
-    local OptionNode = self:RegisterStatic("Barotrauma.CrewManager+OptionNode")
+    local OptionNode = self.Statics["Barotrauma.CrewManager+OptionNode"]
     local OrderPrefab = OrderPrefab
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
     local performId = Identifier("sbai_perform")
@@ -97,7 +97,7 @@ local function activate(self)
     --     end
     -- end)
 
-    self:RegisterStrongRef("Game.GameSession.CrewManager", "optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", true, false,
+    self:RegisterStrongRef("Game.GameSession.CrewManager.optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", nil,
     function(strongRef)
         optionNodes = strongRef
     end)

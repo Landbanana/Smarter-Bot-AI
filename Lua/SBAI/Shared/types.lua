@@ -328,11 +328,15 @@ do
     end
 end
 
----@private
-function Types.Module:init()
-    if not self.initializers then return end
-    for func in self.initializers do --[[@cast func fun()]]
-        func()
+do
+    local Game = Game
+
+    ---@private
+    function Types.Module:init()
+        if not self.initializers or not Game.GameSession then return end
+        for func in self.initializers do --[[@cast func fun()]]
+            func()
+        end
     end
 end
 
@@ -355,82 +359,115 @@ do
     local CreateStatic = LuaUserData.CreateStatic
     local upcall = util.debug.upcall
 
-    local statics = {} --[[@type table<string,System.Object>]]
+    ---@type table<string,System.Object>
+    Types.Module.Statics = setmetatable({}, {
+        ---@param self table<string,System.Object>
+        ---@param typeName string
+        ---@return System.Object
+        __index=function(self, typeName)
+            upcall(AutoRegisterType, typeName)
 
-    ---@generic T
-    ---@param typeName `T`
-    ---@return T
-    local function addStatic(typeName)
-        upcall(AutoRegisterType, typeName)
+            local static = upcall(CreateStatic, typeName)
 
-        local static = upcall(CreateStatic, typeName)
-
-        statics[typeName] = static
-        return static
-    end
-
-    ---@public
-    ---@generic T
-    ---@param typeName `T`
-    ---@return T
-    function Types.Module:RegisterStatic(typeName)
-        return statics[typeName] or upcall(addStatic, typeName)
-    end
+            self[typeName] = static
+            return static
+        end
+    })
 end
 
 do
     local G = _G
+    local Statics = Types.Module.Statics
 
     local AutoRegisterType = util.AutoRegisterType
     local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-    local Game = Game
     local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
     local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local TypeOf = LuaUserData.TypeOf
     local upcall = util.debug.upcall
+
+    ---@private
+    ---@type table<string,System.Object>
+    local StaticClassVars = setmetatable({}, {
+        ---@generic T
+        ---@param self table<string,System.Object>
+        ---@param varPath string
+        ---@param varType `T`
+        ---@param containingVarType? string
+        ---@return T
+        __call=function(self, varPath, varType, containingVarType)
+            local out = self[varPath]
+
+            if out then return end
+
+            local globalOrTypeName, varName = varPath:match("^(.+)%.([^%.]+)$") --[[@type string, string]]
+            local globalOrStaticVar = G
+
+            for field in globalOrTypeName:gmatch("([^%.]+)%.?") do
+                globalOrStaticVar = globalOrStaticVar[field]
+
+                if globalOrStaticVar == nil then
+                    globalOrStaticVar = Statics[globalOrTypeName]
+                    break
+                end
+            end
+            
+            local descriptor = upcall(AutoRegisterType, containingVarType or TypeOf(globalOrStaticVar))
+
+            if not pcall(MakeFieldAccessible, descriptor, varName) then upcall(MakePropertyAccessible, descriptor, varName) end
+
+            out = upcall(DoWithTemporaryRegistrations, {varType},
+            function()
+                return globalOrStaticVar[varName]
+            end)
+
+            self[varPath] = out
+        end
+    })
 
     ---@public
     ---@generic T
-    ---@param globalOrClassName string
-    ---@param refName string
-    ---@param refType? `T`
-    ---@param isGlobal? boolean
-    ---@param isProperty? boolean
+    ---@param varPath string
+    ---@param varType `T`
+    ---@param containingVarType? string
     ---@param callBack fun(strongRef:T)
     ---@return T
-    function Types.Module:RegisterStrongRef(globalOrClassName, refName, refType, isGlobal, isProperty, callBack)
-        local doCallBack
+    function Types.Module:RegisterStrongRef(varPath, varType, containingVarType, callBack)
+        StaticClassVars(varPath, varType, containingVarType)
 
-        if isGlobal then
-            function doCallBack()
-                if not Game.GameSession then return end
-                DoWithTemporaryRegistrations({refType},
-                function()
-                    local classObj = G
+        self:AddInit(function() return callBack(StaticClassVars[varPath]) end)
 
-                    for field in globalOrClassName:gmatch("([^%.]+)%.?") do
-                        classObj = classObj[field]
-                    end
+        -- if isGlobal then
+        --     function doCallBack()
+        --         if not Game.GameSession then return end
+        --         DoWithTemporaryRegistrations({refType},
+        --         function()
+        --             local classObj = G
 
-                    return callBack(classObj[refName])
-                end)
-            end
-        else
-            local fullName = globalOrClassName.."."..refName
+        --             for field in globalOrClassName:gmatch("([^%.]+)%.?") do
+        --                 classObj = classObj[field]
+        --             end
 
-            upcall(isProperty and MakePropertyAccessible or MakeFieldAccessible, upcall(AutoRegisterType, globalOrClassName), fullName)
+        --             return callBack(classObj[refName])
+        --         end)
+        --     end
+        -- else
+        --     local fullName = globalOrClassName.."."..refName
 
-            local classObj = self:RegisterStatic(globalOrClassName)
+        --     upcall(isProperty and MakePropertyAccessible or MakeFieldAccessible, upcall(AutoRegisterType, globalOrClassName), fullName)
 
-            if not classObj then error("Unable to find globalOrClassName: "..(globalOrClassName or "nil")) end
-            function doCallBack()
-                if not Game.GameSession then return end
-                DoWithTemporaryRegistrations({refType},
-                function()
-                    return callBack(classObj[refName])
-                end)
-            end
-        end
-        self:AddInit(doCallBack)
+        --     local classObj = self.Statics[globalOrClassName]
+
+        --     if not classObj then error("Unable to find globalOrClassName: "..(globalOrClassName or "nil")) end
+        --     function doCallBack()
+        --         if not Game.GameSession then return end
+        --         DoWithTemporaryRegistrations({refType},
+        --         function()
+        --             return callBack(classObj[refName])
+        --         end)
+        --     end
+        -- end
+        -- self:AddInit(doCallBack)
     end
 end
 

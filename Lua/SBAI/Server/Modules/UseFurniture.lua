@@ -62,9 +62,6 @@ end
 local function activateAutoUseWhenIdle(self, options)
     local Item = Item
 
-    local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
-    local Partial2 = util.functools.Partial2
-
     local idleFurnitureIds = Types.Set.new()
     local optionToFURNITURE = {
         beds=FURNITURE.BED,
@@ -79,13 +76,11 @@ local function activateAutoUseWhenIdle(self, options)
         end
     end
 
-    self:RegisterStrongRef("Item", "_chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", true, false,
+    self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
     function(strongRef)
-        local chairItems = strongRef
-
         for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
             if idleFurnitureIds[item.Prefab.Identifier] then
-                chairItems.Add(item)
+                strongRef.Add(item)
             end
         end
     end)
