@@ -334,7 +334,6 @@ do
     ---@private
     function Types.Module:init()
         if not Game.GameSession or not self.initializers then return end
-        if not self.initializers then return end
         for func in self.initializers do --[[@cast func fun()]]
             func()
         end
@@ -383,7 +382,6 @@ do
     local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
     local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
     local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
-    local TypeOf = LuaUserData.TypeOf
     local upcall = util.debug.upcall
 
     local function getVar(containingVar, varName, varType)
@@ -394,27 +392,12 @@ do
     ---@generic T
     ---@param varPath string
     ---@param varType `T`
-    ---@param containingVarType? string
+    ---@param containingVarType string
     ---@param callBack fun(strongRef:T)
     function Types.Module:RegisterStrongRef(varPath, varType, containingVarType, callBack)
         local globalOrTypeName, varName = varPath:match("^(.+)%.([^%.]+)$") --[[@type string, string]]
-        local globalOrStaticVar = G
-        local fieldList = {}
-        local i = 0
-
-        for field in globalOrTypeName:gmatch("([^%.]+)%.?") do
-            globalOrStaticVar = globalOrStaticVar[field]
-
-            if globalOrStaticVar == nil then
-                globalOrStaticVar = Statics[globalOrTypeName]
-                break
-            end
-
-            i = i + 1
-            fieldList[i] = field
-        end
         
-        local descriptor = upcall(AutoRegisterType, containingVarType or TypeOf(globalOrStaticVar))
+        local descriptor = upcall(AutoRegisterType, containingVarType)
 
         if not pcall(MakeFieldAccessible, descriptor, varName) then upcall(MakePropertyAccessible, descriptor, varName) end
 
@@ -424,7 +407,7 @@ do
             function out()
                 local globalVar = G
 
-                for field in fieldList do
+                for field in globalOrTypeName:gmatch("([^%.]+)%.?") do
                     globalVar = globalVar[field]
                 end
 
@@ -432,7 +415,7 @@ do
             end
         else
             function out()
-                return getVar(globalOrStaticVar, varName, varType)
+                return getVar(Statics[globalOrTypeName], varName, varType)
             end
         end
         
@@ -580,7 +563,7 @@ function Types.Module:Activate(namespace, options)
     for name, func in next, {activate=self.activate, init=self.init} do
         if not self:pcall(name, func) then return self:Deactivate(options) end
     end
-    
+
     self:AddHook("roundStart", function() return self:init() end)
 end
 
@@ -796,6 +779,8 @@ function Types.NetworkMember:RemoveHandler(msg, func)
 end
 
 do
+    local Reliable = DeliveryMethod.Reliable
+
     local serialize = json.serialize
     local Send2 = Networking.Send
     local Start = Networking.Start
@@ -819,7 +804,7 @@ do
     function Types.NetworkMember:Send(msg, client, deliveryMethod, jsonData)
         local data = Start(msg)
 
-        deliveryMethod = deliveryMethod or DeliveryMethod.Reliable
+        deliveryMethod = deliveryMethod or Reliable
 
         if jsonData then
             data.WriteString(serialize(jsonData))

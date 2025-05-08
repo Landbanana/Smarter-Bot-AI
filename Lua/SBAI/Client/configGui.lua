@@ -630,7 +630,7 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        Config.Load()
+        --Config.Load()
         return MakeSBAIMenu(parent)
     end
 end

@@ -1,5 +1,4 @@
 
-local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 local activateShared, deactivateShared, ID_ORDER = require("SBAI.Shared.Modules.Orders")
@@ -15,6 +14,8 @@ local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 ---@param self Types.Module
 local function activate(self)
     local ignoredHulls = activateShared(self)
+
+
     
     -- self:RegisterStrongRef("Game.GameSession.CrewManager", "ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", true, false,
     -- function(activeOrders)

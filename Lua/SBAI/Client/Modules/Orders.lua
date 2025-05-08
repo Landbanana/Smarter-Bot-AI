@@ -47,8 +47,7 @@ local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
 
 ---@param self Types.Module
-local function activate(self)
-    local AIObjectiveOperateItem = AIObjectiveOperateItem
+local function activateOrderGui(self)
     local Character = Character
     -- local fabricateItemsId = Identifier("sbai_fabricateitems")
     local HotPink = Color.HotPink
@@ -56,8 +55,6 @@ local function activate(self)
     local OptionNode = self.Statics["Barotrauma.CrewManager+OptionNode"]
     local OrderPrefab = OrderPrefab
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
-    local performId = Identifier("sbai_perform")
-    local RangedWeapon = Components.RangedWeapon
     local Sprite = Sprite
     local TextManager = TextManager
     local Zero = Vector2.Zero
@@ -72,6 +69,8 @@ local function activate(self)
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local orderCategory --[[@type Barotrauma.OrderCategory]]
     local sprite --[[@type Barotrauma.Sprite]]
+
+    
 
     local ignoredHulls = activateShared(self)
 
@@ -97,7 +96,7 @@ local function activate(self)
     --     end
     -- end)
     
-    self:RegisterStrongRef("Game.GameSession.CrewManager.optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", nil,
+    self:RegisterStrongRef("Game.GameSession.CrewManager.optionNodes", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]", "Barotrauma.CrewManager",
     function(strongRef)
         optionNodes = strongRef
     end)
@@ -247,13 +246,14 @@ local function activate(self)
     -- local mainFrame = GUI.Frame(GUI.RectTransform(Vector2.One))
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "OnResolutionChanged")
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "ReloadGuiFrame")
-
+    
     self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier
 
         if id:StartsWith(orderCategoryPrefix) then
+            
             if  id == IGNORE_ROOM or
                 id == UNIGNORE_ROOM
             then
@@ -298,6 +298,23 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
+    
+
+    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "CreateGUI")
+    
+
+    -- self:AddPatch("Barotrauma.Items.Components.Fabricator", "CreateGUI", nil,
+    -- function(instance, ptable)
+
+    -- end, Hook.HookMethodType.After)
+end
+
+---@param self Types.Module
+local function activatePerformOrder(self)
+    local AIObjectiveOperateItem = AIObjectiveOperateItem
+    local performId = Identifier("sbai_perform")
+    local RangedWeapon = Components.RangedWeapon
+
     self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
@@ -322,14 +339,34 @@ local function activate(self)
             end
         end
     end, Hook.HookMethodType.Before)
+end
 
-    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "CreateGUI")
-    
+local function activate(self)
+    -- if Game.IsMultiplayer then
+    --     local session = Game.GameSession
 
-    -- self:AddPatch("Barotrauma.Items.Components.Fabricator", "CreateGUI", nil,
-    -- function(instance, ptable)
+    --     if session then
+    --         local networking = require("SBAI.Shared.networking")
 
-    -- end, Hook.HookMethodType.After)
+    --         Networking.Receive(networking.MSG.ORDER_UPDATE,
+    --         ---@param msg Barotrauma.Networking.IReadMessage
+    --         ---@param client Barotrauma.Networking.Client
+    --         function(msg, client)
+    --             if msg.ReadBoolean() then
+    --                 session.CrewManager.ClientReadActiveOrders(msg)
+    --             end
+                
+    --             activateOrderGui(self)
+    --         end)
+    --         networking.member:Send(networking.MSG.ORDER_REQUEST)
+    --     else
+    --         activateOrderGui(self)
+    --     end
+    -- else
+    --     activateOrderGui(self)
+    -- end
+    activateOrderGui(self)
+    activatePerformOrder(self)
 end
 
 return Types.Module.new(activate, deactivateShared)

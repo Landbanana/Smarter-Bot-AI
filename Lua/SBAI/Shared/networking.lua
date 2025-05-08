@@ -9,18 +9,10 @@ do
     ---@enum MSG
     networking.MSG = {
         CONF_UPDATE=Acronym..".CONF_UPDATE",
-        CONF_REQUEST=Acronym..".CONF_REQUEST"
+        CONF_REQUEST=Acronym..".CONF_REQUEST",
+        ORDER_UPDATE=Acronym..".ORDER_UPDATE",
+        ORDER_REQUEST=Acronym..".ORDER_REQUEST"
     }
-end
-
-if  SERVER and
-    Game.IsMultiplayer
-then
-    local registerId = Networking.RegisterId
-
-    for k in next, networking.MSG do
-        registerId(k)
-    end
 end
 
 networking.member = Types.NetworkMember.new()

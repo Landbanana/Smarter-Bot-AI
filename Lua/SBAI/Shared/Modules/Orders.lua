@@ -30,7 +30,7 @@ local function activate(self)
     
     local Contains = util.itertools.Contains
 
-    self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", nil,
+    self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", "Barotrauma.CrewManager",
     function(strongRef)
         activeOrders = strongRef
     end)
@@ -70,7 +70,6 @@ local function activate(self)
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier --[[@type Barotrauma.Identifier]]
-
         if id:StartsWith(orderCategoryPrefix) then
             if id == IGNORE_ROOM then
                 if ptable["fadeOutTime"] then
@@ -168,63 +167,65 @@ end
 
 ---@param self Types.Module
 local function deactivate(self)
-    if self.options.enable then return end
-
-    ignoredHulls = nil
-
-    util.DoWithTemporaryRegistrations(
-    {"System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]"},
-    function()
+    if not self.options.enable then
         local session = Game.GameSession
 
-        if not session then return end
-
-        do
-            local activeOrders = session.CrewManager.ActiveOrders --[[@type System.Collections.Generic.List*1Barotrauma*CrewManager*ActiveOrder]]
-            local removeIndices = {}
-            local i = 0
-            local j = 0
-
-            for order in activeOrders do
-                local orderId = order.Order.Identifier --[[@type Barotrauma.Identifier]]
-
-                if orderId:StartsWith(orderCategoryPrefix) then
-                    j = j + 1
-                    removeIndices[j] = i
-                end
-                i = i + 1
-            end
-
-            table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
-            for k in removeIndices do --[[@cast k integer]]
-                activeOrders.RemoveAt(k)
-            end
-        end
-
-        for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
-            if character.IsHuman then
-                local CurrentOrders = character.AIController.ObjectiveManager.CurrentOrders --[[@type System.Collections.Generic.List*1Barotrauma*Order]]
+        if session then
+            if activeOrders then
                 local removeIndices = {}
                 local i = 0
                 local j = 0
-
-                for order in CurrentOrders do
-                    local orderId = order.Identifier --[[@type Barotrauma.Identifier]]
-
+                
+                for order in activeOrders do
+                    local orderId = order.Order.Identifier --[[@type Barotrauma.Identifier]]
+        
                     if orderId:StartsWith(orderCategoryPrefix) then
                         j = j + 1
                         removeIndices[j] = i
                     end
                     i = i + 1
                 end
-
+        
                 table.sort(removeIndices, function(k1, k2) return k1 > k2 end)
                 for k in removeIndices do --[[@cast k integer]]
-                    CurrentOrders.RemoveAt(k)
+                    activeOrders.RemoveAt(k)
                 end
             end
+
+            util.DoWithTemporaryRegistrations({"System.Collections.Generic.List`1[[Barotrauma.Order]]"},
+            function()
+                local sort = table.sort
+
+                for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
+                    if  character.IsHuman and
+                        character.IsBot
+                    then
+                        local CurrentOrders = character.AIController.ObjectiveManager.CurrentOrders --[[@type System.Collections.Generic.List*1Barotrauma*Order]]
+                        local removeIndices = {}
+                        local i = 0
+                        local j = 0
+            
+                        for order in CurrentOrders do
+                            local orderId = order.Identifier --[[@type Barotrauma.Identifier]]
+            
+                            if orderId:StartsWith(orderCategoryPrefix) then
+                                j = j + 1
+                                removeIndices[j] = i
+                            end
+                            i = i + 1
+                        end
+            
+                        sort(removeIndices, function(k1, k2) return k1 > k2 end)
+                        for k in removeIndices do --[[@cast k integer]]
+                            CurrentOrders.RemoveAt(k)
+                        end
+                    end
+                end
+            end)
         end
-    end)
+    end
+    ignoredHulls = nil
+    activeOrders = nil
 end
 
 return activate, deactivate, ID_ORDER

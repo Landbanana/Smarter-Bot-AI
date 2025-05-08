@@ -1118,20 +1118,26 @@ end
 do
     local Character = Character
     local CharacterInfo = CharacterInfo
-    local CrewManager = CrewManager
+    local Game = Game
     local XElement = XElement
 
     local allOrders
     
     function util.SaveOrders()
+        local session = Game.GameSession
+
+        if not session then return end
+
+        local crewManager = session.CrewManager
+
         allOrders = {
             CrewOrders=XElement.__new("Orders"),
             CharacterOrders={}
         }
         
-        CrewManager.SaveActiveOrders(allOrders.CrewOrders)
+        crewManager.SaveActiveOrders(allOrders.CrewOrders)
 
-        for charInfo in CrewManager.GetCharacterInfos() do
+        for charInfo in crewManager.GetCharacterInfos() do
             local xElement = XElement.__new("Orders")
 
             CharacterInfo.SaveOrderData(charInfo, xElement)
@@ -1141,9 +1147,12 @@ do
     end
 
     function util.LoadOrders()
-        if allOrders == nil then error("allOrders cannot be nil") end
+        local session = Game.GameSession
+
+        if not session then return end
+        if allOrders == nil then return end
         
-        CrewManager.LoadActiveOrders(allOrders.CrewOrders)
+        session.CrewManager.LoadActiveOrders(allOrders.CrewOrders)
 
         for character in Character.CharacterList do
             CharacterInfo.ApplyOrderData(character, allOrders.CharacterOrders[character.Name])

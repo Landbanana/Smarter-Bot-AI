@@ -324,6 +324,8 @@ then
         end
     end
 
+    if not File.Exists(Constants.ConfigPath) then Config.Save() end
+
     if Game.IsMultiplayer then
         member:AddHandler(MSG.CONF_REQUEST,
         function(data, client)
@@ -340,7 +342,8 @@ then
                 if not client.HasPermission(ManageSettings) then return end
     
                 Config.data = data
-                Config.Save()
+                member:Send(MSG.CONF_UPDATE, nil, nil, Config.data)
+                return Config.Save()
             end)
         end
     end
@@ -357,11 +360,6 @@ then
         if not Config.data then return end
         return member:Send(MSG.CONF_UPDATE, nil, nil, Config.data)
     end
-    
-    member:AddHandler(MSG.CONF_UPDATE,
-    function(data, client)
-        Config.data = data
-    end)
 end
 
 return Config
