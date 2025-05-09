@@ -2,204 +2,24 @@ local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 local Config = require("SBAI.Shared.config")
 local Constants = require("SBAI.Shared.constants")
+local guiUtil = require("SBAI.Client.guiUtil")
 
-local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
+local ForceUpperCase = guiUtil.Constants.ForceUpperCase
 
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.GUITextBlock"], "MeasureText", {"System.String"})
+local D_PADDING = guiUtil.Constants.D_PADDING
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.RectTransform"], "ChildrenChanged")
+local D_WIDTH = guiUtil.Constants.D_WIDTH
+local D_HEIGHT = guiUtil.Constants.D_HEIGHT
 
-local D_BUTTON_TEXT_ALIGN = GUI.Alignment.Center
-local D_BUTTON_STYLE = "GUIButton"
-local D_FRAME_STYLE = "GUIFrame"
-local D_LISTBOX_STYLE = "GUIListBox"
+local D_ICON_VH = guiUtil.Constants.D_ICON_VH
 
-local D_COLOR = Color(235, 225, 193)
-local D_COLOR_HOVER = Color(255, 245, 213)
-local D_COLOR_SELECTED = Color(215, 205, 173)
-local D_COLOR_DISABLED = Color(100, 100, 100)
-local D_COLOR_PRESSED = Color(128, 129, 83)
-local D_COLOR_OUTLINE = Color(50, 50, 50)
-
-local D_COLOR_TEXT = Color(225, 221, 184)
-local D_COLOR_HOVER_TEXT = Color(245, 241, 204)
-local D_COLOR_SELECTED_TEXT = Color(205, 201, 164)
-
-local D_BIGBRAIN_SIZE = Point(120, 92)
-
-local D_PADDING = 10
-
-local D_WIDTH = 0.6
-local D_HEIGHT = 0.6
-
-local D_ICON_VH = 0.04
-
----@param component Barotrauma.GUIComponent
-local function AssignColors(component)
-    component.Color = D_COLOR
-    component.HoverColor = D_COLOR_HOVER
-    component.SelectedColor = D_COLOR_SELECTED
-    component.DisabledColor = D_COLOR_DISABLED
-    component.PressedColor = D_COLOR_PRESSED
-    component.OutlineColor = D_COLOR_OUTLINE
-end
-
----@param component Barotrauma.GUIButton|Barotrauma.GUITextBlock
-local function AssignTextColors(component)
-    component.TextColor = D_COLOR_TEXT
-    component.HoverTextColor = D_COLOR_HOVER_TEXT
-    component.SelectedTextColor = D_COLOR_SELECTED_TEXT
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param text? string
----@param style? string
----@param font? string
----@param alignment? Barotrauma.Alignment
----@param wrap? boolean
----@param ignoreColors? boolean
----@return Barotrauma.GUITextBlock
-local function AddTextBlock(parent, size, anchor, text, style, font, alignment, wrap, ignoreColors)
-    local textBlock = GUI.TextBlock(
-        GUI.RectTransform(
-            size,
-            parent.RectTransform,
-            anchor
-        ),
-        text,
-        nil,
-        font and GUI.Style.Fonts[Identifier(font)],
-        alignment or GUI.Alignment.Center,
-        wrap
-    )
-    if not ignoreColors then
-        AssignColors(textBlock)
-        AssignTextColors(textBlock)
-    end
-    textBlock.ForceUpperCase = ForceUpperCase.No
-    return textBlock
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param text? string
----@param style? string
----@param ignoreColors? boolean
----@param onClicked? fun(button: Barotrauma.GUIButton, obj: any):boolean
----@return Barotrauma.GUIButton
-local function AddButton(parent, size, anchor, text, style, ignoreColors, onClicked)
-    local button = GUI.Button(
-        GUI.RectTransform(
-            size,
-            parent.rectTransform,
-            anchor
-        ),
-        text,
-        D_BUTTON_TEXT_ALIGN,
-        style or D_BUTTON_STYLE
-    )
-    if not ignoreColors then
-        AssignColors(button)
-        AssignTextColors(button)
-    end
-    button.ForceUpperCase = ForceUpperCase.No
-    button.OnClicked = onClicked
-    return button
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param style? string
----@param isHorizontal? boolean
----@param ignoreColors? boolean
----@return Barotrauma.GUIListBox
-local function AddListBox(parent, size, anchor, style, isHorizontal, ignoreColors)
-    local listBox = GUI.ListBox(
-        GUI.RectTransform(
-            size,
-            parent.rectTransform,
-            anchor
-        ),
-        isHorizontal,
-        nil,
-        style or D_LISTBOX_STYLE,
-        true,
-        true
-    )
-    if not ignoreColors then AssignColors(listBox) end
-    return listBox
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param style? string
----@param ignoreColors? boolean
----@return Barotrauma.GUIFrame
-local function AddFrame(parent, size, anchor, style, ignoreColors)
-    local frame = GUI.Frame(
-        GUI.RectTransform(
-            size,
-            parent.rectTransform,
-            anchor
-        ),
-        style or D_FRAME_STYLE
-    )
-    if not ignoreColors then AssignColors(frame) end
-    return frame
-end
-
----@param parent any
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? any
----@return Barotrauma.GUIComponent
-local function AddInvisibleFrame(parent, size, anchor)
-    local frame = GUI.Frame(
-        GUI.RectTransform(
-            size,
-            parent.rectTransform,
-            anchor
-        )
-    )
-    frame.Visible = false
-    return frame
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param pivot? Barotrauma.Pivot
----@param isHorizontal? boolean
----@param childAnchor? Barotrauma.Anchor
----@return Barotrauma.GUILayoutGroup
-local function AddLayoutGroup(parent, size, anchor, pivot, isHorizontal, childAnchor)
-    local group = GUI.LayoutGroup(
-        GUI.RectTransform(
-            size,
-            parent.rectTransform,
-            anchor,
-            pivot
-        ),
-        isHorizontal,
-        childAnchor
-    )
-    return group
-end
-
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param pivot? Barotrauma.Pivot
----@return Barotrauma.GUIScissorComponent
-local function CutComponent(parent, size, anchor, pivot)
-    local scissor = GUI.ScissorComponent(GUI.RectTransform(size, parent.RectTransform, anchor, pivot))
-    scissor.CanBeFocused = false
-    return scissor
-end
+local AddTextBlock = guiUtil.AddTextBlock
+local AddButton = guiUtil.AddButton
+local AddListBox = guiUtil.AddListBox
+local AddFrame = guiUtil.AddFrame
+local AddInvisibleFrame = guiUtil.AddInvisibleFrame
+local AddLayoutGroup = guiUtil.AddLayoutGroup
+local CutComponent = guiUtil.CutComponent
 
 local function AddTitleText(parent, text, font, noUnderline, ignoreColors)
     local canvas = GUI.Frame(GUI.RectTransform(parent.Rect.Size, GUI.Canvas.Instance))
@@ -521,10 +341,11 @@ local function AddCloseButton(parent, anchor)
     return button
 end
 
--- local MakeCrewPolicyMenu
+local MakeCrewPolicyMenu
 
 ---@param parent Barotrauma.GUIComponent
 local function MakeSBAIMenu(parent)
+    local bigBrainSize = Point(120, 92)
     local framePadding = Point(2*D_PADDING, 2*D_PADDING)
 
     mainFrame = AddFrame(parent, Vector2(D_WIDTH, D_HEIGHT), GUI.Anchor.Center, "ItemUI")
@@ -580,7 +401,7 @@ local function MakeSBAIMenu(parent)
 
     local bigBrain = GUI.Image(
         GUI.RectTransform(
-            D_BIGBRAIN_SIZE,
+            bigBrainSize,
             bottomRightCut.Content.RectTransform,
             GUI.Anchor.BottomCenter
         ),
@@ -588,9 +409,9 @@ local function MakeSBAIMenu(parent)
     )
     bigBrain.ToolTip = "big brain"
 
-    -- bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
+    --bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
     
-    local availableTextWidth = (bottomRightCut.Rect.Width - D_BIGBRAIN_SIZE.X - D_PADDING)/2
+    local availableTextWidth = (bottomRightCut.Rect.Width - bigBrainSize.X - D_PADDING)/2
 
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
@@ -630,18 +451,16 @@ end
 ---@param parent Barotrauma.GUIComponent
 local function ShowSBAIMenu(parent)
     if not mainFrame then
-        --Config.Load()
         return MakeSBAIMenu(parent)
     end
 end
 
 -- ---@param parent Barotrauma.GUIComponent
 -- function MakeCrewPolicyMenu(parent)
---     local policyFrame = AddFrame(parent, parent.Rect.Size + Point(-parent.Rect.Width/5, parent.Rect.Height/3), GUI.Anchor.Center, "ItemUI")
-    
-    
--- end
+--     local mainFrame = require("SBAI.Client.fabricateOrderGui")
 
+--     mainFrame.RectTransform.Parent = parent.RectTransform
+-- end
 
 
 ---@param namespace Namespace

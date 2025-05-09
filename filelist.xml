@@ -4,6 +4,8 @@
   <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/fabricateOrderGui.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/guiUtil.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/Orders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/PerformInstruments.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleanablePetItems.lua" />
@@ -27,6 +29,7 @@
   <Other file="%ModDir%/Lua/SBAI/Shared/types.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/util.lua" />
   <Orders file="%ModDir%/Xml/Orders.xml" />
+  <Text file="%ModDir%/Xml/Text/English/GUIMisc.xml" />
   <Text file="%ModDir%/Xml/Text/English/Orders.xml" />
   <Text file="%ModDir%/Xml/Text/English/Tooltips.xml" />
   <UIStyle file="%ModDir%/Xml/UI/SettingsMenu.xml" />
