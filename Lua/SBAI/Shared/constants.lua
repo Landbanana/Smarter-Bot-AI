@@ -1,7 +1,7 @@
 local Constants = {
     Name="Smarter Bot AI",
     Acronym="SBAI",
-    Version="1.6.2",
+    Version="1.6.2a",
     Path=ToolBox.CleanUpPath(table.pack(...)[1]),
     ModConfigsDirPath=ToolBox.CleanUpPath(Game.SaveFolder.."/ModConfigs"), --[[@type string]]
 
