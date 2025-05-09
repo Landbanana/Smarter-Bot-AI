@@ -94,10 +94,12 @@ do
     local function instrumentSetup(self)
         self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
         
+        local Aim = InputType.Aim
         local Identifier = Identifier
         local ItemPrefab = ItemPrefab
         local MAX_FLOAT = Constants.MAX_FLOAT
         local PERFORM = Constants.ID_ORDER.PERFORM
+        local Shoot = InputType.Shoot
         local TalentPrefab = TalentPrefab
         local traitorMissionItemId = Identifier("traitormissionitem")
 
@@ -162,7 +164,8 @@ do
 
         self:AddPatch("Barotrauma.Item", "TryInteract", nil,
         function(instance, ptable)
-            local curObjective = ptable["user"].AIController.ObjectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
+            local character = ptable["user"] --[[@type Barotrauma.Character]]
+            local curObjective = character.AIController.ObjectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
 
             if curObjective then
                 local curSubObjective = curObjective.CurrentSubObjective
@@ -170,7 +173,8 @@ do
                 if curSubObjective and
                     curSubObjective.Identifier == PERFORM
                 then
-                    curSubObjective.Abandon = true
+                    character.ClearInput(Aim)
+                    character.ClearInput(Shoot)
                 end
             end
         end, Hook.HookMethodType.Before)

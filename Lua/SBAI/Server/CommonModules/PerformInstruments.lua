@@ -45,13 +45,16 @@ end
 
 ---@param self Types.CommonModule
 local function activate(self)
-    local concurrentIds = {Identifier("idle"), Identifier("wait")}
+    local Aim = InputType.Aim
     local hornItemId = Identifier("hornitem")
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
+    local Shoot = InputType.Shoot
     local Timer = Timer
 
     local Contains = util.itertools.Contains
+
+    local concurrentIds = {Identifier("idle"), Identifier("wait")}
 
     self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
     function(instance, ptable)
@@ -65,8 +68,8 @@ local function activate(self)
             if  Contains(character.HeldItems, item) or
                 character.Inventory.TryPutItem(item, character, instrumentInvSlots[item.Prefab.Identifier].slotTypes, true, true)
             then
-                character.SetInput(InputType.Aim, false, true)
-                character.SetInput(InputType.Shoot, false, true)
+                character.SetInput(Aim, false, true)
+                character.SetInput(Shoot, false, true)
             end
             
             if  item.HasTag(hornItemId) and
