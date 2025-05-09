@@ -171,7 +171,8 @@ do
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("MuteSingleplayerBotConversations", false)
+    section = defaults:CreateSection("MuteSingleplayerBotConversations", false)
+    section:CreateOption("BlockAllBotChat", false, Config.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("OperateReactorTweaks")
     section:CreateOption("behavior", "mostlyVanilla;*fuelOnlyWhenController;fuelOnly", Config.OPTION_TYPE.int, "radio")

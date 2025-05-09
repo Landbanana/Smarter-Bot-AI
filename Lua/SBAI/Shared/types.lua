@@ -473,7 +473,7 @@ end
 
 ---@public
 ---@param name string
----@param func fun(any...):any
+---@param func fun(...):any
 function Types.Module:AddHook(name, func)
     if not self.hooks then self.hooks = {} end
     local identifier = self.namespace()
