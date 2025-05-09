@@ -1053,7 +1053,9 @@ if CSActive then
         ---@return string[]
         local function inner(className)
             for v in GetType(className).GetMethods(4 + 8 + 16 + 32) do
-                print(v.Name)
+                local name = v.Name --[[@type string]]
+                
+                print(name)
             end
         end
 
@@ -1062,6 +1064,29 @@ if CSActive then
             return DoWithTemporaryRegistrations({
                 "System.Type",
                 "System.Reflection.RuntimeMethodInfo"
+            }, inner, className)
+        end
+    end
+    
+    do
+        local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
+        local GetType = LuaUserData.GetType
+
+        ---@param className string
+        ---@return string[]
+        local function inner(className)
+            for v in GetType(className).GetFields(4 + 8 + 16 + 32) do
+                local name = v.Name --[[@type string]]
+                
+                print(name)
+            end
+        end
+
+        ---@param className string
+        function util.debug.PrintAllFieldNames(className)
+            return DoWithTemporaryRegistrations({
+                "System.Type",
+                "System.Reflection.RuntimeFieldInfo"
             }, inner, className)
         end
     end
