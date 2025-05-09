@@ -1052,14 +1052,9 @@ if CSActive then
         ---@param className string
         ---@return string[]
         local function inner(className)
-            local out = {}
-            local i = 0
-
-            for k, v in next, GetType(className).GetMethods(4 + 8 + 16 + 32) do
-                i = i + 1
-                out[i] = v.Name
+            for v in GetType(className).GetMethods(4 + 8 + 16 + 32) do
+                print(v.Name)
             end
-            return out
         end
 
         ---@param className string
