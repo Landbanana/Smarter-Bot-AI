@@ -51,8 +51,11 @@
   <GUI.tooltips.usetalents.assistant.nonthreatening>AI Assistants with the "Non-Threatening" talent will ragdoll if they're attacked, their health goes below a certain percentage, and the room they're in isn't on fire or flooding and they don't have a diving suit/mask</GUI.tooltips.usetalents.assistant.nonthreatening>
   <GUI.tooltips.usetalents.assistant.nonthreatening.ragdollhealthpercent>How low the bot's health should get before ragdolling</GUI.tooltips.usetalents.assistant.nonthreatening.ragdollhealthpercent>
   <GUI.tooltips.usetalents.assistant.inspiringtunes>AI assistants with the "Inspiring Tunes" talent will play instruments in their inventory periodically. NOTE: All instruments (NOT just the bikehorn) work with this talent (even in vanilla!)</GUI.tooltips.usetalents.assistant.inspiringtunes>
-  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range. instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed> 
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed> 
   <GUI.tooltips.usetalents.captain>Captain talents</GUI.tooltips.usetalents.captain>
   <GUI.tooltips.usetalents.captain.steadytune>AI captains will now play the harmonica when idling, providing psychosis resistance</GUI.tooltips.usetalents.captain.steadytune>
-  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range. instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed> 
+  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>
+  <GUI.tooltips.usetalents.engineer>Engineer talents</GUI.tooltips.usetalents.engineer>
+  <GUI.tooltips.usetalents.engineer.melodicrespite>AI engineers will play guitar, providing a 25% increase in repair speed</GUI.tooltips.usetalents.engineer.melodicrespite>
+  <GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>
 </infotexts>
