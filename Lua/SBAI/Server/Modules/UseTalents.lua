@@ -165,16 +165,21 @@ do
         self:AddPatch("Barotrauma.Item", "TryInteract", nil,
         function(instance, ptable)
             local character = ptable["user"] --[[@type Barotrauma.Character]]
-            local curObjective = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
 
-            if curObjective then
-                local curSubObjective = curObjective.CurrentSubObjective
+            if  character.IsHuman and
+                character.IsBot
+            then
+                local curObjective = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
+                
+                if curObjective then
+                    local curSubObjective = curObjective.CurrentSubObjective
 
-                if curSubObjective and
-                    curSubObjective.Identifier == PERFORM
-                then
-                    character.ClearInput(Aim)
-                    character.ClearInput(Shoot)
+                    if curSubObjective and
+                        curSubObjective.Identifier == PERFORM
+                    then
+                        character.ClearInput(Aim)
+                        character.ClearInput(Shoot)
+                    end
                 end
             end
         end, Hook.HookMethodType.Before)
