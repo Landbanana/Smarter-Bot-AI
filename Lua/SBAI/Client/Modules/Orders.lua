@@ -1,7 +1,8 @@
+local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-local activateShared, deactivateShared, ID_ORDER = require("SBAI.Shared.Modules.Orders")
+local activateShared, deactivateShared = require("SBAI.Shared.Modules.Orders")
 
 LuaUserData.RegisterType("Barotrauma.CrewManager+OptionNode")
 LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
@@ -37,6 +38,8 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "availabl
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "optionNodes")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
+
+local ID_ORDER = Constants.ID_ORDER
 
 local IGNORE_ROOM = ID_ORDER.IGNORE_ROOM
 local FABRICATE_ITEMS = ID_ORDER.FABRICATE_ITEMS
@@ -328,12 +331,6 @@ local function activatePerformOrder(self)
                 local newObj = AIObjectiveOperateItem(targetItemComponent, instance.character, instance, order.Option, true)
 
                 newObj.Identifier = order.Identifier
-
-                -- ---@param operateObj Barotrauma.AIObjective
-                -- ---@return boolean
-                -- function newObj.AbortCondition(operateObj)
-                --     return false
-                -- end
                 
                 return newObj
             end

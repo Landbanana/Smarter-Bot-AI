@@ -291,6 +291,7 @@ do
 end
 
 ---@class Types.Module
+---@field private commonModules table<string,Types.CommonModule>
 ---@field private hooks {identifier:string, name:string}[]
 ---@field private initializers fun()[]
 ---@field private patches {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}[]
@@ -307,7 +308,7 @@ do
     local remove = table.remove
     local unpack = table.unpack
 
-    ---@private
+    ---@protected
     ---@generic T,R
     ---@param name? string
     ---@param func fun(...:T):R
@@ -331,7 +332,7 @@ end
 do
     local Game = Game
 
-    ---@private
+    ---@protected
     function Types.Module:init()
         if not Game.GameSession or not self.initializers then return end
         for func in self.initializers do --[[@cast func fun()]]
@@ -455,10 +456,26 @@ do
     end
 end
 
+do
+    local unpack = table.unpack
+
+    ---@public
+    ---@param requirePath string
+    ---@return ...
+    function Types.Module:AddCommonModule(requirePath)
+        if not self.commonModules then self.commonModules = {} end
+        local requireOut = {require(requirePath)}
+
+        self.commonModules[requirePath] = requireOut[1]
+        return select(1, unpack(requireOut))
+    end
+end
+
 ---@public
 ---@param name string
 ---@param func fun(any...):any
 function Types.Module:AddHook(name, func)
+    if not self.hooks then self.hooks = {} end
     local identifier = self.namespace()
 
     table.insert(self.hooks, {identifier=identifier, name=name})
@@ -481,6 +498,8 @@ do
     ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
     ---@param hookType Barotrauma.LuaCsHook.HookMethodType
     function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hookType)
+        if not self.patches then self.patches = {} end
+
         local identifier = self.namespace()
         
         local descriptor = upcall(AutoRegisterType, className)
@@ -536,6 +555,7 @@ do
     ---@param ... util.CLEAR_REG
     ---@return table
     function Types.Module:RegisterTable(init, ...)
+        if not self.tables then self.tables = {} end
         local flags = 0
 
         for flag in {...} do --[[@cast flag util.CLEAR_REG]]
@@ -564,6 +584,19 @@ function Types.Module:Activate(namespace, options)
         if not self:pcall(name, func) then return self:Deactivate(options) end
     end
 
+    if self.commonModules then
+        for requirePath, commonModule in next, self.commonModules do --[[@cast commonModule Types.CommonModule]]
+            local newNamespace = -namespace
+            newNamespace.i = 0
+            newNamespace.stack = {}
+
+            for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
+                newNamespace = newNamespace + stackAdd
+            end
+            commonModule:Activate(self, newNamespace)
+        end
+    end
+
     self:AddHook("roundStart", function() return self:init() end)
 end
 
@@ -587,16 +620,28 @@ do
         if self.namespace then
             self.options = options
 
-            for v in self.hooks do --[[@cast v {name:string, identifier:string}]]
-                Hook.Remove(v.name, v.identifier)
+            if self.commonModules then
+                for v in self.commonModules do  --[[@cast v Types.CommonModule]]
+                    v:Deactivate(self)
+                end
             end
 
-            for v in self.patches do --[=[@cast v {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}]=]
-                Hook.RemovePatch(v.identifier, v.className, v.methodName, v.parameterTypes, v.hookType)
+            if self.hooks then
+                for v in self.hooks do --[[@cast v {name:string, identifier:string}]]
+                    Hook.Remove(v.name, v.identifier)
+                end
             end
 
-            for v in self.tables do --[[@cast v {t:table, flags:number}]]
-                UnregisterTable(v.t, v.flags)
+            if self.patches then
+                for v in self.patches do --[=[@cast v {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}]=]
+                    Hook.RemovePatch(v.identifier, v.className, v.methodName, v.parameterTypes, v.hookType)
+                end
+            end
+
+            if self.tables then
+                for v in self.tables do --[[@cast v {t:table, flags:number}]]
+                    UnregisterTable(v.t, v.flags)
+                end
             end
 
             if self.deactivate then
@@ -606,12 +651,11 @@ do
             self.namespace = nil
             self.options = nil
         end
-
+        self.commonModules = nil
         self.initializers = nil
-
-        self.hooks = {}
-        self.patches = {}
-        self.tables = {}
+        self.hooks = nil
+        self.patches = nil
+        self.tables = nil
     end
 end
 
@@ -644,6 +688,41 @@ do
             self.namespace = -self.namespace
             return unpack(results)
         end
+    end
+end
+
+---@class Types.CommonModule: Types.Module
+---@field private moduleRefs Types.Set<Types.Module>
+Types.CommonModule = setmetatable({}, Types.Module)
+Types.CommonModule.__index = Types.CommonModule
+
+---@param activate fun(self: Types.Module)
+---@param deactivate? fun(self: Types.Module)
+---@return Types.CommonModule
+function Types.CommonModule.new(activate, deactivate)
+    local t = Types.Module.new(activate, deactivate)
+
+    return setmetatable(t, Types.CommonModule)
+end
+
+---@public
+---@param callingModule Types.Module
+---@param namespace Namespace
+function Types.CommonModule:Activate(callingModule, namespace)
+    if not self.moduleRefs then self.moduleRefs = Types.Set.new() end
+    if self.moduleRefs:IsEmpty() then Types.Module.Activate(self, namespace, {enable=true}) end
+    return self.moduleRefs:Add(callingModule)
+end
+
+---@public
+---@param callingModule Types.Module
+function Types.CommonModule:Deactivate(callingModule)
+    if callingModule.new == nil then return end
+    if not self.moduleRefs then return end
+    self.moduleRefs:Remove(callingModule)
+    if self.moduleRefs:IsEmpty() then
+        Types.Module.Deactivate(self, {enable=false})
+        self.moduleRefs = nil
     end
 end
 

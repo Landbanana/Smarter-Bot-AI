@@ -1,16 +1,10 @@
+local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 LuaUserData.RegisterType("Barotrauma.CrewManager+ActiveOrder")
 
----@enum ID_ORDER
-local ID_ORDER = {
-    FABRICATE_ITEMS = Identifier("sbai_fabricateitems"),
-    IGNORE_ROOM = Identifier("sbai_ignoreroom"),
-    PERFORM = Identifier("sbai_perform"),
-    SBAI_CATEGORY = Identifier("sbai"),
-    UNIGNORE_ROOM = Identifier("sbai_unignoreroom")
-}
+local ID_ORDER = Constants.ID_ORDER
 
 local IGNORE_ROOM = ID_ORDER.IGNORE_ROOM
 local FABRICATE_ITEMS = ID_ORDER.FABRICATE_ITEMS
@@ -24,11 +18,9 @@ local ignoredHulls
 local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
 ---@param self Types.Module
-local function activate(self)
-    if ignoredHulls then return ignoredHulls end
+---@return Types.Set<Barotrauma.Hull>
+local function activateIgnoreRoomOrder(self)
     ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
-    
-    local Contains = util.itertools.Contains
 
     self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", "Barotrauma.CrewManager",
     function(strongRef)
@@ -45,26 +37,6 @@ local function activate(self)
             end
         end
     end)
-
-    -- self:AddInit(
-    -- function()
-    --     local session = Game.GameSession
-
-    --     if not session then return end
-    --     activeOrders = GetStrongRef(function() return session.CrewManager.ActiveOrders end,
-    --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
-
-    --     -- optionNodes = GetStrongRef(function() return session.CrewManager.optionNodes end,
-    --     -- "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
-
-    --     for activeOrder in activeOrders do
-    --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
-
-    --         if curOrder.Identifier == IGNORE_ROOM then
-    --             ignoredHulls:Add(curOrder.TargetEntity)
-    --         end
-    --     end
-    -- end)
 
     self:AddPatch("Barotrauma.CrewManager", "AddOrder", nil,
     function(instance, ptable)
@@ -99,70 +71,34 @@ local function activate(self)
             end
         end
     end, Hook.HookMethodType.Before)
+end
 
-    local instrumentData = setmetatable({}, {
-        ---@param t {[Barotrauma.Identifier]:{slotTypes:Barotrauma.InvSlotType[]}}
-        ---@param k Barotrauma.Identifier
-        __index=function(t, k)
-            local prefab = ItemPrefab.Prefabs[k]
-
-            if prefab then
-                local holdable = prefab.ConfigElement.GetChildElement("Holdable")
-            
-                if holdable then
-                    local slotString = holdable.GetAttributeString("slots")
-                    
-                    if slotString then
-                        local allowedSlots = {}
-                        local i = 0
-            
-                        for slotCombination in slotString:gmatch("([^,]+),?") do
-                            if slotCombination:lower() ~= "any" then
-                                local slots = 0
-            
-                                i = i + 1
-                                for specSlotString in slotCombination:gmatch("([^%+]+)%+?") do
-                                    specSlotString = specSlotString:match("(%a+)")
-                                    
-                                    if specSlotString:lower() == "bothhands" then
-                                        slots = InvSlotType.LeftHand + InvSlotType.RightHand
-                                    end
-            
-                                    slots = slots + InvSlotType[specSlotString]
-                                end
-                                allowedSlots[i] = slots
-                            end
-                        end
-                        if i > 0 then
-                            t[k] = {slotTypes=allowedSlots}
-                            return t[k]
-                        end
-                    end
-                end
-            end
-            error("Unable to find instrument: "..k, 2)
-        end
-    })
-
-    self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
-    function(instance, ptable)
-        local obj = ptable["objective"]
-
-        if obj.Identifier == PERFORM then
-            local item = instance.Item
-            local character = ptable["character"] --[[@type Barotrauma.Character]]
-
-            character.AIController.SteeringManager.Reset()
-            if  Contains(character.HeldItems, item) or
-                character.inventory.TryPutItem(item, character, instrumentData[item.Prefab.Identifier].slotTypes, true, false)
-            then
-                character.SetInput(InputType.Aim, false, true)
-                character.SetInput(InputType.Shoot, false, true)
-            end
-            return true
-        end
-    end, Hook.HookMethodType.Before)
+---@param self Types.Module
+local function activate(self)
+    if not ignoredHulls then
+        activateIgnoreRoomOrder(self)
+    end
     return ignoredHulls
+    
+    -- self:AddInit(
+    -- function()
+    --     local session = Game.GameSession
+
+    --     if not session then return end
+    --     activeOrders = GetStrongRef(function() return session.CrewManager.ActiveOrders end,
+    --     "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]")
+
+    --     -- optionNodes = GetStrongRef(function() return session.CrewManager.optionNodes end,
+    --     -- "System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
+
+    --     for activeOrder in activeOrders do
+    --         local curOrder = activeOrder.Order --[[@type Barotrauma.Order]]
+
+    --         if curOrder.Identifier == IGNORE_ROOM then
+    --             ignoredHulls:Add(curOrder.TargetEntity)
+    --         end
+    --     end
+    -- end)
 end
 
 ---@param self Types.Module
@@ -228,4 +164,4 @@ local function deactivate(self)
     activeOrders = nil
 end
 
-return activate, deactivate, ID_ORDER
+return activate, deactivate

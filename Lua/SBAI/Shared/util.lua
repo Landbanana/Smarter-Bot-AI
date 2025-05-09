@@ -400,11 +400,14 @@ end
 function util.True()
     return true
 end
+do
+    local waitId = Identifier("wait")
 
----@param instance Barotrauma.AIObjectiveGoTo
----@return boolean
-function util.IsWaitObjective(instance)
-    return instance.IsWaitOrder
+    ---@param instance Barotrauma.AIObjectiveGoTo
+    ---@return boolean
+    function util.IsAtWaitObjective(instance)
+        return  instance.Identifier == waitId and instance.IsCloseEnough
+    end
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R

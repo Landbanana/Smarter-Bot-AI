@@ -7,3 +7,7 @@ then
 end
 
 SBAI.Control.Activate()
+
+--local util = require("SBAI.Shared.util")
+
+--util.debug.PrintAllMethodNames("Barotrauma.AIObjectiveGetItem")
