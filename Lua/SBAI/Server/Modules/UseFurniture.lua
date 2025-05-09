@@ -3,8 +3,6 @@ local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "Act")
-
 ---@class Barotrauma.Item
 ---@field _chairItems System.Collections.Generic.List*1Barotrauma*Item
 

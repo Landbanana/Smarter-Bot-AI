@@ -39,7 +39,7 @@ ConfigOption.__index = ConfigOption
 ---@param max? number
 ---@return ConfigOption
 ---@overload fun(default:string, optionType:Config.OPTION_TYPE.string, specialType:nil):ConfigOption
----@overload fun(default:number, optionType:Config.OPTION_TYPE.int|Config.OPTION_TYPE.float, specialType:nil, min:number, max:number):
+---@overload fun(default:number, optionType:Config.OPTION_TYPE.int|Config.OPTION_TYPE.float, specialType:nil, min:number, max:number):ConfigOption
 ---@overload fun(default:string, optionType:Config.OPTION_TYPE.int, specialType:"radio"):ConfigOption
 ---@overload fun(default:boolean, optionType:Config.OPTION_TYPE.boolean, specialType:nil):ConfigOption
 function ConfigOption.new(default, optionType, specialType, min, max)

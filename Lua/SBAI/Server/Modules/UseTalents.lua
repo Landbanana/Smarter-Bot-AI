@@ -562,4 +562,4 @@ local function activate(self)
     self:DoOption("Engineer", activateEngineer)
 end
 
-return Types.Module.new(activate, deactivate)
+return Types.Module.new(activate)
