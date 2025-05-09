@@ -31,26 +31,18 @@ end
 do
     local MapEntityCategoryDecorative = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory").Decorative
     
+    local xPath = util.xPath
+    
     ---@param prefab Barotrauma.ItemPrefab
     ---@return boolean
     function bedPredicate(prefab)
         if prefab.Category == MapEntityCategoryDecorative then
-            for controller in prefab.ConfigElement.Element.Elements("Controller") do
-                if  controller.GetAttributeBool("canbeselected", false) and
-                    controller.GetAttributeBool("drawuserbehind", false)
-                then
-                    for requiredItem in controller.Elements("RequiredItem") do
-                        local itemsArray = requiredItem.GetAttributeIdentifierArray("items")
-
-                        if  itemsArray and
-                            #itemsArray == 1 and
-                            itemsArray[1] == "deepdivinglarge" and
-                            requiredItem.GetAttributeBool("requireempty", false)
-                        then
-                            return true
-                        end
-                    end
-                end
+            local requiredItems = xPath(prefab.ConfigElement, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]")
+    
+            if  requiredItems and
+                requiredItems[1].GetAttributeBool("requireempty", false)
+            then
+                return true
             end
         end
         return false

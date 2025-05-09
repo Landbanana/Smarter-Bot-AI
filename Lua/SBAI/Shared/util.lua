@@ -1163,4 +1163,44 @@ do
     end
 end
 
+---@param rootElement Barotrauma.ContentXElement
+---@param xPathString string
+---@return Barotrauma.ContentXElement[]
+function util.xPath(rootElement, xPathString)
+    local matchingElements = {rootElement}
+
+    for elementAttributeStr in xPathString:gmatch("([^/]+)/*") do
+        local newMatchingElements = {}
+        local i = 0
+
+        for element in matchingElements do --[[@cast element Barotrauma.ContentXElement]]
+            local elementStr = elementAttributeStr:match("^([^%[%]]+)")
+            local attributeMatchStr = "^"..elementStr.."%[@(.+)%]$"
+            
+            for subElement in element.GetChildElements(elementStr) do --[[@cast subElement Barotrauma.ContentXElement]]
+                local attributeStr = elementAttributeStr:match(attributeMatchStr)
+
+                if attributeStr then
+                    local attributeName = attributeStr:match("^([^=]+)=") or attributeStr
+                    local attributeValue = attributeStr:match("^"..attributeName.."=([^=]+)$")
+                    local xAttribute = subElement.GetAttribute(attributeName)
+
+                    if  xAttribute and
+                        (attributeValue == nil or
+                        xAttribute.Value == attributeValue)
+                    then
+                        i = i + 1
+                        newMatchingElements[i] = subElement
+                    end
+                else
+                    i = i + 1
+                    newMatchingElements[i] = subElement
+                end
+            end
+        end
+        if i == 0 then return nil end
+        matchingElements = newMatchingElements
+    end
+    return matchingElements
+end
 return util
