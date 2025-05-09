@@ -110,7 +110,7 @@ local function activate(self)
     local FindItems = util.FindItems
     local GetClosest = util.GetClosest
     local True = util.True
-    local IsWaitObjective = util.IsWaitObjective
+    local IsWaitObjective = util.IsAtWaitObjective
     local TryAddSubObjective = util.TryAddSubObjective
     local Variator = util.itertools.Variator
 
@@ -151,10 +151,11 @@ local function activate(self)
                     then
                         for loadData in allLoadData do
                             local itemTag, _, refillerTag, isFungible, minCon, _, fullItemPredicate, targetItemPredicate = unpack(loadData)
+                            local itemList = character.Inventory.FindAllItems(nil, true)
 
-                            local targetItem = FindItem(character, character.Inventory.GetAllItems(true), itemTag, {0, minCon}, targetItemPredicate)
+                            local targetItem = FindItem(character, itemList, itemTag, {0, minCon}, targetItemPredicate)
                             
-                            targetItem = targetItem or FindItem(character, character.Inventory.GetAllItems(true), itemTag, {0, minCon},
+                            targetItem = targetItem or FindItem(character, itemList, itemTag, {0, minCon},
                             function(c, i)
                                 if i.Container then
                                     return targetItemPredicate(c, i)
@@ -179,6 +180,8 @@ local function activate(self)
                             end)) or nil --[[@type Barotrauma.Item?]]
                             
                             if targetContainer and closestFullItem then
+                                
+                                
                                 local closestFullItemContainer = closestFullItem.Container
                                 local originalClosestFullItemContainer = closestFullItemContainer and closestFullItemContainer.GetComponent(ItemContainer) or nil --[[@type Barotrauma.Items.Components.ItemContainer]]
                                 
