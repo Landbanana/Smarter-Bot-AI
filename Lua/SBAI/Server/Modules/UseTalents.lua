@@ -165,7 +165,7 @@ do
         self:AddPatch("Barotrauma.Item", "TryInteract", nil,
         function(instance, ptable)
             local character = ptable["user"] --[[@type Barotrauma.Character]]
-            local curObjective = character.AIController.ObjectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
+            local curObjective = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
 
             if curObjective then
                 local curSubObjective = curObjective.CurrentSubObjective
