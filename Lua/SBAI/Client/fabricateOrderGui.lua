@@ -49,6 +49,8 @@ local function createFabricatorGUI()
     local mainFrame = GUI.Frame(RectTransform(Point(screenSize.X*0.4, screenSize.Y*0.6), nil, GUI.Anchor.Center), "ItemUI")
     guiUtil.AssignColors(mainFrame)
 
+    local dragHandle = GUI.DragHandle(RectTransform(Vector2.One, mainFrame.RectTransform, GUI.Anchor.Center), mainFrame.RectTransform, nil)
+
     local paddedGroup = AddLayoutGroup(mainFrame, Vector2(0.95, 0.9), GUI.Anchor.Center, nil, nil, GUI.Anchor.TopCenter)
 
     AddTextBlock(paddedGroup, Vector2(1, 0.05), nil, TextManager.Get("GUI.fabricateordertitle"), nil, Identifier("SubHeadingFont"), GUI.Alignment.Center, nil, true, true).AutoScaleVertical = true
@@ -127,8 +129,12 @@ local function createFabricatorGUI()
     AddFrame(separatorGroup, Vector2.One, nil, "HorizontalLine")
 
     local inputGroup = AddLayoutGroup(bottomFrame, Vector2(0.95, 1), GUI.Anchor.BottomCenter, nil, true, GUI.Anchor.BottomLeft)
+    
+    local inputInventoryFrame = AddFrame(inputGroup, Vector2(0.7, 0.8), nil, "null", true)
+    local inputInventoryGroup = guiUtil.AddLayoutGroup(inputInventoryFrame, Vector2.One, GUI.Anchor.Center, nil, true, GUI.Anchor.CenterLeft)
+    local minEdgeSize = math.min(inputInventoryFrame.Rect.Width, inputInventoryFrame.Rect.Height)
 
-    local inputInventoryHolder = AddFrame(inputGroup, Vector2(0.7, 1), nil, "null", true)
+    guiUtil.AddItemCarousel(inputInventoryGroup, Point(minEdgeSize, minEdgeSize), nil, nil, true, ItemPrefab.GetItemPrefab("bikehorn"), ItemPrefab.GetItemPrefab("poop"))
 
     return mainFrame
 end
