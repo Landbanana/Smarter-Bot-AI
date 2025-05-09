@@ -256,7 +256,6 @@ local function activateOrderGui(self)
         local id = order.Identifier
 
         if id:StartsWith(orderCategoryPrefix) then
-            
             if  id == IGNORE_ROOM or
                 id == UNIGNORE_ROOM
             then
@@ -296,7 +295,7 @@ local function activateOrderGui(self)
             --         order.TargetItemComponent.CreateGUI()
             --         order.TargetItemComponent.OnResolutionChanged()
             --     end
-
+                
             end
         end
     end, Hook.HookMethodType.Before)
