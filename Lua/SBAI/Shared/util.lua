@@ -792,12 +792,11 @@ do
     ---@return T?
     function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
         if objective ~= nil then
-            if not Contains(instance.subObjectives, objective) then objective = nil end
-            return false
+            return false, Contains(instance.subObjectives, objective) and objective or nil
         else
             objective = constructor()
 
-            if util.itertools.Contains(instance.subObjectives, objective) then return false end
+            if Contains(instance.subObjectives, objective) then return false, objective end
             if instance.AllowMultipleInstances then
                 objective.SourceObjective = instance
                 instance.subObjectives.Add(objective)
@@ -810,7 +809,7 @@ do
             if onAbandonGenerator ~= nil then
                 objective.Abandoned.add(onAbandonGenerator(objective))
             end
-            return true
+            return true, objective
         end
     end
 end
