@@ -8,6 +8,7 @@ local Constants = {
     CLR_TYPE_POSTFIX = CLIENT and "Barotrauma" or "DedicatedServer",
 
     MAX_FLOAT=3.402823E+38,
+    MAX_INT=2147483647,
 
     D_TIMER_NOISE=0.1,
     D_PETITEM_TEMPLATE="creepingorange",
