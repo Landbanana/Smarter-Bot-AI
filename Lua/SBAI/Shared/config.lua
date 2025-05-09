@@ -248,9 +248,9 @@ do
     subsubsection = subsection:CreateSection("SteadyTune")
     subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
 
-    -- subsection = section:CreateSection("Engineer")
-    -- subsubsection = subsection:CreateSection("MelodicRespite")
-    -- subsubsection:CreateOption("stopAfterBuffed", false, Config.OPTION_TYPE.boolean)
+    subsection = section:CreateSection("Engineer")
+    subsubsection = subsection:CreateSection("MelodicRespite")
+    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
 
     Config.defaults.CONFIG = defaults
 end
