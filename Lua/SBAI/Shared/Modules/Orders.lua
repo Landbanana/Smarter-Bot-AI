@@ -42,6 +42,7 @@ local function activateIgnoreRoomOrder(self)
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier --[[@type Barotrauma.Identifier]]
+
         if id:StartsWith(orderCategoryPrefix) then
             if id == IGNORE_ROOM then
                 if ptable["fadeOutTime"] then
@@ -164,4 +165,4 @@ local function deactivate(self)
     activeOrders = nil
 end
 
-return activate, deactivate
+return {activate, deactivate}

@@ -1,7 +1,10 @@
 local Constants = require("SBAI.Shared.constants")
 local Types = require("SBAI.Shared.types")
 
-local activateShared, deactivateShared = require("SBAI.Shared.Modules.Orders")
+local activateShared, deactivateShared = table.unpack(require("SBAI.Shared.Modules.Orders"))
+if Game.IsSingleplayer then
+    deactivateShared = nil
+end
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
@@ -35,4 +38,4 @@ local function activate(self)
     activatePerformOrder(self)
 end
 
-return Types.Module.new(activate, Game.IsMultiplayer and deactivateShared or nil)
+return Types.Module.new(activate, deactivateShared)

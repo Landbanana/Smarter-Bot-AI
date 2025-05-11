@@ -2,7 +2,7 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-local activateShared, deactivateShared = require("SBAI.Shared.Modules.Orders")
+local activateShared, deactivateShared = table.unpack(require("SBAI.Shared.Modules.Orders"))
 
 LuaUserData.RegisterType("Barotrauma.CrewManager+OptionNode")
 LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
