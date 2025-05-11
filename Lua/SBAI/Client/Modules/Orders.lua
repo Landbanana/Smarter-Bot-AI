@@ -3,6 +3,9 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 local activateShared, deactivateShared = table.unpack(require("SBAI.Shared.Modules.Orders"))
+if Game.IsSingleplayer then
+    deactivateShared = nil
+end
 
 LuaUserData.RegisterType("Barotrauma.CrewManager+OptionNode")
 LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
@@ -72,8 +75,6 @@ local function activateOrderGui(self)
     local optionNode  --[[@type Barotrauma.CrewManager.OptionNode]]
     local orderCategory --[[@type Barotrauma.OrderCategory]]
     local sprite --[[@type Barotrauma.Sprite]]
-
-    
 
     local ignoredHulls = activateShared(self)
 

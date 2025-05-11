@@ -2,9 +2,6 @@ local Constants = require("SBAI.Shared.constants")
 local Types = require("SBAI.Shared.types")
 
 local activateShared, deactivateShared = table.unpack(require("SBAI.Shared.Modules.Orders"))
-if Game.IsSingleplayer then
-    deactivateShared = nil
-end
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
