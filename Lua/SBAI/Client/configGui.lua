@@ -77,7 +77,8 @@ do
 
     ---@param optionsFrame Barotrauma.GUIFrame
     ---@param sectionName string
-    function LoadSectionOptionsToGUI(optionsFrame, sectionName)
+    ---@param unsavedChanges table<string,any>
+    function LoadSectionOptionsToGUI(optionsFrame, sectionName, unsavedChanges)
         optionsFrame.ClearChildren()
         
         local namespace = SBAI.namespace
@@ -113,6 +114,16 @@ do
             if textTag ~= nil then textBlock.ToolTip = TextManager.get(textTag) end
         end
 
+        ---@param curNamespace Namespace
+        ---@return fun(value:any)
+        local function addToUnsavedChanges(curNamespace)
+            local strPath = curNamespace()
+
+            return function(value)
+                unsavedChanges[strPath] = value
+            end
+        end
+
         ---@param defaults ConfigSection|ConfigOption
         ---@param option string
         ---@param value number
@@ -120,8 +131,7 @@ do
         local function processNumber(defaults, option, value, optionType)
             MakeNamedCut(defaults, option)
 
-            local configRef = util.config.Get(Config.data, -namespace)
-            local key = namespace.stack[#namespace.stack]
+            local changeAdder = addToUnsavedChanges(namespace)
 
             if optionType == Config.OPTION_TYPE.int and defaults.specialType == "radio" then
                 local radioGroup = RadioButtonGroup()
@@ -142,9 +152,9 @@ do
                     --tickBox.ResizeBox()
                 end
                 
-                radioGroup.Selected = value
+                radioGroup.Selected = unsavedChanges[namespace()] or value
                 radioGroup.OnSelect = function(rbg, val)
-                    configRef[key] = val
+                    changeAdder(val)
                 end
                 return
             end
@@ -166,7 +176,7 @@ do
             if optionType == Config.OPTION_TYPE.float then
                 numberInput.MinValueFloat = defaults.min
                 numberInput.MaxValueFloat = defaults.max
-                numberInput.FloatValue = value
+                numberInput.FloatValue = unsavedChanges[namespace()] or value
 
                 ---@param numberIn Barotrauma.GUINumberInput
                 numberInput.OnValueEntered = function(numberIn)
@@ -174,8 +184,7 @@ do
                         numberIn.FloatValue = defaults.value
                         forcedDefault = false
                     end
-
-                    configRef[key] = numberIn.FloatValue
+                    changeAdder(numberIn.FloatValue)
                 end
 
                 ---@param numberIn Barotrauma.GUINumberInput
@@ -186,14 +195,14 @@ do
                         zeroCheck = numberIn.FloatValue == 0
                         forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
                     else
-                        configRef[key] = numberIn.FloatValue
+                        changeAdder(numberIn.FloatValue)
                         forcedDefault = false
                     end
                 end
             else
                 numberInput.MinValueInt = defaults.min
                 numberInput.MaxValueInt = defaults.max
-                numberInput.IntValue = value
+                numberInput.IntValue = unsavedChanges[namespace()] or value
                 
                 ---@param numberIn Barotrauma.GUINumberInput
                 numberInput.OnValueEntered = function(numberIn)
@@ -201,8 +210,7 @@ do
                         numberIn.IntValue = defaults.value
                         forcedDefault = false
                     end
-                    
-                    configRef[key] = numberIn.IntValue
+                    changeAdder(numberIn.IntValue)
                 end
 
                 ---@param numberIn Barotrauma.GUINumberInput
@@ -213,7 +221,7 @@ do
                         zeroCheck = numberIn.IntValue == 0
                         forcedDefault = forcedDefault or (oldZeroCheck and zeroCheck)
                     else
-                        configRef[key] = numberIn.IntValue
+                        changeAdder(numberIn.IntValue)
                         forcedDefault = false
                     end
                 end
@@ -249,20 +257,25 @@ do
                     MakeNamedCut(defaults, option)
                 end
                 
-                local configRef = util.config.Get(Config.data, -namespace)
+                local changeAdder = addToUnsavedChanges(namespace)
                 
-                local key = namespace.stack[#namespace.stack]
                 local button = AddButton(currentOptionCut.Content, clickableSizePoint, GUI.Anchor.CenterLeft, nil, "SwitchHorizontal", false,
                 ---@param button Barotrauma.GUIButton
                 ---@param obj any
                 ---@return boolean
                 function(button, obj)
                     button.Selected = not button.Selected
-                    configRef[key] = button.Selected
+                    changeAdder(button.Selected)
                     return button.Selected
                 end)
                 button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
-                button.Selected = value
+                local unsavedValue = unsavedChanges[namespace()]
+
+                if unsavedValue == nil then
+                    button.Selected = value
+                else
+                    button.Selected = unsavedValue
+                end
             end,
             ["table"]=function(defaults, option, value) --[[@cast value table]]
                 xSpacing = xSpacing + 4*D_PADDING
@@ -294,49 +307,81 @@ local function LoadConfigSectionsToGUI(sectionList)
     end
 end
 
----@param parent Barotrauma.GUIComponent
----@param sectionList Barotrauma.GUIListBox
----@param anchor Barotrauma.Anchor
----@return Barotrauma.GUIButton
-local function AddLoadConfigButton(parent, sectionList, anchor)
-    local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
-    function()
-        Config.Load()
-        LoadConfigSectionsToGUI(sectionList)
-    end)
-    button.ToolTip = "Reload the saved config to GUI"
-    return button
+local AddLoadConfigButton
+
+do
+    local ClearTable = util.itertools.ClearTable
+
+    ---@param parent Barotrauma.GUIComponent
+    ---@param sectionList Barotrauma.GUIListBox
+    ---@param anchor Barotrauma.Anchor
+    ---@param unsavedChanges table<string,any>
+    ---@return Barotrauma.GUIButton
+    function AddLoadConfigButton(parent, sectionList, anchor, unsavedChanges)
+        local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "GUIButtonRefresh", false,
+        function()
+            Config.Load()
+            LoadConfigSectionsToGUI(sectionList)
+            ClearTable(unsavedChanges)
+        end)
+        button.ToolTip = "Reload the saved config to GUI"
+        return button
+    end
 end
 
----@param parent Barotrauma.GUIComponent
----@param anchor Barotrauma.Anchor
----@return Barotrauma.GUIButton
-local function AddSaveButton(parent, anchor)
-    local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
-    function()
-        Config.Save()
-    end)
+local AddSaveButton
+
+do
+    local ClearTable = util.itertools.ClearTable
+    local Get = util.config.Get
     
-    button.ToolTip = "Save and apply config changes"
-    return button
+    ---@param parent Barotrauma.GUIComponent
+    ---@param anchor Barotrauma.Anchor
+    ---@param unsavedChanges table<string,any>
+    ---@return Barotrauma.GUIButton
+    function AddSaveButton(parent, anchor, unsavedChanges)
+        local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopLeft, nil, "SaveButton", false,
+        function()
+            for configPath, value in next, unsavedChanges do
+                local prevPath, curKey = configPath:match("^("..Constants.Acronym..".+)%.([^%.]+)$") --[[@type string, string]]
+                Get(Config.data, prevPath)[curKey] = value
+            end
+            Config.Save()
+            ClearTable(unsavedChanges)
+        end)
+        
+        button.ToolTip = "Save and apply config changes"
+        return button
+    end
 end
 
----@param parent Barotrauma.GUIComponent
----@param anchor Barotrauma.Anchor
----@return Barotrauma.GUIButton
-local function AddCloseButton(parent, anchor)
-    local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true, CloseSBAIMenu)
+local AddCloseButton
 
-    GUI.Image(
-        GUI.RectTransform(
-            button.Rect.Size,
-            button.RectTransform
-        ),
-        "MissionFailedIcon",
-        true
-    ).CanBeFocused = false
-    button.toolTip = "Close menu"
-    return button
+do
+    local ClearTable = util.itertools.ClearTable
+
+    ---@param parent Barotrauma.GUIComponent
+    ---@param anchor Barotrauma.Anchor
+    ---@param unsavedChanges table<string,any>
+    ---@return Barotrauma.GUIButton
+    function AddCloseButton(parent, anchor, unsavedChanges)
+        local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true,
+        function()
+            ClearTable(unsavedChanges)
+            return CloseSBAIMenu()
+        end)
+
+        GUI.Image(
+            GUI.RectTransform(
+                button.Rect.Size,
+                button.RectTransform
+            ),
+            "MissionFailedIcon",
+            true
+        ).CanBeFocused = false
+        button.toolTip = "Close menu"
+        return button
+    end
 end
 
 local MakeCrewPolicyMenu
@@ -380,9 +425,10 @@ local function MakeSBAIMenu(parent)
     sectionList.RectTransform.IsFixedSize = true
     optionList.RectTransform.IsFixedSize = true
 
-    local loadConfigButton = AddLoadConfigButton(topMiddleCut.Content, sectionList, GUI.Anchor.CenterLeft)
-    local saveButton = AddSaveButton(topMiddleCut.Content, GUI.Anchor.CenterRight)
-    local closeButton = AddCloseButton(topFrame, GUI.Anchor.CenterRight)
+    local unsavedChanges = {} --[[@type table<string,any>]]
+    local loadConfigButton = AddLoadConfigButton(topMiddleCut.Content, sectionList, GUI.Anchor.CenterLeft, unsavedChanges)
+    local saveButton = AddSaveButton(topMiddleCut.Content, GUI.Anchor.CenterRight, unsavedChanges)
+    local closeButton = AddCloseButton(topFrame, GUI.Anchor.CenterRight, unsavedChanges)
     closeButton.RectTransform.Translate(Point(-D_PADDING, 0))
     
     LoadConfigSectionsToGUI(sectionList)
@@ -391,7 +437,7 @@ local function MakeSBAIMenu(parent)
     ---@param _ System.Object
     ---@return boolean
     sectionList.OnSelected = function(component, _)
-        LoadSectionOptionsToGUI(optionList.Content, component.Text.SanitizedValue)
+        LoadSectionOptionsToGUI(optionList.Content, component.Text.SanitizedValue, unsavedChanges)
         return true
     end
 
