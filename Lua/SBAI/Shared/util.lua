@@ -937,6 +937,7 @@ function util.config.Get(config, optionString, skip)
         for _=0,skip,1 do
             optionString = optionString:match("[^%.]+%.(.+)")
         end
+        
         for sub in optionString:gmatch("([^%.]+)") do
             config = config[sub]
         end
@@ -1180,6 +1181,24 @@ do
             CharacterInfo.ApplyOrderData(character, allOrders.CharacterOrders[character.Name])
         end
         allOrders = nil
+    end
+end
+
+do
+    local Identifier = Identifier
+
+    ---@param ... string
+    ---@return Barotrauma.Identifier[]
+    function util.AsIdentifiers(...)
+        local ids = {}
+        local i = 0
+
+        for s in {...} do
+            i = i + 1
+            ids[i] = Identifier(s)
+        end
+
+        return ids
     end
 end
 

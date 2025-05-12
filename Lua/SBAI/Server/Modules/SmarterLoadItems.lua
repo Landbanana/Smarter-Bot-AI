@@ -41,8 +41,8 @@ do
 
     ---@enum (key) LOAD_TYPE_DATA
     local LOAD_TYPE_DATA = {
-        BatteryCells={Identifier("mobilebattery"), Identifier("mobilebattery"), Identifier("batterycellrecharger")},
-        OxygenTanks={Identifier("refillableoxygensource"), Identifier("oxygensource"), Identifier("oxygentankrefiller")}
+        BatteryCells=util.AsIdentifiers("mobilebattery", "mobilebattery", "batterycellrecharger"),
+        OxygenTanks=util.AsIdentifiers("refillableoxygensource", "oxygensource", "oxygentankrefiller")
     }
 
     ---@type {[1]:Barotrauma.Identifier, [2]:Barotrauma.Identifier, [3]:Barotrauma.Identifier, [4]:Barotrauma.Identifier, [5]:integer}

@@ -88,9 +88,7 @@ do
         -- local currentValue --[[@type string|number|boolean|table]]
 
         local typeTable --[[@type table<OptionType|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
-        local mainFontIds = {Identifier("LargeFont"), Identifier("SubHeadingFont")}
-
-        
+        local mainFontIds = util.AsIdentifiers("LargeFont", "SubHeadingFont")
 
         ---@param defaults ConfigSection|ConfigOption
         ---@param option string

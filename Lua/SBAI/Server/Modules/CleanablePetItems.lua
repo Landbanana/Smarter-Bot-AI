@@ -6,16 +6,7 @@ LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "Prefer
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems")
 
-local petItemIds = {"poop", "mucusball", "chitin"}
-
-do
-    local temp = Types.Set.new()
-
-    for id in petItemIds do
-        temp:Add(Identifier(id))
-    end
-    petItemIds = temp
-end
+local petItemIds = util.AsIdentifiers("poop", "mucusball", "chitin")
 
 ---@param self Types.Module
 local function activate(self)
@@ -29,7 +20,7 @@ local function activate(self)
     function()
         local newPrefConts = ItemPrefab.GetItemPrefab(Constants.D_PETITEM_TEMPLATE).PreferredContainers
 
-        for id in next, petItemIds do
+        for id in petItemIds do
             local prefab = ItemPrefab.GetItemPrefab(id)
     
             if #prefab.PreferredContainers <= 0 then
@@ -59,7 +50,7 @@ local function deactivate(self)
 
     return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]"},
     function()
-        for id in next, petItemIds do
+        for id in petItemIds do
             local prefab = ItemPrefab.GetItemPrefab(id)
             local oldPrefConts = prefab.PreferredContainers
     
