@@ -134,7 +134,7 @@ local function createFabricatorGUI()
     local inputInventoryGroup = guiUtil.AddLayoutGroup(inputInventoryFrame, Vector2.One, GUI.Anchor.Center, nil, true, GUI.Anchor.CenterLeft)
     local minEdgeSize = math.min(inputInventoryFrame.Rect.Width, inputInventoryFrame.Rect.Height)
 
-    guiUtil.AddItemCarousel(inputInventoryGroup, Point(minEdgeSize, minEdgeSize), nil, nil, true, ItemPrefab.GetItemPrefab("bikehorn"), ItemPrefab.GetItemPrefab("poop"))
+    guiUtil.AddItemCarousel(inputInventoryGroup, Point(minEdgeSize, minEdgeSize), nil, true, ItemPrefab.GetItemPrefab("bikehorn"), ItemPrefab.GetItemPrefab("poop"))
 
     return mainFrame
 end

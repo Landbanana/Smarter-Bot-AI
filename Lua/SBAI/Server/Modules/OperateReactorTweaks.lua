@@ -1,8 +1,5 @@
-local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "TooMuchFuel")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "NeedMoreFuel")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "meltDownTimer")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedTurbineOutputSignalTime")
@@ -21,7 +18,18 @@ local function activate(self)
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
     local behavior = self.options["behavior"] --[[@type integer]]
 
-    local getNumFuelRods
+    ---@param instance Barotrauma.Items.Components.Reactor
+    ---@return integer
+    local function getNumFuelRods(instance)
+        local i = 0
+
+        for item in instance.Item.OwnInventory.GetAllItems(false) do
+            if item.ConditionPercentage > minimumCondition then
+                i = i + 1
+            end
+        end
+        return i
+    end
 
     if behavior ~= 1 then
         local allCharacterData
@@ -131,19 +139,6 @@ local function activate(self)
                 return instance.Priority
             end
         end, Hook.HookMethodType.Before)
-    end
-
-    ---@param instance Barotrauma.Items.Components.Reactor
-    ---@return integer
-    function getNumFuelRods(instance)
-        local i = 0
-
-        for item in instance.Item.OwnInventory.GetAllItems(false) do
-            if item.ConditionPercentage > minimumCondition then
-                i = i + 1
-            end
-        end
-        return i
     end
 
     self:AddPatch("Barotrauma.Items.Components.Reactor", "TooMuchFuel", nil,

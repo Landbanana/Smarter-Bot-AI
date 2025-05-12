@@ -238,11 +238,10 @@ end
 ---@param parent Barotrauma.GUIComponent
 ---@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
 ---@param anchor? Barotrauma.Anchor
----@param style? string
 ---@param includeRandomOption? boolean
 ---@param ... Barotrauma.ItemPrefab
 ---@return Barotrauma.GUISelectionCarousel
-function guiUtil.AddItemCarousel(parent, size, anchor, style, includeRandomOption, ...)
+function guiUtil.AddItemCarousel(parent, size, anchor, includeRandomOption, ...)
     local ids = {} --[=[@type Barotrauma.Identifier[]]=]
     local icons = {} --[=[@type Barotrauma.Sprite[]]=]
     local max = 0 --[[@type integer]]
@@ -254,7 +253,7 @@ function guiUtil.AddItemCarousel(parent, size, anchor, style, includeRandomOptio
         icons[max] = prefab.InventoryIcon or prefab.Sprite
     end
 
-    local frame = guiUtil.AddFrame(parent, size, nil, "InnerFrameDark", true)
+    local frame = guiUtil.AddFrame(parent, size, anchor, "InnerFrameDark", true)
     --local slotGroup = guiUtil.AddLayoutGroup(frame, Vector2.One, GUI.Anchor.Center, nil, nil, GUI.Anchor.CenterLeft)
     --local innerFrame = guiUtil.AddFrame(slotGroup, Point(size.X, size.X), nil, "InnerFrameDark")
 
