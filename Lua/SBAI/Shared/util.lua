@@ -1154,11 +1154,11 @@ do
         local crewManager = session.CrewManager
 
         allOrders = {
-            CrewOrders=XElement.__new("Orders"),
+            --CrewOrders=XElement.__new("Orders"),
             CharacterOrders={}
         }
         
-        crewManager.SaveActiveOrders(allOrders.CrewOrders)
+        --crewManager.SaveActiveOrders(allOrders.CrewOrders)
 
         for charInfo in crewManager.GetCharacterInfos() do
             local xElement = XElement.__new("Orders")
@@ -1175,7 +1175,7 @@ do
         if not session then return end
         if allOrders == nil then return end
         
-        session.CrewManager.LoadActiveOrders(allOrders.CrewOrders)
+        --session.CrewManager.LoadActiveOrders(allOrders.CrewOrders)
 
         for character in Character.CharacterList do
             CharacterInfo.ApplyOrderData(character, allOrders.CharacterOrders[character.Name])
