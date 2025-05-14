@@ -1235,7 +1235,7 @@ function util.xPath(rootElement, xPathString)
                 end
             end
         end
-        if i == 0 then return nil end
+        if i == 0 then return newMatchingElements end
         matchingElements = newMatchingElements
     end
     return matchingElements

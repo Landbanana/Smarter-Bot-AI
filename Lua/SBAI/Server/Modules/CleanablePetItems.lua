@@ -6,22 +6,51 @@ LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "Prefer
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems")
 
-local petItemIds = util.AsIdentifiers("poop", "mucusball", "chitin")
+local petItemIds = Types.Set.new()
+
+do
+    local GetItemPrefab = ItemPrefab.GetItemPrefab
+    local xPath = util.xPath
+
+    for prefab in CharacterPrefab.Prefabs do
+        for xSubElement in xPath(prefab.ConfigElement, "ai/petbehavior/itemproduction/item") do --[[@cast xSubElement Barotrauma.ContentXElement]]
+            if xSubElement then
+                local itemId = xSubElement.GetAttributeIdentifier("identifier")
+
+                if itemId.Value ~= "" then
+                    petItemIds:Add(itemId)
+                end
+            end
+        end
+    end
+
+    for id in next, petItemIds do
+        local prefab = GetItemPrefab(id)
+
+        if prefab then
+            local xElement = prefab.ConfigElement
+
+            if #xPath(xElement, "PreferredContainer") > 0 then
+                petItemIds:Remove(id)
+            end
+        end
+    end
+end
 
 ---@param self Types.Module
 local function activate(self)
     local Item = Item
-    local ItemPrefab = ItemPrefab
+    local GetItemPrefab = ItemPrefab.GetItemPrefab
 
     return util.DoWithTemporaryRegistrations({
         "System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]",
         "System.Collections.Generic.List`1[[Barotrauma.Item]]"
     },
     function()
-        local newPrefConts = ItemPrefab.GetItemPrefab(Constants.D_PETITEM_TEMPLATE).PreferredContainers
+        local newPrefConts = GetItemPrefab(Constants.D_PETITEM_TEMPLATE).PreferredContainers
 
-        for id in petItemIds do
-            local prefab = ItemPrefab.GetItemPrefab(id)
+        for id in next, petItemIds do
+            local prefab = GetItemPrefab(id)
     
             if #prefab.PreferredContainers <= 0 then
                 prefab.PreferredContainers = newPrefConts
@@ -43,15 +72,15 @@ end
 ---@param self Types.Module
 local function deactivate(self)
     local Item = Item
-    local ItemPrefab = ItemPrefab
+    local GetItemPrefab = ItemPrefab.GetItemPrefab
 
     local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
     local sort = table.sort
 
     return DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]"},
     function()
-        for id in petItemIds do
-            local prefab = ItemPrefab.GetItemPrefab(id)
+        for id in next, petItemIds do
+            local prefab = GetItemPrefab(id)
             local oldPrefConts = prefab.PreferredContainers
     
             if #oldPrefConts > 0 then
