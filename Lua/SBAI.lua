@@ -122,14 +122,14 @@ SBAI.Control = {}
 if  SERVER or
     Game.IsSingleplayer
 then
-    local SaveOrders = util.SaveOrders
-    local LoadOrders = util.LoadOrders
+    local SaveCharacterOrders = util.SaveCharacterOrders
+    local LoadCharacterOrders = util.LoadCharacterOrders
 
     function SBAI.Control.Reactivate()
-        SaveOrders()
+        SaveCharacterOrders()
         SBAI.Control.Deactivate()
         SBAI.Control.Activate()
-        LoadOrders()
+        LoadCharacterOrders()
     end
 
     local oldSave = Config.Save

@@ -1144,43 +1144,41 @@ do
     local Game = Game
     local XElement = XElement
 
-    local allOrders
+    local characterOrders
     
-    function util.SaveOrders()
+    function util.SaveCharacterOrders()
         local session = Game.GameSession
 
         if not session then return end
 
-        local crewManager = session.CrewManager
+        characterOrders = {}
 
-        allOrders = {
-            --CrewOrders=XElement.__new("Orders"),
-            CharacterOrders={}
-        }
-        
-        --crewManager.SaveActiveOrders(allOrders.CrewOrders)
-
-        for charInfo in crewManager.GetCharacterInfos() do
+        for charInfo in session.CrewManager.GetCharacterInfos() do
             local xElement = XElement.__new("Orders")
 
             CharacterInfo.SaveOrderData(charInfo, xElement)
-            allOrders.CharacterOrders[charInfo.Name] = xElement
+            characterOrders[charInfo.Name] = xElement
         end
-        return allOrders
+        return characterOrders
     end
 
-    function util.LoadOrders()
+    function util.LoadCharacterOrders()
+        if characterOrders == nil then return end
+
         local session = Game.GameSession
 
         if not session then return end
-        if allOrders == nil then return end
-        
-        --session.CrewManager.LoadActiveOrders(allOrders.CrewOrders)
 
-        for character in Character.CharacterList do
-            CharacterInfo.ApplyOrderData(character, allOrders.CharacterOrders[character.Name])
+        for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
+            local charInfo = character.Info
+            
+            if charInfo then
+                local orders = characterOrders[charInfo.Name]
+                
+                if orders then CharacterInfo.ApplyOrderData(character, orders) end
+            end
         end
-        allOrders = nil
+        characterOrders = nil
     end
 end
 
