@@ -1,3 +1,4 @@
+local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
@@ -6,47 +7,18 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_chairItems")
 ---@class Barotrauma.Item
 ---@field _chairItems System.Collections.Generic.List*1Barotrauma*Item
 
----@enum (key) FURNITURE
+---@enum FURNITURE
 local FURNITURE = {
     BED=1,
     CHAIR=2
 }
 
-local ids --[[@type table<FURNITURE,Set>]]
-local bedPredicate
-local chairPredicate
-
-do
-    local Contains = util.itertools.Contains
-
-    ---@param prefab Barotrauma.ItemPrefab
-    ---@return boolean
-    function chairPredicate(prefab)
-        return Contains(prefab.Tags, "chair")
-    end
-end
-
-do
-    local MapEntityCategoryDecorative = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory").Decorative
-    
-    local Any = util.itertools.Any
-    local xPath = util.xPath
-    
-    ---@param prefab Barotrauma.ItemPrefab
-    ---@return boolean
-    function bedPredicate(prefab)
-        if prefab.Category == MapEntityCategoryDecorative then
-            return Any(xPath(prefab.ConfigElement, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]"), function(item) return item.GetAttributeBool("requireempty", false) end)
-        end
-        return false
-    end
-end
-
 local _chairItems
 
 ---@param self Types.Module
 ---@param options table
-local function activateAutoUseWhenIdle(self, options)
+---@param ids table<FURNITURE,Set>
+local function activateAutoUseWhenIdle(self, options, ids)
     local Item = Item
 
     self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
@@ -78,7 +50,9 @@ local function activateAutoUseWhenIdle(self, options)
 end
 
 ---@param self Types.Module
-local function activateStayInBedIfHurt(self, options)
+---@param options boolean
+---@param ids table<FURNITURE,Set>
+local function activateStayInBedIfHurt(self, options, ids)
     local HumanInSafeHull = util.HumanInSafeHull
     local bedIds = ids[FURNITURE.BED]
 
@@ -100,22 +74,33 @@ end
 
 ---@param self Types.Module
 local function activate(self)
+    local ids = {}
+
     do
+        local chairId = Identifier("chair")
+        local Decorative = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory").Decorative --[[@type Barotrauma.MapEntityCategory]]
+        local Prefabs = ItemPrefab.Prefabs
+
+        local Any = util.itertools.Any
+        local Contains = util.itertools.Contains
+        local new = Types.Set.new
+        local xPath = util.xPath
+
         ---@type table<FURNITURE,fun(prefab:Barotrauma.ItemPrefab):boolean>
         local predicateMap = {
-            [FURNITURE.BED]=bedPredicate,
-            [FURNITURE.CHAIR]=chairPredicate
+            [FURNITURE.BED]=function(prefab)
+                if prefab.Category == Decorative then
+                    return Any(xPath(prefab.ConfigElement, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]"), function(item) return item.GetAttributeBool("requireempty", false) end)
+                end
+                return false
+            end,
+            [FURNITURE.CHAIR]=function(prefab)
+                return Contains(prefab.Tags, chairId)
+            end
         }
 
-        local Prefabs = ItemPrefab.Prefabs
-        local new = Types.Set.new
-
         ---@type table<FURNITURE,Set>
-        ids = setmetatable({}, {
-            ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
-            ---@param k FURNITURE
-            ---@return table<Barotrauma.Identifier,true>
-            __call=function(t, k) return t[k] end,
+        setmetatable(ids, {
             ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
             ---@param k FURNITURE
             ---@return table<Barotrauma.Identifier,true>
@@ -136,9 +121,9 @@ local function activate(self)
             end
         })
     end
-
-    self:DoOption("AutoUseWhenIdle", activateAutoUseWhenIdle)
-    self:DoOption("stayInBedIfHurt", activateStayInBedIfHurt)
+    print(ids)
+    self:DoOption("AutoUseWhenIdle", activateAutoUseWhenIdle, ids)
+    self:DoOption("stayInBedIfHurt", activateStayInBedIfHurt, ids)
 
     setmetatable(ids, nil)
 end
@@ -146,9 +131,11 @@ end
 ---@param self Types.Module
 local function deactivate(self)
     if _chairItems then
+        local chairId = Identifier("chair")
+
         _chairItems.Clear()
-        for item in util.FindItems(nil, Item.ItemList, "chair") do
-            _chairItems.Add(item)
+        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
+            if item.Prefab.Identifier == chairId then _chairItems.Add(item) end
         end
         _chairItems = nil
     end
