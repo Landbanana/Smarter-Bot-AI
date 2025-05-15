@@ -121,7 +121,7 @@ local function activate(self)
             end
         })
     end
-    print(ids)
+    
     self:DoOption("AutoUseWhenIdle", activateAutoUseWhenIdle, ids)
     self:DoOption("stayInBedIfHurt", activateStayInBedIfHurt, ids)
 
