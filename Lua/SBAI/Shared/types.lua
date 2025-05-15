@@ -661,8 +661,6 @@ end
 
 do
     local Get = util.config.Get
-    local insert = table.insert
-    local select = select
     local unpack = table.unpack
 
     ---@public
@@ -675,16 +673,16 @@ do
         local options = Get(self.options, newNamespace, 2)
 
         if options then
-            local args = {...}
-            local n = select("#", ...)
-
-            if type(options) == "table" then
-                if not options.enable then return end
-                insert(args, 1, options)
-                n = n + 1
+            if  type(options) == "table" and
+                not options.enable
+            then
+                return
             end
+            
             self.namespace = self.namespace + name
-            local results = {self:pcall(nil, func, unpack(args, 1, n))}
+
+            local results = {self:pcall(nil, func, options, ...)}
+
             self.namespace = -self.namespace
             return unpack(results)
         end
