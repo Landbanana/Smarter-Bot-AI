@@ -1240,4 +1240,5 @@ function util.xPath(rootElement, xPathString)
     end
     return matchingElements
 end
+
 return util

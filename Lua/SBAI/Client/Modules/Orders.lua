@@ -66,7 +66,6 @@ local function activateOrderGui(self)
     local Zero = Vector2.Zero
 
     local Any = util.itertools.Any
-    
     local GetPointsOnCircumference = util.GetPointsOnCircumference
     local None = util.itertools.None
     local sort = table.sort

@@ -5,7 +5,7 @@ local Constants = {
     Path=ToolBox.CleanUpPath(table.pack(...)[1]),
     ModConfigsDirPath=ToolBox.CleanUpPath(Game.SaveFolder.."/ModConfigs"), --[[@type string]]
 
-    CLR_TYPE_POSTFIX = CLIENT and "Barotrauma" or "DedicatedServer",
+    CLR_TYPE_POSTFIX = CLIENT and "Barotrauma" or "DedicatedServer", -- This is super dumb
 
     MAX_FLOAT=3.402823E+38,
     MAX_INT=2147483647,
