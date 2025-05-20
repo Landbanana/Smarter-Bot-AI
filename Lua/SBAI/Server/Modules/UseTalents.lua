@@ -395,7 +395,9 @@ function Assistant.JengaMaster(self, options)
     local allCharacterData = Types.TimedCharacterData.new(self, options["timeBetween"])
 
     local containerNotTouched
-
+    
+    ---@param container Barotrauma.Item
+    ---@return boolean
     function containerNotTouched(container)
         for k in next, container.StatManager.talentStats do
             if k.TalentIdentifier == talentId then
