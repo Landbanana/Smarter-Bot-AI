@@ -180,26 +180,60 @@ function util.itertools.Contains(t, v)
     return false
 end
 
----@param ... any[]
----@return fun():any
-function util.itertools.Chain(...)
-    local tableList = {...}
-    local tableIdx = 0
-    local tableListMax = #tableList
-    local tableCur
-    local n = 0
-    local i = 0
+do
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+    
+    ---@generic T
+    ---@param t T[]
+    ---@param p fun(v:T):boolean
+    ---@return fun():T?
+    function util.itertools.Filter(t, p)
+        return wrap(
+        function()
+            for v in t do
+                if p(v) then
+                    yield(v)
+                end
+            end
+        end)
+    end
+end
 
-    return function()
+---@generic T
+---@param func fun():T?
+---@return T[]
+function util.itertools.ToList(func)
+    local i = 0
+    local t = {}
+
+    for v in func do
         i = i + 1
-        while i > n do
-            tableIdx = tableIdx + 1
-            if tableIdx > tableListMax then return end
-            tableCur = tableList[tableIdx]
-            n = #tableCur
-            i = 1
-        end
-        return tableCur[i]
+        t[i] = v
+    end
+    return t
+end
+
+do
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+
+    ---@generic T
+    ---@param ... T[]
+    ---@return fun():T
+    function util.itertools.Chain(...)
+        local out = wrap(
+        function(lists)
+            yield()
+            for l in lists do
+                for v in l do
+                    yield(v)
+                end
+            end
+        end)
+        
+        out({...})
+        return out
     end
 end
 
