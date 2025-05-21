@@ -39,7 +39,7 @@ local function activate(self)
                 return band(filteredClothesSlotTypes, slot) == slot
             end
             
-            local wearables = FindItems(character, inventory.GetAllItems(true), nil, nil,
+            local wearables = FindItems(character, inventory.FindAllItems(nil, true), nil, nil,
             function(character, item)
                 return item.GetComponent(Wearable) ~= nil and
                     not item.HasTag(lightdivingId) and

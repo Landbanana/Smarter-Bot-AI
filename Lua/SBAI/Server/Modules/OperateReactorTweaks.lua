@@ -8,6 +8,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
 
 LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "GetGeneratedHeat")
+
 ---@param self Types.Module
 local function activate(self)
     local containItemId = Identifier("contain item")

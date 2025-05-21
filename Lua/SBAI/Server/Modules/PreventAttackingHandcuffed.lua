@@ -14,7 +14,7 @@ local function activate(self)
             if enemy.IsHuman then
                 ptable.PreventExecution = true
 
-                if ptable.returnValue or enemy.IsHandcuffed then return true end
+                if ptable.ReturnValue or enemy.IsHandcuffed then return true end
                 local paralysis = enemy.CharacterHealth.GetAffliction(paralysisId, false)
                 
                 return paralysis ~= nil and paralysis.Strength >= 99.0

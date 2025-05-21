@@ -439,8 +439,8 @@ function Assistant.JengaMaster(self, options)
         then
             local characterData = allCharacterData:Get(character)
             
-            if  not characterData["goToObj"] and
-                characterData.timer:Update(ptable["deltaTime"])
+            if  characterData.timer:Update(ptable["deltaTime"]) and
+                not characterData["goToObj"]
             then
                 local closestContainer = GetClosest(character.WorldPosition, FindItems(character, untouchedContainers:ToList())) --[[@type Barotrauma.Item]]
 
@@ -450,9 +450,9 @@ function Assistant.JengaMaster(self, options)
                     local function constructor()
                         local objective = AIObjectiveGoTo(closestContainer, character, instance.objectiveManager, false, false, 1, 50.0)
 
-                        objective.SpeakIfFails = false
                         objective.DebugLogWhenFails = false
                         objective.AllowGoingOutside = false
+                        objective.SpeakIfFails = false
 
                         local function cleanup()
                             characterData["goToObj"] = nil
