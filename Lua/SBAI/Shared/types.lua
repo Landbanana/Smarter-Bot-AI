@@ -381,6 +381,32 @@ do
     end
 end
 
+do
+    local AutoRegisterType = util.AutoRegisterType
+    local CreateEnumTable = LuaUserData.CreateEnumTable
+    local upcall = util.debug.upcall
+
+    local Enums = setmetatable({}, {
+        ---@param self table<string,System.Object>
+        ---@param typeName string
+        ---@return System.Object
+        __index=function(self, typeName)
+            upcall(AutoRegisterType, typeName)
+
+            local enum = upcall(CreateEnumTable, typeName)
+
+            self[typeName] = enum
+            return enum
+        end
+    })
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return function|T
+    function Types.Module:RegisterEnumTable(typeName)
+        return Enums[typeName]
+    end
+end
 
 do
     local G = _G

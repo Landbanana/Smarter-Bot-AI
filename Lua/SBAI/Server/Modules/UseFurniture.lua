@@ -41,7 +41,7 @@ local function activateAutoUseWhenIdle(self, options, ids)
     end
 
     self:AddInit(function()
-        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]   
+        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
             if idleFurnitureIds[item.Prefab.Identifier] then
                 _chairItems.Add(item)
             end
@@ -78,7 +78,7 @@ local function activate(self)
 
     do
         local chairId = Identifier("chair")
-        local Decorative = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory").Decorative --[[@type Barotrauma.MapEntityCategory]]
+        local Decorative = self:RegisterEnumTable("Barotrauma.MapEntityCategory").Decorative
         local Prefabs = ItemPrefab.Prefabs
 
         local Any = util.itertools.Any
