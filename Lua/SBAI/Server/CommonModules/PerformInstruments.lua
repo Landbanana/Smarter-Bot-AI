@@ -47,6 +47,9 @@ end
 local function activate(self)
     local Aim = InputType.Aim
     local hornItemId = Identifier("hornitem")
+    local idleObjId = Identifier("idle")
+    local waitObjId = Identifier("wait")
+
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
@@ -54,7 +57,16 @@ local function activate(self)
 
     local Contains = util.itertools.Contains
 
-    local concurrentIds = {Identifier("idle"), Identifier("wait")}
+    local ModObjProp
+    local ModMainObjProp
+    
+    do
+        local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
+
+        ModObjProp = mod.ModObjProp --[[@type fun(objId:Barotrauma.Identifier, objSuffix:string, propertyName:string, value:any)]]
+        ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
+
+    end
 
     self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
     function(instance, ptable)
@@ -81,43 +93,50 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
-    self:AddPatch("Barotrauma.AIObjective", "get_ConcurrentObjectives", nil,
-    function(instance, ptable)
-        if Contains(concurrentIds, instance.Identifier) then
-            local curSubObjective = instance.CurrentSubObjective
+    -- self:AddPatch("Barotrauma.AIObjective", "get_ConcurrentObjectives", nil,
+    -- function(instance, ptable)
+    --     if Contains(concurrentIds, instance.Identifier) then
+    --         local curSubObjective = instance.CurrentSubObjective
 
-            if  curSubObjective and
-                curSubObjective.Identifier == PERFORM
-            then
-                ptable.PreventExecution = true
-                return true
-            end
-        end
-    end, Hook.HookMethodType.Before)
+    --         if  curSubObjective and
+    --             curSubObjective.Identifier == PERFORM
+    --         then
+    --             ptable.PreventExecution = true
+    --             return true
+    --         end
+    --     end
+    -- end, Hook.HookMethodType.Before)
 
-    self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
-    function(instance, ptable)
-        if instance.Identifier == PERFORM then
-            ptable.PreventExecution = true
-            return false
-        end
-    end, Hook.HookMethodType.Before)
+    ModMainObjProp(idleObjId, "Idle", PERFORM, "ConcurrentObjectives", true)
+    ModMainObjProp(waitObjId, "GoTo", PERFORM, "ConcurrentObjectives", true)
+    ModMainObjProp(idleObjId, "Idle", PERFORM, "AllowAutomaticItemUnequipping", false)
 
-    self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
-    function(instance, ptable)
-        if instance.Identifier == PERFORM then
-            ptable.PreventExecution = true
-            return false
-        end
-    end, Hook.HookMethodType.Before)
+    ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
+    ModObjProp(PERFORM, "OperateItem", "AllowMultipleInstances", false)
 
-    self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowMultipleInstances", nil,
-    function(instance, ptable)
-        if instance.Identifier == PERFORM then
-            ptable.PreventExecution = true
-            return false
-        end
-    end, Hook.HookMethodType.Before)
+    -- self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
+    -- function(instance, ptable)
+    --     if instance.Identifier == PERFORM then
+    --         ptable.PreventExecution = true
+    --         return false
+    --     end
+    -- end, Hook.HookMethodType.Before)
+
+    -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
+    -- function(instance, ptable)
+    --     if instance.Identifier == PERFORM then
+    --         ptable.PreventExecution = true
+    --         return false
+    --     end
+    -- end, Hook.HookMethodType.Before)
+
+    -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowMultipleInstances", nil,
+    -- function(instance, ptable)
+    --     if instance.Identifier == PERFORM then
+    --         ptable.PreventExecution = true
+    --         return false
+    --     end
+    -- end, Hook.HookMethodType.Before)
 end
 
 return Types.CommonModule.new(activate)

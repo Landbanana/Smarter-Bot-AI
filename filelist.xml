@@ -8,6 +8,7 @@
   <Other file="%ModDir%/Lua/SBAI/Client/guiUtil.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/MuteSingleplayerBotConversations.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/Orders.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ModifyObjectiveProperties.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/PerformInstruments.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleanablePetItems.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleaningAdditions.lua" />

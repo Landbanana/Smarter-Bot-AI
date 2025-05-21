@@ -489,6 +489,7 @@ do
 end
 
 do
+    local remove = table.remove
     local unpack = table.unpack
 
     ---@public
@@ -498,8 +499,8 @@ do
         if not self.commonModules then self.commonModules = {} end
         local requireOut = {require(requirePath)}
 
-        self.commonModules[requirePath] = requireOut[1]
-        return select(1, unpack(requireOut))
+        self.commonModules[requirePath] = remove(requireOut, 1)
+        return unpack(requireOut)
     end
 end
 
