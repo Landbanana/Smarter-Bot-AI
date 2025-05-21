@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
-  <GUI.tooltips.cleanablepetitems>Pet items can now be picked up (specifically, poop, chitin chunks, and mucus balls). They will be placed in the same type of containers as pomegrenades</GUI.tooltips.cleanablepetitems>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
@@ -37,6 +36,13 @@
   <GUI.tooltips.smarterloaditems.batterycells.minimumcondition>Minimum condition before AI ordered to load batteries will replace batteries</GUI.tooltips.smarterloaditems.batterycells.minimumcondition>
   <GUI.tooltips.smarterloaditems.oxygentanks>Apply this setting to AI loading oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks>
   <GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>
+  <GUI.tooltips.smarterpets>Various changes to the pet AI and related human bot AI</GUI.tooltips.smarterpets>
+  <GUI.tooltips.smarterpets.eatfoodininventory>Pets will eat food items that are inside of their own inventory</GUI.tooltips.smarterpets.eatfoodininventory>
+  <GUI.tooltips.smarterpets.eatfoodininventory.timebetween>How long pets should wait between checking their inventory</GUI.tooltips.smarterpets.eatfoodininventory.timebetween>
+  <GUI.tooltips.smarterpets.eatfoodininventory.overrideprotectowner>Pets normally refuse to eat when their owner is nearby. This disables that for food in the pet's inventory</GUI.tooltips.smarterpets.eatfoodininventory.overrideprotectowner>
+  <GUI.tooltips.smarterpets.botsplaywhenidle>Lets the human AI play with nearby, visible, and sad pets</GUI.tooltips.smarterpets.botsplaywhenidle>
+  <GUI.tooltips.smarterpets.botsplaywhenidle.timebetween>How long human AI should wait before checking for sad pets</GUI.tooltips.smarterpets.botsplaywhenidle.timebetween>
+  <GUI.tooltips.smarterpets.cleanableproduce>Pet produce can now be cleaned up (specifically, poop, chitin chunks, and mucus balls). They will be placed in the same type of containers as pomegrenades</GUI.tooltips.smarterpets.cleanableproduce>
   <GUI.tooltips.usefurniture>Various tweaks to let the AI use some furniture</GUI.tooltips.usefurniture>
   <GUI.tooltips.usefurniture.autousewhenidle>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.usefurniture.autousewhenidle>
   <GUI.tooltips.usefurniture.autousewhenidle.beds>Bots will use beds when they idle</GUI.tooltips.usefurniture.autousewhenidle.beds>

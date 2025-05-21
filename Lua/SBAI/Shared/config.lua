@@ -159,8 +159,6 @@ do
     ---subsection = section:CreateSection("CleanWalls")
     ---subsection:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
-    defaults:CreateSection("CleanablePetItems")
-
     --defaults:CreateSection("CombatTweaks")
 
     defaults:CreateSection("CrewStaysInSub")
@@ -216,6 +214,17 @@ do
 
     subsection = section:CreateSection("OxygenTanks")
     subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    section = defaults:CreateSection("SmarterPets")
+
+    subsection = section:CreateSection("EatFoodInInventory")
+    subsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsection:CreateOption("overrideProtectOwner", true, Config.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("BotsPlayWhenIdle")
+    subsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    section:CreateSection("CleanableProduce")
 
     section = defaults:CreateSection("UseFurniture")
     subsection = section:CreateSection("AutoUseWhenIdle")

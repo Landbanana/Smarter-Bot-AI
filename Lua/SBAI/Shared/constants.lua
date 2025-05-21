@@ -19,6 +19,7 @@ local Constants = {
         FABRICATE_ITEMS = Identifier("sbai_fabricateitems"),
         IGNORE_ROOM = Identifier("sbai_ignoreroom"),
         PERFORM = Identifier("sbai_perform"),
+        PET_PLAY = Identifier("sbai_petplay"),
         SBAI_CATEGORY = Identifier("sbai"),
         UNIGNORE_ROOM = Identifier("sbai_unignoreroom")
     }
