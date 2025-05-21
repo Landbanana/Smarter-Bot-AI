@@ -58,7 +58,7 @@ local function activateOrderGui(self)
     -- local fabricateItemsId = Identifier("sbai_fabricateitems")
     local HotPink = Color.HotPink
     local One = Vector2.One
-    local OptionNode = self.Statics["Barotrauma.CrewManager+OptionNode"]
+    local OptionNode = self:RegisterStatic("Barotrauma.CrewManager+OptionNode")
     local OrderPrefab = OrderPrefab
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
     local Sprite = Sprite

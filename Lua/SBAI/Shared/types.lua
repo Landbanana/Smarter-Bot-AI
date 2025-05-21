@@ -359,8 +359,7 @@ do
     local CreateStatic = LuaUserData.CreateStatic
     local upcall = util.debug.upcall
 
-    ---@type table<string,System.Object>
-    Types.Module.Statics = setmetatable({}, {
+    local Statics = setmetatable({}, {
         ---@param self table<string,System.Object>
         ---@param typeName string
         ---@return System.Object
@@ -373,11 +372,18 @@ do
             return static
         end
     })
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return function|T
+    function Types.Module:RegisterStatic(typeName)
+        return Statics[typeName]
+    end
 end
+
 
 do
     local G = _G
-    local Statics = Types.Module.Statics
 
     local AutoRegisterType = util.AutoRegisterType
     local DoWithTemporaryRegistrations = util.DoWithTemporaryRegistrations
@@ -416,7 +422,7 @@ do
             end
         else
             function out()
-                return getVar(Statics[globalOrTypeName], varName, varType)
+                return getVar(self:RegisterStatic(globalOrTypeName), varName, varType)
             end
         end
         
@@ -587,6 +593,7 @@ function Types.Module:Activate(namespace, options)
     if self.commonModules then
         for requirePath, commonModule in next, self.commonModules do --[[@cast commonModule Types.CommonModule]]
             local newNamespace = -namespace
+            
             newNamespace.i = 0
             newNamespace.stack = {}
 
