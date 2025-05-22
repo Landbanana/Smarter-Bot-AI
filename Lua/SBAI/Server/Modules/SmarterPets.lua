@@ -247,8 +247,8 @@ local function activateBotsPlayWhenIdle(self, options)
     local ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
 
     local Character = Character
-    local idleObjId = Identifier("idle")
-    local PET_PLAY = Constants.ID_ORDER.PET_PLAY
+    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
+    local PET_PLAY = Constants.ID_OBJECTIVE.PET_PLAY
     local Sad = self:RegisterEnumTable("Barotrauma.PetBehavior+StatusIndicatorType").Sad --[[@type Barotrauma.PetBehavior.StatusIndicatorType]]
 
     local Filter = util.itertools.FilterList

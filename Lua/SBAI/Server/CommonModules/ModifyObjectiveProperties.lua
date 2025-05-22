@@ -66,6 +66,7 @@ function mod.ModMainObjProp(mainObjId, mainObjSuffix, subObjId, propertyName, va
     mainObjData[subObjId] = value
 end
 
+---@param self Types.CommonModule
 local function activate(self)
     for propertyName, propertyData in next, allPropertyData do
         self.namespace = self.namespace + propertyName

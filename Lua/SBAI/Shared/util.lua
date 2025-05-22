@@ -488,12 +488,12 @@ function util.True()
 end
 
 do
-    local waitId = Identifier("wait")
+    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
 
     ---@param instance Barotrauma.AIObjectiveGoTo
     ---@return boolean
     function util.IsAtWaitObjective(instance)
-        return  instance.Identifier == waitId and instance.IsCloseEnough
+        return  instance.Identifier == WAIT and instance.IsCloseEnough
     end
 end
 

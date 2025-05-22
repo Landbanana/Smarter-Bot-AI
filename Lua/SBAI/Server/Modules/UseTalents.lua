@@ -201,10 +201,10 @@ do
         
         local AIObjectiveGetItem = AIObjectiveGetItem
         local AIObjectiveOperateItem = AIObjectiveOperateItem
-        local getItemId = Identifier("get item")
-        local PERFORM = Constants.ID_ORDER.PERFORM
+        local GET_ITEM = Constants.ID_OBJECTIVE_BASE.GET_ITEM
+        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
         local RangedWeapon = Components.RangedWeapon
-        local waitId = Identifier("wait")
+        local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
 
         local Distance = Vector2.Distance
         local Partial3 = util.functools.Partial3
@@ -418,7 +418,7 @@ end
 function Assistant.JengaMaster(self, options)
     local AIObjectiveGoTo = AIObjectiveGoTo
     local Character = Character
-    local goToObjId = Identifier("go to")
+    local GOTO = Constants.ID_OBJECTIVE_BASE.GOTO
     local Holdable = Components.Holdable
     local ItemContainer = Components.ItemContainer
     local Wearable = Components.Wearable

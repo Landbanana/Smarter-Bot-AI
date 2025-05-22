@@ -14,6 +14,9 @@ LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reacto
 local function activate(self)
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
 
+    local CONTAIN_ITEM = Constants.ID_OBJECTIVE_BASE.CONTAIN_ITEM
+    local OPERATE_REACTOR = Constants.ID_OBJECTIVE_BASE.OPERATE_REACTOR
+    local POWER_UP = Constants.ID_OBJECTIVE_BASE.POWER_UP
 
     local numFuelRods = self.options["numFuelRods"] --[[@type integer]]
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
@@ -62,7 +65,7 @@ local function activate(self)
             function(instance, ptable)
                 local id = instance.Identifier
 
-                if  id == operateReactorId then
+                if  id == OPERATE_REACTOR then
                     local character = instance.character
                     local characterData = allCharacterData:Get(character)
                     
@@ -128,7 +131,7 @@ local function activate(self)
 
         self:AddPatch("Barotrauma.AIObjectiveOperateItem", "GetPriority", nil,
         function(instance, ptable)
-            if  instance.Identifier == operateReactorId and
+            if  instance.Identifier == OPERATE_REACTOR and
                 allCharacterData:Get(instance.character).isAutoReactorOn and
                 getNumFuelRods(instance.Component) == numFuelRods
             then
@@ -169,16 +172,16 @@ local function activate(self)
     function(instance, ptable)
         local id = instance.Identifier
 
-        if  id == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
+        if  id == OPERATE_REACTOR then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
             local curOrder = instance.objectiveManager.CurrentOrder
 
             if  curOrder and
-                curOrder.Identifier == operateReactorId and
-                instance.Option == powerUpId
+                curOrder.Identifier == OPERATE_REACTOR and
+                instance.Option == POWER_UP
             then
                 local objective = ptable["objective"]
                 
-                if  objective.Identifier == containItemId then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
+                if  objective.Identifier == CONTAIN_ITEM then --[[@cast objective Barotrauma.AIObjectiveContainItem]]
                     objective.ConditionLevel = minimumCondition
                     objective.RemoveEmpty = true
                     objective.RemoveExistingWhenNecessary = true
@@ -203,12 +206,12 @@ local function activate(self)
     function(instance, ptable)
         local sourceObj = instance.SourceObjective
 
-        if  sourceObj.Identifier == operateReactorId then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
+        if  sourceObj.Identifier == OPERATE_REACTOR then --[[@cast instance Barotrauma.AIObjectiveOperateItem]]
             local curOrder = instance.objectiveManager.CurrentOrder
 
             if  curOrder and
-                curOrder.Identifier == operateReactorId and
-                sourceObj.Option == powerUpId
+                curOrder.Identifier == OPERATE_REACTOR and
+                sourceObj.Option == POWER_UP
             then
                 ptable.ReturnValue.TargetCondition = 1
             end

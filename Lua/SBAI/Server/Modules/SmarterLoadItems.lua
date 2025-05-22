@@ -64,7 +64,7 @@ do
     ---@param self Types.Module
     function addPatches(self)
         local ItemContainer = Components.ItemContainer
-        local loadItemsId = Identifier("loaditems")
+        local LOAD_ITEMS = Constants.ID_OBJECTIVE_BASE.LOAD_ITEMS
 
         local Contains = util.itertools.Contains
         local FindItem = util.FindItem
@@ -170,7 +170,7 @@ do
                 local curObj = ptable["objectiveManager"].CurrentObjective --[[@type Barotrauma.AIObjective?]]
 
                 if  curObj and
-                    curObj.Identifier == loadItemsId
+                    curObj.Identifier == LOAD_ITEMS
                 then --[[@cast curObj Barotrauma.AIObjectiveLoadItems]]
                     for loadData in activeLoadData do
                         local _, itemTag, containableTag, refillerTag, _ = unpack(loadData) --[[@type Barotrauma.Identifier, Barotrauma.Identifier, Barotrauma.Identifier, Barotrauma.Identifier, integer]]
@@ -206,7 +206,7 @@ do
             local curObj = ptable["objectiveManager"].CurrentObjective --[[@type Barotrauma.AIObjective?]]
 
             if  curObj and
-                curObj.Identifier == loadItemsId
+                curObj.Identifier == LOAD_ITEMS
             then --[[@cast curObj Barotrauma.AIObjectiveLoadItems]]
                 if ptable["item"].IsFullCondition then
                     for loadData in activeLoadData do

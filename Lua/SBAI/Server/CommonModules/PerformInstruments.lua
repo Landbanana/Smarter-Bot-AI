@@ -51,9 +51,8 @@ local function activate(self)
 
     local Aim = InputType.Aim
     local hornItemId = Identifier("hornitem")
-    local idleObjId = Identifier("idle")
-    local waitObjId = Identifier("wait")
-
+    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
+    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
