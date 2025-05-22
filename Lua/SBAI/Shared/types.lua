@@ -294,6 +294,7 @@ end
 ---@field private commonModules table<string,Types.CommonModule>
 ---@field private hooks {identifier:string, name:string}[]
 ---@field private initializers fun()[]
+---@field private methodRegistry Types.Set<string>
 ---@field private patches {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}[]
 ---@field private tables {t:table, flags:number}[]
 ---@field private activate fun(self:Types.Module)
@@ -557,6 +558,23 @@ do
 end
 
 do
+    local AddMethod = util.AddMethod
+    local new = Types.Set.new
+
+    ---@generic T
+    ---@param className `T`
+    ---@param methodName string
+    ---@param method fun(instance:T, ...):...
+    function Types.Module:AddMethod(className, methodName, method)
+        if not self.methodRegistry then
+            self.methodRegistry = new()
+        end
+        AddMethod(className, methodName, method)
+        return self.methodRegistry:Add(className.."."..Constants.Acronym.."_"..methodName)
+    end
+end
+
+do
     local defaultNestedMethodNames = Constants.defaultNestedMethodNames
 
     CheckNestedMethodName = util.debug.CheckNestedMethodName
@@ -646,6 +664,9 @@ do
 end
 
 do
+    local RemoveHook = Hook.Remove
+    local RemoveMethod = util.RemoveMethod
+    local RemovePatch = Hook.RemovePatch
     local UnregisterTable = util.UnregisterTable
 
     ---@public
@@ -662,13 +683,21 @@ do
 
             if self.hooks then
                 for v in self.hooks do --[[@cast v {name:string, identifier:string}]]
-                    Hook.Remove(v.name, v.identifier)
+                    RemoveHook(v.name, v.identifier)
+                end
+            end
+
+            if self.methodRegistry then
+                for v in next, self.methodRegistry do --[[@cast v string]]
+                    local className, methodName = v:match("^(.+)%.([%w_]+)$") --[[@type string,string]]
+
+                    RemoveMethod(className, methodName)
                 end
             end
 
             if self.patches then
                 for v in self.patches do --[=[@cast v {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}]=]
-                    Hook.RemovePatch(v.identifier, v.className, v.methodName, v.parameterTypes, v.hookType)
+                    RemovePatch(v.identifier, v.className, v.methodName, v.parameterTypes, v.hookType)
                 end
             end
 
@@ -679,7 +708,7 @@ do
             end
 
             if self.deactivate then
-                return self:pcall("deactivate", self.deactivate)
+                self:pcall("deactivate", self.deactivate)
             end
 
             self.namespace = nil
@@ -688,6 +717,7 @@ do
         self.commonModules = nil
         self.initializers = nil
         self.hooks = nil
+        self.methodRegistry = nil
         self.patches = nil
         self.tables = nil
     end

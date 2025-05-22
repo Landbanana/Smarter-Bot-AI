@@ -1,3 +1,4 @@
+local Constants = require("SBAI.Shared.constants")
 local Types = require("SBAI.Shared.types")
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
@@ -11,9 +12,8 @@ LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reacto
 
 ---@param self Types.Module
 local function activate(self)
-    local containItemId = Identifier("contain item")
-    local operateReactorId = Identifier("operatereactor")
-    local powerUpId = Identifier("powerup")
+    self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+
 
     local numFuelRods = self.options["numFuelRods"] --[[@type integer]]
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
@@ -24,10 +24,8 @@ local function activate(self)
     local function getNumFuelRods(instance)
         local i = 0
 
-        for item in instance.Item.OwnInventory.GetAllItems(false) do
-            if item.ConditionPercentage > minimumCondition then
-                i = i + 1
-            end
+        for item in instance.Item.OwnInventory:SBAI_findAllItems(false, false, function(item) return item.ConditionPercentage > minimumCondition end) do
+            i = i + 1
         end
         return i
     end

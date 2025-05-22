@@ -20,6 +20,8 @@ local _chairItems
 ---@param ids table<FURNITURE,Set>
 local function activateAutoUseWhenIdle(self, options, ids)
     local Item = Item
+    
+    local FilterList = util.itertools.FilterList
 
     self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
     function(strongRef)
@@ -41,10 +43,8 @@ local function activateAutoUseWhenIdle(self, options, ids)
     end
 
     self:AddInit(function()
-        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-            if idleFurnitureIds[item.Prefab.Identifier] then
-                _chairItems.Add(item)
-            end
+        for item in FilterList(Item.ItemList, function(item) return idleFurnitureIds[item.Prefab.Identifier] end) do
+            _chairItems.Add(item)
         end
     end)
 end
@@ -83,6 +83,7 @@ local function activate(self)
 
         local Any = util.itertools.Any
         local Contains = util.itertools.Contains
+        local FilterList = util.itertools.FilterList
         local new = Types.Set.new
         local xPath = util.xPath
 
@@ -111,11 +112,10 @@ local function activate(self)
 
                 local idSet = new()
 
-                for prefab in Prefabs do
-                    if predicate(prefab) then
-                        idSet:Add(prefab.Identifier)
-                    end
-                end
+                idSet:Update(FilterList(Prefabs, predicate))
+                -- for prefab in FilterList(Prefabs, predicate) do
+                --     idSet:Add(prefab.Identifier)
+                -- end
                 t[k] = idSet
                 return t[k]
             end
@@ -134,8 +134,8 @@ local function deactivate(self)
         local chairId = Identifier("chair")
 
         _chairItems.Clear()
-        for item in Item.ItemList do --[[@cast item Barotrauma.Item]]
-            if item.Prefab.Identifier == chairId then _chairItems.Add(item) end
+        for item in util.itertools.FilterList(Item.ItemList, function(item) return item.Prefab.Identifier == chairId end) do
+            _chairItems.Add(item)
         end
         _chairItems = nil
     end

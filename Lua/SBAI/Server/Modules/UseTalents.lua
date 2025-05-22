@@ -36,7 +36,7 @@ local activateInstrumentTalent
 
 do
     local allCharacterInstrumentData --[[@type Types.TimedCharacterData]]
-    local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Barotrauma.Identifier[]}}>]]
+    local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}>]]
     local allInstrumentObjectiveData
 
     local makeOperateObjective
@@ -44,7 +44,7 @@ do
 
     do
         local AIObjectiveOperateItem = AIObjectiveOperateItem
-        local PERFORM = Constants.ID_ORDER.PERFORM
+        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
 
         ---@param character Barotrauma.Character
         ---@param itemComponent Barotrauma.Items.Components.ItemComponent
@@ -93,12 +93,13 @@ do
 
     local function instrumentSetup(self)
         self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
+        self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
         
         local Aim = InputType.Aim
         local Identifier = Identifier
         local ItemPrefab = ItemPrefab
         local MAX_FLOAT = Constants.MAX_FLOAT
-        local PERFORM = Constants.ID_ORDER.PERFORM
+        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
         local Shoot = InputType.Shoot
         local TalentPrefab = TalentPrefab
         local traitorMissionItemId = Identifier("traitormissionitem")
@@ -108,9 +109,9 @@ do
 
         allCharacterInstrumentData = Types.TimedCharacterData.new(self)
 
-        ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Barotrauma.Identifier[]}}
+        ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}
         allInstrumentTalentData = setmetatable({}, {
-            ---@param t {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Barotrauma.Identifier[]}}
+            ---@param t {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}
             ---@param k Barotrauma.Identifier
             __index=function(t, k)
                 local prefab = TalentPrefab.TalentPrefabs[k]
@@ -122,25 +123,33 @@ do
                 local afflictionId = xPath(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
                 if not afflictionId then error("Unable to find afflictions for talent: "..tostring(k), 2) end
                 
-                local instrumentIds = abilityConditionItem.GetAttributeIdentifierArray("identifiers")
-                if not instrumentIds then
+                local instrumentIds = Types.Set.new()
+
+                
+
+                do
+                    local ids = abilityConditionItem.GetAttributeIdentifierArray("identifiers")
+
+                    if ids then
+                        instrumentIds:Update(ids)
+                    end
+                end
+                
+                if instrumentIds:IsEmpty() then
                     local tags = abilityConditionItem.GetAttributeIdentifierArray("tags")
-                    local i = 0
                     
-                    instrumentIds = {}
                     for prefab in ItemPrefab.Prefabs do
                         for tag in tags do --[[@cast tag Barotrauma.Identifier]]
                             if  Contains(prefab.Tags, tag) and
                                 not Contains(prefab.Tags, traitorMissionItemId)
                             then
-                                i = i + 1
-                                instrumentIds[i] = prefab.Identifier
+                                instrumentIds:Add(prefab.Identifier)
                                 break
                             end
                         end
                     end
                 end
-                if #instrumentIds <= 0 then error("Unable to find instruments for talent: "..tostring(k), 2) end
+                if instrumentIds:IsEmpty() then error("Unable to find instruments for talent: "..tostring(k), 2) end
                 local maxDistance = characterAbilityApplyStatusEffectsToAllies.GetAttributeFloat("maxdistance", MAX_FLOAT)
                 local allowSelf = characterAbilityApplyStatusEffectsToAllies.GetAttributeBool("allowself", true)
 
@@ -174,7 +183,7 @@ do
                 if curObjective then
                     local curSubObjective = curObjective.CurrentSubObjective
 
-                    if curSubObjective and
+                    if  curSubObjective and
                         curSubObjective.Identifier == PERFORM
                     then
                         character.ClearInput(Aim)
@@ -199,14 +208,14 @@ do
 
         local Distance = Vector2.Distance
         local Partial3 = util.functools.Partial3
-        local TryAddSubObjective = util.TryAddSubObjective
+        local Partial5 = util.functools.Partial5
 
         local stopAfterBuffed = options["stopAfterBuffed"] --[[@type boolean]]
         local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
         local afflictionId --[[@type Barotrauma.Identifier]]
         local allowSelf --[[@type boolean]]
         local maxDistance --[[@type number]]
-        local validInstruments --[=[@type Barotrauma.Identifier[]]=]
+        local validInstruments --[[@type Types.Set<Barotrauma.Identifier>]]
 
         do
             local instrumentTalentData = allInstrumentTalentData[talentId]
@@ -240,27 +249,23 @@ do
             anyNeedBuffFull = Partial3(anyNeedBuff, afflictionId, maxDistance, allowSelf)
 
             self:AddPatch(objectiveData.fullTypeName, "Act", nil,
+            ---@param instance Barotrauma.AIObjective
+            ---@param ptable Barotrauma.LuaCsHook.ParameterTable
             function(instance, ptable)
                 local character = instance.character --[[@type Barotrauma.Character]]
                 
-                if  character.HasTalent(talentId) then
+                if character.HasTalent(talentId) then
                     local characterData = allCharacterInstrumentData:Get(character)
-                    local curSubObjective = instance.CurrentSubObjective --[[@type Barotrauma.AIObjective]]
-                
+                    --local curSubObjective = instance.CurrentSubObjective --[[@type Barotrauma.AIObjective]]
+
                     if  characterData.timer:Update(ptable["deltaTime"]) and
-                        prePatch(instance) and
-                        not characterData["getItemObjective"] and
-                        (not curSubObjective or
-                        curSubObjective.Identifier ~= getItemId)
+                        prePatch(instance)
                     then
-                        local performObjective = characterData["performObjective"] --[[@type Barotrauma.AIObjectiveOperateItem]]
-                        
-                        if  not stopAfterBuffed or
-                            anyNeedBuffFull(character) or
-                            (not performObjective and
-                            curSubObjective and
-                            curSubObjective.Identifier == PERFORM)
-                        then
+                        local inventory = character.Inventory
+                        local instrument = characterData["instrument"] or
+                            inventory:SBAI_findAllItems(nil, true, function(item) return validInstruments[item.Prefab.Identifier] end)()
+
+                        if not instrument then
                             local function constructor()
                                 local objective = AIObjectiveGetItem(character, validInstruments, instance.objectiveManager, true, true)
 
@@ -269,65 +274,99 @@ do
                                 objective.AllowStealing = false
                                 objective.AllowVariants = true
 
-                                if instance.Identifier == waitId then
+                                if instance.Identifier == WAIT then
                                     objective.AbortCondition = abortWaitGetItem
                                 end
+
+                                local cleanup = Partial3(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGetItem)
+
+
+                                objective.Completed.add(function()
+                                    characterData["instrument"] = objective.TargetItem
+                                    return cleanup()
+                                end)
+                                objective.Abandoned.add(function()
+                                    return cleanup(characterData, "instrument")
+                                end)
                                 return objective
                             end
+                            ptable.PreventExecution = instance:SBAI_tryAddSubObjective(nil, nil, GET_ITEM, false, true, constructor)
+                        else
+                            local function constructor()
+                                local objective = AIObjectiveOperateItem(instrument.GetComponent(RangedWeapon), character, instance.objectiveManager, instrument.Prefab.Identifier, true)
 
-                            ---@param objective Barotrauma.AIObjectiveGetItem
-                            local function onCompletedGenerator(objective)
-                                return function()
-                                    characterData["getItemObjective"] = nil
-                                    instance.RemoveSubObjective(AIObjectiveGetItem, objective)
-                                    
-                                    local item = objective.TargetItem
+                                objective.Identifier = PERFORM
 
-                                    if item == nil then return end
-                                    
-                                    local function operateConstructorFull()
-                                        return makeOperateObjective(character, item.GetComponent(RangedWeapon), item.Prefab.Identifier, instance.objectiveManager)
-                                    end
+                                local cleanup = Partial5(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveOperateItem, characterData, "performObjective")
 
-                                    ---@param subObjective Barotrauma.AIObjectiveOperateItem
-                                    ---@return fun()
-                                    local function cleanupGenerator(subObjective)
-                                        return function()
-                                            instance.RemoveSubObjective(AIObjectiveOperateItem, subObjective)
-                                            characterData["performObjective"] = nil
-                                        end
-                                    end
-                                    
-                                    for subObjective in instance.subObjectives do --[[@cast subObjective Barotrauma.AIObjective]]
-                                        if subObjective.Identifier == PERFORM then
-                                            performObjective = subObjective
-                                            break
-                                        end
-                                    end
-                                    _, characterData["performObjective"] = TryAddSubObjective(instance, performObjective, operateConstructorFull, cleanupGenerator, cleanupGenerator)
-                                end
+                                objective.Completed.add(cleanup)
+                                objective.Abandoned.add(cleanup)
+                                return objective
                             end
-
-                            local function onAbandonGenerator(objective)
-                                return function()
-                                    characterData["getItemObjective"] = nil
-                                    instance.RemoveSubObjective(AIObjectiveGetItem, objective)
-                                end
-                            end
-
-                            local getItemObjective
-
-                            for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                                if objective.Identifier == "get item" then
-                                    getItemObjective = objective
-                                    break
-                                end
-                            end
-                            _, characterData["getItemObjective"] = TryAddSubObjective(instance, getItemObjective, constructor, onCompletedGenerator, onAbandonGenerator)
-                        elseif performObjective then
-                            performObjective.Abandon = true
+                            
+                            ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "performObjective", PERFORM, true, false, ((not stopAfterBuffed) or anyNeedBuffFull(character)) and constructor or nil)
                         end
                     end
+                
+                    -- if  characterData.timer:Update(ptable["deltaTime"]) and
+                    --     prePatch(instance) and
+                    --     not characterData["getItemObjective"] and
+                    --     (not curSubObjective or
+                    --     curSubObjective.Identifier ~= GET_ITEM)
+                    -- then
+                    --     local performObjective = characterData["performObjective"] --[[@type Barotrauma.AIObjectiveOperateItem]]
+                        
+                    --     if  not stopAfterBuffed or
+                    --         anyNeedBuffFull(character) or
+                    --         (not performObjective and
+                    --         curSubObjective and
+                    --         curSubObjective.Identifier == PERFORM)
+                    --     then
+                    --         local function constructor()
+                    --             local objective = AIObjectiveGetItem(character, validInstruments, instance.objectiveManager, true, true)
+
+                    --             objective.AllowDangerousPressure = false
+                    --             objective.AllowToFindDivingGear = false
+                    --             objective.AllowStealing = false
+                    --             objective.AllowVariants = true
+
+                    --             if instance.Identifier == WAIT then
+                    --                 objective.AbortCondition = abortWaitGetItem
+                    --             end
+
+                    --             local cleanup = Partial5(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGetItem, characterData, "getItemObjective")
+
+                    --             objective.Completed.add(
+                    --                 function()
+                    --                     cleanup()
+                                        
+                    --                     local item = objective.TargetItem
+
+                    --                     if item == nil then return end
+                                        
+                    --                     local function operateConstructorFull()
+                    --                         local subObj = AIObjectiveOperateItem(item.GetComponent(RangedWeapon), character, instance.objectiveManager, item.Prefab.Identifier, true)
+
+                    --                         subObj.Identifier = PERFORM
+
+                    --                         local subCleanup = Partial5(instance.SBAI_cleanupSubObj, instance, subObj, AIObjectiveOperateItem, characterData, "performObjective")
+
+                    --                         subObj.Completed.add(subCleanup)
+                    --                         subObj.Abandoned.add(subCleanup)
+                    --                         return subObj
+                    --                     end
+                                        
+                    --                     instance:SBAI_tryAddSubObjective(characterData, "performObjective", true, false, operateConstructorFull)
+                    --                 end)
+
+                    --             objective.Abandoned.add(cleanup)
+                    --             return objective
+                    --         end
+                    --         ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "getItemObjective", false, true, constructor)
+                    --     elseif performObjective then
+                    --         performObjective.Abandon = true
+                    --     end
+                    -- end
                 end
             end, Hook.HookMethodType.Before)
             ::continue::
@@ -388,7 +427,6 @@ function Assistant.JengaMaster(self, options)
     local Any = util.itertools.Any
     local FindItems = util.FindItems
     local GetClosest = util.GetClosest
-    local TryAddSubObjective = util.TryAddSubObjective
 
     local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
     local untouchedContainers = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
@@ -472,22 +510,8 @@ function Assistant.JengaMaster(self, options)
                         objective.Abandoned.add(cleanup)
                         return objective
                     end
-
-                    local goToObj --[[@type Barotrauma.AIObjectiveGoTo]]
-
-                    for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                        if objective.Identifier == goToObjId then
-                            goToObj = objective
-                            break
-                        end
-                    end
                     
-                    local success, newObj = TryAddSubObjective(instance, goToObj, constructor)
-
-                    if success then
-                        ptable.PreventExecution = true
-                        characterData["goToObj"] = newObj
-                    end
+                    ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "goToObj", GOTO, false, true, constructor)
                 end
             end
         end

@@ -185,10 +185,10 @@ do
     local yield = coroutine.yield
     
     ---@generic T
-    ---@param t T[]
+    ---@param t T[]|fun():T?
     ---@param p fun(v:T):boolean
     ---@return fun():T?
-    function util.itertools.Filter(t, p)
+    function util.itertools.FilterList(t, p)
         return wrap(
         function()
             for v in t do
@@ -210,6 +210,58 @@ function util.itertools.ToList(func)
     for v in func do
         i = i + 1
         t[i] = v
+    end
+    return t
+end
+
+do
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+    
+    ---@generic T1,T2
+    ---@param t T1[]|fun():T1?
+    ---@param f fun(v:T1):T2
+    ---@return fun():T2?
+    function util.itertools.PostList(t, f)
+        return wrap(
+        function()
+            for v in t do
+                yield(f(v))
+            end
+        end)
+    end
+end
+
+do
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+    
+    ---@generic K
+    ---@generic V
+    ---@param t table<K,V>|fun():(K?,V?)
+    ---@param p fun(k:K, v:V):boolean
+    ---@return fun():(K?,V?)
+    function util.itertools.FilterTable(t, p)
+        return wrap(
+        function()
+            for k, v in next, t do
+                if p(k, v) then
+                    yield(k, v)
+                end
+            end
+        end)
+    end
+end
+
+---@generic K
+---@generic V
+---@param func fun():(K?,V?)
+---@return table<K,V>
+function util.itertools.ToTable(func)
+    local t = {}
+
+    for k, v in func do
+        t[k] = v
     end
     return t
 end
@@ -434,6 +486,7 @@ end
 function util.True()
     return true
 end
+
 do
     local waitId = Identifier("wait")
 
@@ -487,6 +540,20 @@ end
 function util.functools.Partial4(func, a1, a2, a3, a4)
     return function(...)
         return func(a1, a2, a3, a4, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@param a4 T4
+---@param a5 T5
+---@return fun(a6:T6,a7:T7,a8:T8,a9:T9):R
+function util.functools.Partial5(func, a1, a2, a3, a4, a5)
+    return function(...)
+        return func(a1, a2, a3, a4, a5, ...)
     end
 end
 
@@ -888,18 +955,102 @@ do
     end
 end
 
-
+---@param descriptor MoonSharp.Interpreter.Interop.IUserDataDescriptor
+---@return System.Type
+function util.DescriptorToType(descriptor)
+    return descriptor.Type
+end
 
 do
     local Descriptors = Descriptors
     
+    local AddMethod = LuaUserData.AddMethod
+    local DescriptorToType = util.DescriptorToType
+    local FilterTable = util.itertools.FilterTable
     local IsRegistered = LuaUserData.IsRegistered
+    local HasMember = LuaUserData.HasMember
+    local IsTargetType = LuaUserData.IsTargetType
     local RegisterType = LuaUserData.RegisterType
+    local RemoveMember = LuaUserData.RemoveMember
 
-    ---@param typeName string
+    local MethodData
+
+    do
+        local mt = {
+            __index=function(t, k)
+                local typeData = {}
+
+                t[k] = typeData
+                return typeData
+            end
+        }
+        ---@type {[string]:{[string]:fun(...):...}}
+        MethodData = setmetatable({}, {
+            __index=function(t, k)
+                local typeData = setmetatable({}, mt)
+
+                t[k] = typeData
+                return typeData
+            end
+        })
+    end
+
+    ---@param className string
     ---@return MoonSharp.Interpreter.Interop.IUserDataDescriptor
-    function util.AutoRegisterType(typeName)
-        return IsRegistered(typeName) and Descriptors[typeName] or upcall(RegisterType, typeName)
+    local function AutoRegisterType(className)
+        local descriptor
+
+        if IsRegistered(className) then
+            descriptor = Descriptors[className]
+        else
+            descriptor = upcall(RegisterType, className)
+
+            local type = descriptor.Type
+
+            for typeName, typeMethodData in FilterTable(MethodData, function(typeName, typeMethodData) return IsTargetType(type, typeName) end) do
+                for methodName, method in next, typeMethodData do
+                    AddMethod(descriptor, methodName, method)
+                end
+            end
+        end
+        return descriptor
+    end
+
+    util.AutoRegisterType = AutoRegisterType
+
+    ---@generic T
+    ---@param className `T`
+    ---@param methodName string
+    ---@param method fun(instance:T, ...):...
+    function util.AddMethod(className, methodName, method)
+        upcall(AutoRegisterType, className)
+
+        methodName = Constants.Acronym.."_"..methodName
+        for typeName, descriptor in FilterTable(Descriptors,
+        function(typeName, descriptor)
+            local success, type = pcall(DescriptorToType, descriptor)
+            
+            return success and IsTargetType(type, className)
+        end) do
+            AddMethod(descriptor, methodName, method)
+        end
+        MethodData[className][methodName] = method
+    end
+
+    ---@param className string
+    ---@param methodName string
+    function util.RemoveMethod(className, methodName)
+        for typeName, descriptor in FilterTable(Descriptors,
+        function(typeName, descriptor)
+            local success, type = pcall(DescriptorToType, descriptor)
+            
+            return success and
+                IsTargetType(type, className) and
+                HasMember(type, methodName)
+        end) do
+            RemoveMember(descriptor, methodName)
+        end
+        MethodData[className][methodName] = nil
     end
 end
 
@@ -1178,6 +1329,8 @@ do
     local Game = Game
     local XElement = XElement
 
+    local FilterList = util.itertools.FilterList
+
     local characterOrders
     
     function util.SaveCharacterOrders()
@@ -1203,14 +1356,14 @@ do
 
         if not session then return end
 
-        for character in Character.CharacterList do --[[@cast character Barotrauma.Character]]
-            local charInfo = character.Info
-            
-            if charInfo then
-                local orders = characterOrders[charInfo.Name]
-                
-                if orders then CharacterInfo.ApplyOrderData(character, orders) end
-            end
+        for character in FilterList(Character.CharacterList,
+            function(character)
+                local charInfo = character.Info
+
+                return charInfo and
+                    characterOrders[charInfo.Name]
+            end) do
+            CharacterInfo.ApplyOrderData(character, characterOrders[character.Info.Name])
         end
         characterOrders = nil
     end

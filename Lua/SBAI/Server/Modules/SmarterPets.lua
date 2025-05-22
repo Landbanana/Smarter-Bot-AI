@@ -19,13 +19,15 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems
 ---@param self Types.Module
 ---@param options table
 local function activateEatFoodInInventory(self, options)
+    self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+    
     local AIState = self:RegisterEnumTable("Barotrauma.AIState")
 
     local Eat = AIState.Eat
     -- local Follow = AIState.Follow
     -- local Protect = options["overrideProtectOwner"] and AIState.Protect or nil
     
-    local Filter = util.itertools.Filter
+    local Filter = util.itertools.FilterList
     local ToList = util.itertools.ToList
     
     local allPetData = Types.TimedCharacterData.new(self, options["timeBetween"])
@@ -240,26 +242,18 @@ end
 ---@param self Types.Module
 ---@param options table
 local function activateBotsPlayWhenIdle(self, options)
+    self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
+    local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
+    local ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
+
     local Character = Character
     local idleObjId = Identifier("idle")
     local PET_PLAY = Constants.ID_ORDER.PET_PLAY
     local Sad = self:RegisterEnumTable("Barotrauma.PetBehavior+StatusIndicatorType").Sad --[[@type Barotrauma.PetBehavior.StatusIndicatorType]]
 
-    local Filter = util.itertools.Filter
+    local Filter = util.itertools.FilterList
     local GetClosest = util.GetClosest
     local ToList = util.itertools.ToList
-    local TryAddSubObjective = util.TryAddSubObjective
-
-    --local ModObjProp
-    local ModMainObjProp
-    
-    do
-        local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
-
-        --ModObjProp = mod.ModObjProp --[[@type fun(objId:Barotrauma.Identifier, objSuffix:string, propertyName:string, value:any)]]
-        ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
-
-    end
 
     local allCharacterData = Types.TimedCharacterData.new(self, options["timeBetween"])
 
@@ -299,40 +293,21 @@ local function activateBotsPlayWhenIdle(self, options)
                         return petbehavior.Happiness > unhappyThreshold
                     end
 
-                    local function cleanup()
-                        characterData["petplayObj"] = nil
-                        instance.RemoveSubObjective(AIObjectiveGoTo, objective)
-                    end
-
                     objective.Completed.add(
                     function()
                         closestSadPet.AIController.PetBehavior.Play(character)
-                        return cleanup()
+                        return instance:SBAI_cleanupSubObj(objective, AIObjectiveGoTo, characterData, "petplayObj")
                     end)
-                    objective.Abandoned.add(cleanup)
+                    objective.Abandoned.add(function() return instance:SBAI_cleanupSubObj(objective, AIObjectiveGoTo, characterData, "petplayObj") end)
                     return objective
                 end
 
-                local petplayObj --[[@type Barotrauma.AIObjectiveGoTo]]
-
-                for objective in instance.subObjectives do --[[@cast objective Barotrauma.AIObjective]]
-                    if objective.Identifier == PET_PLAY then
-                        petplayObj = objective
-                        break
-                    end
-                end
-                
-                local success, newObj = TryAddSubObjective(instance, petplayObj, constructor)
-
-                if success then
-                    ptable.PreventExecution = true
-                    characterData["petplayObj"] = newObj
-                end
+                ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "petplayObj", PET_PLAY, true, true, constructor)
             end
         end
     end, Hook.HookMethodType.Before)
 
-    ModMainObjProp(idleObjId, "Idle", PET_PLAY, "ConcurrentObjectives", true)
+    ModMainObjProp(IDLE, "Idle", PET_PLAY, "ConcurrentObjectives", true)
 end
 
 local petItemIds

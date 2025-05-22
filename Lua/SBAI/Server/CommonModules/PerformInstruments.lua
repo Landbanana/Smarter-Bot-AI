@@ -45,6 +45,10 @@ end
 
 ---@param self Types.CommonModule
 local function activate(self)
+    local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
+    local ModObjProp = mod.ModObjProp --[[@type fun(objId:Barotrauma.Identifier, objSuffix:string, propertyName:string, value:any)]]
+    local ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
+
     local Aim = InputType.Aim
     local hornItemId = Identifier("hornitem")
     local idleObjId = Identifier("idle")
@@ -56,17 +60,6 @@ local function activate(self)
     local Timer = Timer
 
     local Contains = util.itertools.Contains
-
-    local ModObjProp
-    local ModMainObjProp
-    
-    do
-        local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
-
-        ModObjProp = mod.ModObjProp --[[@type fun(objId:Barotrauma.Identifier, objSuffix:string, propertyName:string, value:any)]]
-        ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
-
-    end
 
     self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
     function(instance, ptable)
@@ -89,6 +82,7 @@ local function activate(self)
             then
                 Timer.Wait(function() objective.Abandon = true end, 1000)
             end
+            
             return true
         end
     end, Hook.HookMethodType.Before)
@@ -107,11 +101,11 @@ local function activate(self)
     --     end
     -- end, Hook.HookMethodType.Before)
 
-    ModMainObjProp(idleObjId, "Idle", PERFORM, "ConcurrentObjectives", true)
-    ModMainObjProp(waitObjId, "GoTo", PERFORM, "ConcurrentObjectives", true)
-    ModMainObjProp(idleObjId, "Idle", PERFORM, "AllowAutomaticItemUnequipping", false)
+    ModMainObjProp(IDLE, "Idle", PERFORM, "ConcurrentObjectives", true)
+    ModMainObjProp(WAIT, "GoTo", PERFORM, "ConcurrentObjectives", true)
+    ModMainObjProp(IDLE, "Idle", PERFORM, "AllowAutomaticItemUnequipping", false)
 
-    ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
+    --ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
     ModObjProp(PERFORM, "OperateItem", "AllowMultipleInstances", false)
 
     -- self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
