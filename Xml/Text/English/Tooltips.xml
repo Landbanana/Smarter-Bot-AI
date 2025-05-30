@@ -18,6 +18,10 @@
   <GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while idling</GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>
   <GUI.tooltips.replenishinventory.wait>Allow an AI that is set to the "wait" order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.wait>
   <GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while set to wait (THEY WILL BRIEFLY LEAVE THEIR POST)</GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>
+  <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
+  <GUI.tooltips.replenishinventory.fillempty>Allow bots to determine "empty" containers (guns without ammo, welding tools without fuel, etc.) and determine what needs to fill it</GUI.tooltips.replenishinventory.fillempty>
+  <GUI.tooltips.replenishinventory.forcesameitemtype>Only replace items with the same exact item type (regular Battery Cells will NOT replace Fulgurium Batter Cells, for example)</GUI.tooltips.replenishinventory.forcesameitemtype>
+  <GUI.tooltips.replenishinventory.forcequalitygeq>The replacement item must be of equal or greater quality than the existing item</GUI.tooltips.replenishinventory.forcequalitygeq>
   <GUI.tooltips.replenishinventory.ammunition>Let the AI replenish their magazine ammunition (SMG, HMG)</GUI.tooltips.replenishinventory.ammunition>
   <GUI.tooltips.replenishinventory.ammunition.minimumcondition>Minimum percentage of bullets left in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumcondition>
   <GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>Minimum percentage of bullets left in items equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>
@@ -30,7 +34,6 @@
   <GUI.tooltips.replenishinventory.weldingfuel>Let the AI replenish their welding fuel tanks</GUI.tooltips.replenishinventory.weldingfuel>
   <GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>Minimum condition of welding fuel tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>
   <GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>Minimum condition of welding fuel tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>
-  <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
   <GUI.tooltips.smarterloaditems>AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery</GUI.tooltips.smarterloaditems>
   <GUI.tooltips.smarterloaditems.batterycells>Apply this setting to AI loading battery cells</GUI.tooltips.smarterloaditems.batterycells>
   <GUI.tooltips.smarterloaditems.batterycells.minimumcondition>Minimum condition before AI ordered to load batteries will replace batteries</GUI.tooltips.smarterloaditems.batterycells.minimumcondition>
