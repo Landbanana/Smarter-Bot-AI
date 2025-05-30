@@ -11,7 +11,6 @@ local function activate(self)
         local wrap = coroutine.wrap
         local yield = coroutine.yield
 
-
         ---@param instance Barotrauma.Inventory
         ---@param checkForDuplicates boolean?
         ---@param recursive boolean?

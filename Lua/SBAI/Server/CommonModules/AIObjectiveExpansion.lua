@@ -25,15 +25,19 @@ local function activate(self)
         ---@param subObj Barotrauma.AIObjective
         ---@param subObjType Barotrauma.AIObjective
         ---@param t table?
-        ---@param k string?
-        local function cleanupSubObj(instance, subObj, subObjType, t, k)
-            if t then t[k] = nil end
+        ---@param ... string?
+        local function cleanupSubObj(instance, subObj, subObjType, t, ...)
+            if t then
+                for k in {...} do
+                    t[k] = nil
+                end
+            end
             return instance.RemoveSubObjective(subObjType, subObj)
         end
 
         AddMethod("cleanupSubObj", cleanupSubObj)
         ---@class Barotrauma.AIObjective
-        ---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, k:string?)
+        ---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, ...:string?)
     end
 
     do
@@ -105,6 +109,20 @@ local function activate(self)
         AddMethod("tryAddSubObjective", tryAddSubObjective)
         ---@class Barotrauma.AIObjective
         ---@field public SBAI_tryAddSubObjective fun(instance:Barotrauma.AIObjective, t:table<string,Barotrauma.AIObjective?>?, k:string?, objId:Barotrauma.Identifier?, stopIdDuplicate:boolean?, stopBaseIdDuplicate:boolean?, constructor:fun():(Barotrauma.AIObjective)):boolean
+    end
+
+    do
+        local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
+
+        ---@param instance Barotrauma.AIObjectiveGoTo
+        ---@return boolean
+        local function isAtWaitObjective(instance)
+            return instance.Identifier == WAIT and
+                instance.IsCloseEnough
+        end
+        self:AddMethod("Barotrauma.AIObjectiveGoTo", "isAtWaitObjective", isAtWaitObjective)
+        ---@class Barotrauma.AIObjectiveGoTo
+        ---@field public SBAI_isAtWaitObjective fun(instance:Barotrauma.AIObjectiveGoTo):boolean
     end
 end
 
