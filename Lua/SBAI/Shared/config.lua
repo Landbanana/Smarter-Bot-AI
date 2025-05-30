@@ -189,6 +189,9 @@ do
     subsection:CreateOption("onlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
 
     section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("fillEmpty", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("forceSameItemType", false, Config.OPTION_TYPE.boolean)
+    section:CreateOption("forceQualityGEQ", true, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Ammunition")
     subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
@@ -218,11 +221,11 @@ do
     section = defaults:CreateSection("SmarterPets")
 
     subsection = section:CreateSection("EatFoodInInventory")
-    subsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsection:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
     subsection:CreateOption("overrideProtectOwner", true, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("BotsPlayWhenIdle")
-    subsection:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsection:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section:CreateSection("CleanableProduce")
 

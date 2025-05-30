@@ -18,7 +18,7 @@ LuaUserData.RegisterType("System.Func`2[[Barotrauma.PathNode, Barotrauma],[Syste
 local function activateCleanWalls(self, options)
     local MIN_ALPHA = 0.001
     
-    local allCharacterData = Types.TimedCharacterData.new(self, options["timeBetween"])
+    local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
     local allHullData = self:RegisterTable(nil, "ROUND_END") --[[@type {[Barotrauma.Hull]:{decals:table<Barotrauma.OrderTarget,Barotrauma.Decal>, n:integer}}]]
 
     setmetatable(allHullData, {
@@ -38,12 +38,12 @@ local function activateCleanWalls(self, options)
     local function resetCharacterData(character)
         local characterData = allCharacterData[character]
 
-        characterData["orderTarget"] = nil
-        characterData["target"] = nil
-        characterData["findSprayerObj"] = nil
-        characterData["refuelObj"] = nil
-        characterData["goToObj"] = nil
-        characterData["sprayObj"] = nil
+        characterData.data["orderTarget"] = nil
+        characterData.data["target"] = nil
+        characterData.data["findSprayerObj"] = nil
+        characterData.data["refuelObj"] = nil
+        characterData.data["goToObj"] = nil
+        characterData.data["sprayObj"] = nil
     end
 
     do

@@ -1,4 +1,3 @@
-local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
@@ -20,8 +19,6 @@ local _chairItems
 ---@param ids table<FURNITURE,Set>
 local function activateAutoUseWhenIdle(self, options, ids)
     local Item = Item
-    
-    local FilterList = util.itertools.FilterList
 
     self:RegisterStrongRef("Item._chairItems", "System.Collections.Generic.List`1[[Barotrauma.Item]]", "Barotrauma.Item",
     function(strongRef)
@@ -42,9 +39,12 @@ local function activateAutoUseWhenIdle(self, options, ids)
         end
     end
 
-    self:AddInit(function()
-        for item in FilterList(Item.ItemList, function(item) return idleFurnitureIds[item.Prefab.Identifier] end) do
-            _chairItems.Add(item)
+    self:AddInit(
+    function()
+        for item in Item.ItemList do
+            if idleFurnitureIds[item.Prefab.Identifier] then
+                _chairItems.Add(item)
+            end
         end
     end)
 end
@@ -134,8 +134,10 @@ local function deactivate(self)
         local chairId = Identifier("chair")
 
         _chairItems.Clear()
-        for item in util.itertools.FilterList(Item.ItemList, function(item) return item.Prefab.Identifier == chairId end) do
-            _chairItems.Add(item)
+        for item in Item.ItemList do
+            if item.Prefab.Identifier == chairId then
+                _chairItems.Add(item)
+            end
         end
         _chairItems = nil
     end

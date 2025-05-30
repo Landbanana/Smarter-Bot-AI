@@ -5,6 +5,7 @@ util.config = {}
 util.debug = {}
 util.functools = {}
 util.itertools = {}
+util.mathtools = {}
 
 local LuaUserData = LuaUserData
 
@@ -13,6 +14,66 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemPrefab"], "tags")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjectives")
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@return fun(a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial1(func, a1)
+    return function(...)
+        return func(a1, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@param a2 T2
+---@return fun(a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial2(func, a1, a2)
+    return function(...)
+        return func(a1, a2, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@return fun(a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial3(func, a1, a2, a3)
+    return function(...)
+        return func(a1, a2, a3, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@param a4 T4
+---@return fun(a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial4(func, a1, a2, a3, a4)
+    return function(...)
+        return func(a1, a2, a3, a4, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@param a4 T4
+---@param a5 T5
+---@return fun(a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial5(func, a1, a2, a3, a4, a5)
+    return function(...)
+        return func(a1, a2, a3, a4, a5, ...)
+    end
+end
 
 do
     ---@param success boolean
@@ -201,6 +262,18 @@ do
 end
 
 ---@generic T
+---@param t T[]|fun():T?
+---@param p fun(v:T):boolean
+---@return fun():T?
+function util.itertools.GetFirst(t, p)
+    for v in t do
+        if p(v) then
+            return v
+        end
+    end
+end
+
+---@generic T
 ---@param func fun():T?
 ---@return T[]
 function util.itertools.ToList(func)
@@ -287,6 +360,109 @@ do
         out({...})
         return out
     end
+end
+
+do
+    local OTHER = Constants.ITEMS_PER_FRAME.OTHER
+
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+
+    ---@generic T
+    ---@param iter T[]|fun():T?
+    ---@param n ITEMS_PER_FRAME
+    ---@return boolean|fun():T?
+    function util.itertools.Limiter(iter, n)
+        local out = wrap(
+        function(_iter, _n, i)
+            for v in _iter do
+                if i >= _n then
+                    i = 0
+                    yield(nil)
+                    yield(true)
+                end
+                i = i + 1
+                yield(v)
+            end
+            yield(nil)
+            return false
+        end)
+
+        n = n or OTHER
+        out(iter, n, n)
+        return out
+    end
+end
+
+do
+    local next = next
+    local Parial1 = util.functools.Partial1
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+
+    ---@generic T
+    ---@param l T[]
+    ---@param n integer
+    ---@return T
+    local function iterLooper(l, n)
+        local i = 0
+
+        while true do
+            yield()
+            for _=1,n,1 do
+                i = i + 1
+
+                local v = l[i]
+
+                if v == nil then
+                    i = 1
+                    v = l[i]
+                end
+                yield(v)
+            end
+        end
+    end
+
+    ---@generic K,V
+    ---@param t table<K,V>
+    ---@param n integer
+    ---@return K,V
+    local function nextLooper(t, n)
+        local k
+
+        while true do
+            yield()
+            for _=1,n,1 do
+                local v
+                k, v = next(t, k)
+                
+                if k == nil then
+                    k, v = next(t)
+                end
+                
+                yield(k, v)
+            end
+        end
+    end
+
+    ---@generic K,V
+    ---@param f fun():(K,V)
+    ---@param t table<K,V>
+    ---@param n? integer
+    ---@return fun():(K,V)
+    local function looper(f, t, n)
+        local _Looper = wrap(f)
+
+        _Looper(t, (n == nil or n < 1) and 1 or n)
+        return _Looper
+    end
+
+    ---@generic T
+    ---@type fun(l:T[], n:integer?):fun():T
+    util.itertools.LoopList = Parial1(looper, iterLooper)
+    ---@generic K,V
+    ---@type fun(t:table<K,V>, n:integer?):fun():(K,V)
+    util.itertools.LoopTable = Parial1(looper, nextLooper)
 end
 
 do
@@ -476,7 +652,7 @@ do
     ---@param value number
     ---@param deviation number
     ---@return number
-    function util.AddNoise(value, deviation)
+    function util.mathtools.AddNoise(value, deviation)
         return value*(1 + deviation*(2*random() - 1))
     end
 end
@@ -497,63 +673,15 @@ do
     end
 end
 
----@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param a1 T1
----@return fun(a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial1(func, a1)
-    return function(...)
-        return func(a1, ...)
-    end
-end
+do
+    local select = select
 
----@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param a1 T1
----@param a2 T2
----@return fun(a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial2(func, a1, a2)
-    return function(...)
-        return func(a1, a2, ...)
-    end
-end
-
----@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param a1 T1
----@param a2 T2
----@param a3 T3
----@return fun(a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial3(func, a1, a2, a3)
-    return function(...)
-        return func(a1, a2, a3, ...)
-    end
-end
-
----@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param a1 T1
----@param a2 T2
----@param a3 T3
----@param a4 T4
----@return fun(a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial4(func, a1, a2, a3, a4)
-    return function(...)
-        return func(a1, a2, a3, a4, ...)
-    end
-end
-
----@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):R
----@param a1 T1
----@param a2 T2
----@param a3 T3
----@param a4 T4
----@param a5 T5
----@return fun(a6:T6,a7:T7,a8:T8,a9:T9):R
-function util.functools.Partial5(func, a1, a2, a3, a4, a5)
-    return function(...)
-        return func(a1, a2, a3, a4, a5, ...)
+    ---@generic T
+    ---@param ... T
+    ---@return T[]
+    ---@return integer
+    function util.functools.GetArgs(...)
+        return {...}, select("#", ...)
     end
 end
 
@@ -582,6 +710,50 @@ function util.GetSpecificSlot(itemContainer, itemTag)
             end
             i = i + 1
         end
+    end
+end
+
+do
+    local Contained = LuaUserData.CreateEnumTable("Barotrauma.RelatedItem+RelationType")["Contained"]
+    local ItemContainer = Components.ItemContainer
+    
+    ---@param container Barotrauma.Item
+    ---@param targetTags Types.Set<Barotrauma.Identifier>
+    ---@return integer[]?
+    function util.GetSpecificSlots(container, targetTags)
+        local itemContainer = container.GetComponent(ItemContainer)
+
+        if itemContainer then
+            local slotIdx = 0
+            local validSlots = {}
+            local i = 0
+
+            for slotR in itemContainer.slotRestrictions do
+                local isChecked = false
+                local ContainableItems = slotR.ContainableItems
+
+                if ContainableItems then
+                    for relatedItem in slotR.ContainableItems do
+                        if  relatedItem.Type == Contained and
+                            not relatedItem.RequireEmpty
+                        then
+                            for id in relatedItem.Identifiers do
+                                if targetTags[id] then
+                                    i = i + 1
+                                    validSlots[i] = slotIdx
+                                    isChecked = true
+                                    break
+                                end
+                            end
+                        end
+                        if isChecked then break end
+                    end
+                end
+                slotIdx = slotIdx + 1
+            end
+            return i > 0 and validSlots or nil
+        end
+        return nil
     end
 end
 
@@ -814,7 +986,7 @@ do
     ---@param points integer
     ---@param firstAngle number
     ---@return Microsoft.Xna.Framework.Vector2[]
-    function util.GetPointsOnCircumference(center, radius, points, firstAngle)
+    function util.mathtools.GetPointsOnCircumference(center, radius, points, firstAngle)
         local maxAngle = 2*pi
         local angleStep = maxAngle/points;
 
@@ -828,7 +1000,23 @@ do
                 center.Y + radius*sin(angle)
             )
         end
-        return coordinates;
+        return coordinates
+    end
+end
+
+do
+    local band = bit32.band
+
+    function util.mathtools.HasFlag(bitFlag, flag)
+        return band(bitFlag, flag) == flag
+    end
+end
+
+do
+    local btest = bit32.btest
+
+    function util.mathtools.HasAnyFlag(bitFlag, flag)
+        return btest(bitFlag, flag)
     end
 end
 
@@ -879,41 +1067,41 @@ do
     end
 end
 
-do
-    local Contains = util.itertools.Contains
+-- do
+--     local Contains = util.itertools.Contains
 
-    ---@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
-    ---@generic T:Barotrauma.AIObjective
-    ---@param instance Barotrauma.AIObjective
-    ---@param objective nil
-    ---@param constructor fun():T
-    ---@param onCompletedGenerator fun(Barotrauma.AIObjective: any)
-    ---@param onAbandonGenerator fun(Barotrauma.AIObjective: any)
-    ---@return boolean
-    ---@return T?
-    function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
-        if objective ~= nil then
-            return false, Contains(instance.subObjectives, objective) and objective or nil
-        else
-            objective = constructor()
+--     ---@type fun(instance:Barotrauma.AIObjective, objective:AIObjective, constructor:fun():(Barotrauma.AIObjective), onCompletedGenerator:fun(Barotrauma.AIObjective), onAbandonGenerator:fun(Barotrauma.AIObjective)):boolean
+--     ---@generic T:Barotrauma.AIObjective
+--     ---@param instance Barotrauma.AIObjective
+--     ---@param objective nil
+--     ---@param constructor fun():T
+--     ---@param onCompletedGenerator fun(Barotrauma.AIObjective: any)
+--     ---@param onAbandonGenerator fun(Barotrauma.AIObjective: any)
+--     ---@return boolean
+--     ---@return T?
+--     function util.TryAddSubObjective(instance, objective, constructor, onCompletedGenerator, onAbandonGenerator)
+--         if objective ~= nil then
+--             return false, Contains(instance.subObjectives, objective) and objective or nil
+--         else
+--             objective = constructor()
 
-            if Contains(instance.subObjectives, objective) then return false, objective end
-            if instance.AllowMultipleInstances then
-                objective.SourceObjective = instance
-                instance.subObjectives.Add(objective)
-            else
-                instance.AddSubObjective(objective)
-            end
-            if onCompletedGenerator ~= nil then
-                objective.Completed.add(onCompletedGenerator(objective))
-            end
-            if onAbandonGenerator ~= nil then
-                objective.Abandoned.add(onAbandonGenerator(objective))
-            end
-            return true, objective
-        end
-    end
-end
+--             if Contains(instance.subObjectives, objective) then return false, objective end
+--             if instance.AllowMultipleInstances then
+--                 objective.SourceObjective = instance
+--                 instance.subObjectives.Add(objective)
+--             else
+--                 instance.AddSubObjective(objective)
+--             end
+--             if onCompletedGenerator ~= nil then
+--                 objective.Completed.add(onCompletedGenerator(objective))
+--             end
+--             if onAbandonGenerator ~= nil then
+--                 objective.Abandoned.add(onAbandonGenerator(objective))
+--             end
+--             return true, objective
+--         end
+--     end
+-- end
 
 do
     local clock = os.clock
@@ -1058,7 +1246,7 @@ do
     local AutoRegisterType = util.AutoRegisterType
 
     ---@param ... string
-    function util.RegisterAll(...)
+    function util.AutoRegisterAll(...)
         for typeName in {...} do
             upcall(AutoRegisterType, typeName)
         end
@@ -1078,7 +1266,7 @@ end
 
 do
     local unpack = table.unpack
-    local RegisterAll = util.RegisterAll
+    local AutoRegisterAll = util.AutoRegisterAll
     local UnregisterAll = util.UnregisterAll
 
     ---@generic T:any...
@@ -1088,7 +1276,7 @@ do
     ---@param ... T
     ---@return R
     function util.DoWithTemporaryRegistrations(typeNames, func, ...)
-        upcall(RegisterAll, unpack(typeNames))
+        upcall(AutoRegisterAll, unpack(typeNames))
 
         local out = {upcall(func, ...)}
 
@@ -1329,8 +1517,6 @@ do
     local Game = Game
     local XElement = XElement
 
-    local FilterList = util.itertools.FilterList
-
     local characterOrders
     
     function util.SaveCharacterOrders()
@@ -1356,14 +1542,14 @@ do
 
         if not session then return end
 
-        for character in FilterList(Character.CharacterList,
-            function(character)
-                local charInfo = character.Info
+        for character in Character.CharacterList do
+            local charInfo = character.Info
 
-                return charInfo and
-                    characterOrders[charInfo.Name]
-            end) do
-            CharacterInfo.ApplyOrderData(character, characterOrders[character.Info.Name])
+            if  charInfo and
+                characterOrders[charInfo.Name]
+            then
+                CharacterInfo.ApplyOrderData(character, characterOrders[character.Info.Name])
+            end
         end
         characterOrders = nil
     end
@@ -1389,7 +1575,7 @@ end
 
 ---@param rootElement Barotrauma.ContentXElement
 ---@param xPathString string
----@return Barotrauma.ContentXElement[]
+---@return Barotrauma.ContentXElement[]|fun():Barotrauma.ContentXElement
 function util.xPath(rootElement, xPathString)
     local matchingElements = {rootElement}
 
@@ -1426,6 +1612,143 @@ function util.xPath(rootElement, xPathString)
         matchingElements = newMatchingElements
     end
     return matchingElements
+end
+
+---@param s string
+---@return string
+---@return string
+function util.GetFirstChar(s)
+    return s:sub(1, 1), s:sub(2)
+end
+
+do
+    ---@param rootElement System.Xml.Linq.XElement
+    ---@param xPathString string
+    ---@return System.Xml.Linq.XElement[]|fun():System.Xml.Linq.XElement
+    function util.xPath2(rootElement, xPathString)
+        local parse
+        local parseTable
+
+        local out = {}
+        local i = 0
+        
+        parseTable = {
+            ["/"]=function(e, s)
+                if s:sub(1, 1) == "/" then return parseTable["//"](e, s:sub(2)) end
+
+                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
+                
+                if s1 then
+                    for e1 in e.Elements(s1) do
+                        parse(e1, s2)
+                    end
+                end
+            end,
+            ["//"]=function (e, s)
+                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
+
+                if s1 then
+                    for e1 in e.Descendants(s1) do
+                        parse(e1, s2)
+                    end
+                end
+            end,
+            ["["]=function(e, s)
+                local s1, s2 = ("["..s):match("^(%b[])(.-)$")
+
+                if parse(e, s1:sub(2, -2)) then
+                    return parse(e, s2)
+                end
+            end,
+            ["@"]=function(e, s)
+                local s1, s2 = s:match("^([^%[%]/|=@]+)=?(.-)$")
+
+                if s2 and s2 ~= "" then
+                    local attr = e.Attribute(s1)
+
+                    return attr and tostring(e.Attribute(s1).Value) == s2
+                else
+                    return e.Attribute(s1) ~= nil
+                end
+            end
+        }
+
+        ---@param e System.Xml.Linq.XElement
+        ---@param s string
+        function parse(e, s)
+            if s == "" then
+                i = i + 1
+                out[i] = e
+            else
+                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
+                if s1 then
+                    for e1 in e.Elements(s1) do
+                        parse(e1, s2)
+                    end
+                else
+                    return parseTable[s:sub(1,1)](e, s:sub(2))
+                end
+            end
+        end
+
+        for s in xPathString:gmatch("([^|]+)|?") do
+            parse(rootElement, s)
+        end
+        return out
+    end
+end
+
+do
+    LuaUserData.RegisterType("Barotrauma.IdentifierExtensions")
+    local IdentifierExtensions = LuaUserData.CreateStatic("Barotrauma.IdentifierExtensions")
+
+    ---@param contElement System.Xml.Linq.XElement
+    ---@return Barotrauma.Identifier[]|fun():Barotrauma.Identifier
+    ---@overload fun(riElement:System.Xml.Linq.XElement):Barotrauma.Identifier[]|fun():Barotrauma.Identifier
+    function util.xGetItemTags(contElement)
+        for tagAlias in {"items", "item", "identifiers", "identifier", "tags", "tag"} do
+            local attr = contElement.Attribute(tagAlias)
+
+            if attr then
+                return IdentifierExtensions.ToIdentifiers(attr.Value)
+                -- for tag in attr.Value:gmatch("([%w_]+)") do
+                --     i = i + 1
+                --     tags[i] = Identifier(tag)
+                -- end
+                --break
+            end
+        end
+        return nil
+    end
+
+    function util.xGetStatusEffectTargets(seElement)
+        for targetAlias in {"targetnames", "targets", "targetidentifiers", "targettags"} do
+            local attr = seElement.Attribute(targetAlias)
+
+            if attr then
+                return IdentifierExtensions.ToIdentifiers(attr.Value)
+                -- for tag in attr.Value:gmatch("([%w_]+)") do
+                --     i = i + 1
+                --     tags[i] = Identifier(tag)
+                -- end
+                --break
+            end
+        end
+        return nil
+    end
+end
+
+---@param seElement System.Xml.Linq.XElement
+---@return string?
+function util.xGetStatusEffectTargetType(seElement)
+    for targetTypeAlias in {"target", "targettype"} do
+        local attr = seElement.Attribute(targetTypeAlias)
+
+        if attr then
+            return attr.Value
+        end
+    end
+    return nil
 end
 
 return util

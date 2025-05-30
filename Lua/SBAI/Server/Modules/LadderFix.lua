@@ -7,7 +7,7 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"]
 local function activate(self)
     local Distance = Vector2.Distance
 
-    local allCharacterData = Types.TimedCharacterData.new(self)
+    local allCharacterData = Types.AllTimedCharacterData.new(self)
 
     self:AddPatch("Barotrauma.IndoorsSteeringManager", "Update", nil,
     function(instance, ptable)
@@ -17,12 +17,12 @@ local function activate(self)
         if  character.CanClimb then
             local characterData = allCharacterData:Get(character)
 
-            if characterData.timer:UpdateClock() then
+            if characterData:UpdateClock() then
                 if  instance.GetCurrentLadder() and
                     character.IsClimbing and
                     controller.Steering.Length() > 1
                 then
-                    local oldSimPos = characterData["simPos"] --[[@type Microsoft.Xna.Framework.Vector2]]
+                    local oldSimPos = characterData.simPos --[[@type Microsoft.Xna.Framework.Vector2]]
                     local simPos = controller.SimPosition --[[@type Microsoft.Xna.Framework.Vector2]]
 
                     if oldSimPos then
@@ -44,21 +44,21 @@ local function activate(self)
                                             potentialNode.ConnectedDoor.HasAccess(character)
                                         )
                                     then
-                                        characterData["simPos"] = nil
+                                        characterData.simPos = nil
                                         currentPath.SkipToNode(potentialIndex)
                                         break
                                     end
                                 end
                             end
                         else
-                            characterData["simPos"] = nil
+                            characterData.simPos = nil
                         end
-                        characterData.timer:Reset()
+                        characterData:Reset()
                     else
-                        characterData["simPos"] = simPos
+                        characterData.simPos = simPos
                     end
                 else
-                    characterData["simPos"] = nil
+                    characterData.simPos = nil
                 end
             end
         end

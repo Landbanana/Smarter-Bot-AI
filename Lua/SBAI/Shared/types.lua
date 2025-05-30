@@ -2,6 +2,7 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = {}
 
+
 ---@enum TYPES
 Types.TYPES = {
     SET=1
@@ -14,8 +15,16 @@ Types.Set.__index = Types.Set
 
 ---@return Types.Set
 function Types.Set.new(t)
-    t = t or {}
+    if t then
+        local temp = {}
 
+        for v in t do
+            temp[v] = true
+        end
+        t = temp
+    else
+        t = {}
+    end
     return setmetatable(t, Types.Set)
 end
 
@@ -223,14 +232,14 @@ end
 Types.Timer = {}
 Types.Timer.__index = Types.Timer
 
+---@private
+function Types.Timer:ResetNoNoise()
+    self.time = self.delay
+end
+
 do
     local clock = os.clock
     local D_TIMER_NOISE = Constants.D_TIMER_NOISE
-
-    ---@private
-    function Types.Timer:ResetNoNoise()
-        self.time = self.delay
-    end
 
     ---@public
     ---@param delay Types.Timer
@@ -254,25 +263,25 @@ do
 end
 
 do
-    local AddNoise = util.AddNoise
+    local AddNoise = util.mathtools.AddNoise
 
     ---@public
     function Types.Timer:Reset()
         self.time = AddNoise(self.delay, self.noise)
     end
+end
 
-    ---@public
-    ---@param deltaTime number
-    ---@return boolean
-    function Types.Timer:Update(deltaTime)
-        self.time = self.time - deltaTime
-        if self.time <= 0 then
-            self:Reset()
-            return true
-        end
-        
-        return false
+---@public
+---@param deltaTime number
+---@return boolean
+function Types.Timer:Update(deltaTime)
+    self.time = self.time - deltaTime
+    if self.time <= 0 then
+        self:Reset()
+        return true
     end
+    
+    return false
 end
 
 do
@@ -305,7 +314,8 @@ Types.Module = {}
 Types.Module.__index = Types.Module
 
 do
-    local Logger = Logger
+    local GetArgs = util.functools.GetArgs
+    local LogError = Logger.LogError
     local remove = table.remove
     local unpack = table.unpack
 
@@ -316,16 +326,18 @@ do
     ---@param ... T
     ---@return boolean, R
     function Types.Module:pcall(name, func, ...)
-        local results = {pcall(func, self, ...)}
+        local results, n = GetArgs(pcall(func, self, ...))
         local success = remove(results, 1)
+
+        n = n - 1
 
         name = name == nil and "" or "."..name
 
         if not success then
-            Logger.LogError(self.namespace()..name..": "..unpack(results))
+            LogError(self.namespace()..name..": "..unpack(results))
             return false
         else
-            return true, unpack(results)
+            return true, unpack(results, 1, n)
         end
     end
 end
@@ -353,6 +365,14 @@ function Types.Module.new(activate, deactivate)
     t.deactivate = deactivate
 
     return setmetatable(t, Types.Module)
+end
+
+---@public
+---@return string
+function Types.Module:GetSection()
+    local stack = self.namespace.stack
+
+    return stack[#stack]
 end
 
 do
@@ -383,7 +403,7 @@ do
 end
 
 do
-    local AutoRegisterType = util.AutoRegisterType
+    --local AutoRegisterType = util.AutoRegisterType
     local CreateEnumTable = LuaUserData.CreateEnumTable
     local upcall = util.debug.upcall
 
@@ -392,8 +412,6 @@ do
         ---@param typeName string
         ---@return System.Object
         __index=function(self, typeName)
-            upcall(AutoRegisterType, typeName)
-
             local enum = upcall(CreateEnumTable, typeName)
 
             self[typeName] = enum
@@ -490,18 +508,40 @@ do
 end
 
 do
-    local remove = table.remove
+    local GetArgs = util.functools.GetArgs
+    local require = require
     local unpack = table.unpack
 
     ---@public
     ---@param requirePath string
     ---@return ...
     function Types.Module:AddCommonModule(requirePath)
-        if not self.commonModules then self.commonModules = {} end
-        local requireOut = {require(requirePath)}
+        local commonModules = self.commonModules
 
-        self.commonModules[requirePath] = remove(requireOut, 1)
-        return unpack(requireOut)
+        if not commonModules then
+            commonModules = {}
+            self.commonModules = commonModules
+        end
+
+        local commonModule = commonModules[requirePath]
+        local requireOut, n = GetArgs(require(requirePath))
+
+        if commonModule == nil then
+            local newNamespace = -self.namespace
+            
+            commonModule = requireOut[1]
+            commonModules[requirePath] = commonModule
+            
+            newNamespace.i = 0
+            newNamespace.stack = {}
+
+            for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
+                newNamespace = newNamespace + stackAdd
+            end
+
+            commonModule:Activate(self, newNamespace)
+        end
+        return unpack(requireOut, 2, n)
     end
 end
 
@@ -531,6 +571,8 @@ do
     ---@param parameterTypes? string[]
     ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
     ---@param hookType Barotrauma.LuaCsHook.HookMethodType
+    ---|`Hook.HookMethodType.Before`
+    ---|`Hook.HookMethodType.After`
     function Types.Module:AddPatch(className, methodName, parameterTypes, patch, hookType)
         if not self.patches then self.patches = {} end
 
@@ -577,7 +619,7 @@ end
 do
     local defaultNestedMethodNames = Constants.defaultNestedMethodNames
 
-    CheckNestedMethodName = util.debug.CheckNestedMethodName
+    local CheckNestedMethodName = util.debug.CheckNestedMethodName
     
     ---@public
     ---@generic T
@@ -635,19 +677,19 @@ function Types.Module:Activate(namespace, options)
         if not self:pcall(name, func) then return self:Deactivate(options) end
     end
 
-    if self.commonModules then
-        for requirePath, commonModule in next, self.commonModules do --[[@cast commonModule Types.CommonModule]]
-            local newNamespace = -namespace
+    -- if self.commonModules then
+    --     for requirePath, commonModule in next, self.commonModules do --[[@cast commonModule Types.CommonModule]]
+    --         local newNamespace = -namespace
             
-            newNamespace.i = 0
-            newNamespace.stack = {}
+    --         newNamespace.i = 0
+    --         newNamespace.stack = {}
 
-            for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
-                newNamespace = newNamespace + stackAdd
-            end
-            commonModule:Activate(self, newNamespace)
-        end
-    end
+    --         for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
+    --             newNamespace = newNamespace + stackAdd
+    --         end
+    --         commonModule:Activate(self, newNamespace)
+    --     end
+    -- end
 
     self:AddHook("roundStart", function() return self:init() end)
 end
@@ -724,31 +766,37 @@ do
 end
 
 do
+    local GetArgs = util.functools.GetArgs
     local Get = util.config.Get
     local unpack = table.unpack
 
     ---@public
     ---@generic T
-    ---@param name string
+    ---@param name string?
     ---@param func fun(self:Types.Module, options:table, ...:T)
     ---@param ... T
+    ---@return false|any
     function Types.Module:DoOption(name, func, ...)
-        local newNamespace = self.namespace + name
+        local newNamespace = name and self.namespace + name or self.namespace
         local options = Get(self.options, newNamespace, 2)
 
         if options then
             if  type(options) == "table" and
                 not options.enable
             then
-                return
+                return false
             end
             
-            self.namespace = self.namespace + name
+            if name then
+                self.namespace = self.namespace + name
+            end
 
-            local results = {self:pcall(nil, func, options, ...)}
+            local results, n = GetArgs(self:pcall(nil, func, options, ...))
 
-            self.namespace = -self.namespace
-            return unpack(results)
+            if name then
+                self.namespace = -self.namespace
+            end
+            return unpack(results, 1, n)
         end
     end
 end
@@ -767,13 +815,18 @@ function Types.CommonModule.new(activate, deactivate)
     return setmetatable(t, Types.CommonModule)
 end
 
----@public
----@param callingModule Types.Module
----@param namespace Namespace
-function Types.CommonModule:Activate(callingModule, namespace)
-    if not self.moduleRefs then self.moduleRefs = Types.Set.new() end
-    if self.moduleRefs:IsEmpty() then Types.Module.Activate(self, namespace, {enable=true}) end
-    return self.moduleRefs:Add(callingModule)
+do
+    local Activate = Types.Module.Activate
+    local new = Types.Set.new
+
+    ---@public
+    ---@param callingModule Types.Module
+    ---@param namespace Namespace
+    function Types.CommonModule:Activate(callingModule, namespace)
+        if not self.moduleRefs then self.moduleRefs = new() end
+        if self.moduleRefs:IsEmpty() then Activate(self, namespace, {enable=true}) end
+        return self.moduleRefs:Add(callingModule)
+    end
 end
 
 ---@public
@@ -789,8 +842,8 @@ function Types.CommonModule:Deactivate(callingModule)
 end
 
 ---@class Types.TimedCharacterData
----@field private [Barotrauma.Character] {timer:Types.Timer}
----@field private timeBetween number
+---@field private timer Types.Timer
+---@field public [any] any
 Types.TimedCharacterData = {}
 Types.TimedCharacterData.__index = Types.TimedCharacterData
 
@@ -798,20 +851,167 @@ do
     local new = Types.Timer.new
 
     ---@public
+    ---@param delay number
+    ---@param noise? number
+    ---@return Types.TimedCharacterData
+    function Types.TimedCharacterData.new(delay, noise)
+        local t = {timer=new(delay, noise)}
+
+        return setmetatable(t, Types.TimedCharacterData)
+    end
+end
+
+---@public
+function Types.TimedCharacterData:Reset()
+    return self.timer:Reset()
+end
+
+---@public
+---@param deltaTime number
+---@return boolean
+function Types.TimedCharacterData:Update(deltaTime)
+    return self.timer:Update(deltaTime)
+end
+
+---@public
+---@return boolean
+function Types.TimedCharacterData:UpdateClock()
+    return self.timer:UpdateClock()
+end
+
+---@class Types.AllTimedCharacterData
+---@field private [Barotrauma.Character] Types.TimedCharacterData
+---@field private timeBetween number
+---@field protected delay number
+---@field protected noise number
+Types.AllTimedCharacterData = {}
+Types.AllTimedCharacterData.__index = Types.AllTimedCharacterData
+
+do
+    local CopyTable = util.itertools.CopyTable
+
+    ---@public
+    ---@param module Types.Module
+    ---@param delay? number
+    ---@param noise? number
+    ---@param init? table
+    ---@return Types.AllTimedCharacterData
+    function Types.AllTimedCharacterData.new(module, delay, noise, init)
+        init = init and CopyTable(init) or {}
+        init.delay = delay or module.options["timeBetween"]
+        init.noise = noise
+
+        local t = module:RegisterTable(init, "ROUND_END", "CHARACTER_DEATH")
+
+        return setmetatable(t, Types.AllTimedCharacterData)
+    end
+end
+
+do
+    local new = Types.TimedCharacterData.new
+
+    ---@public
     ---@param character Barotrauma.Character
-    function Types.TimedCharacterData:Add(character)
-        self[character] = {timer=new(self.timeBetween)}
+    function Types.AllTimedCharacterData:Add(character)
+        self[character] = new(self.delay, self.noise)
     end
 end
 
 ---@public
 ---@param character Barotrauma.Character
----@return {timer:Types.Timer}
-function Types.TimedCharacterData:Get(character)
+---@return Types.TimedCharacterData
+function Types.AllTimedCharacterData:Get(character)
     if not self[character] then
         self:Add(character)
     end
     return self[character]
+end
+
+---@class Types.CoTimedCharacterData: Types.TimedCharacterData
+---@field public character Barotrauma.Character
+---@field private funcs? (fun(self:Types.CoTimedCharacterData, character:Barotrauma.Character):boolean?)[]
+Types.CoTimedCharacterData = setmetatable(util.itertools.CopyTable(Types.TimedCharacterData), Types.TimedCharacterData)
+Types.CoTimedCharacterData.__index = Types.CoTimedCharacterData
+
+do
+    local new = Types.TimedCharacterData.new
+
+    ---@public
+    ---@param delay number
+    ---@param noise? number
+    ---@param character Barotrauma.Character
+    ---@param funcs? (fun(self:Types.CoTimedCharacterData, character:Barotrauma.Character):boolean?)[]
+    ---@return Types.CoTimedCharacterData
+    function Types.CoTimedCharacterData.new(delay, noise, character, funcs)
+        local t = new(delay, noise)
+
+        t.funcs = funcs
+        t.character = character
+        
+        return setmetatable(t, Types.CoTimedCharacterData)
+    end
+end
+
+do
+   
+    
+    -- ---@return fun(self:Types.CoTimedCharacterData, deltaTime:number):boolean
+    -- function Types.CoTimedCharacterData:CoUpdateBase()
+    --     coroutine.yield(false)
+        
+    --     return self:ResetCoUpdate()
+    -- end
+    local oldUpdate = Types.TimedCharacterData.Update
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
+
+    ---@private
+    function Types.CoTimedCharacterData:CoUpdate()
+        if self == nil then return end
+        ---@param self Types.CoTimedCharacterData
+        self.CoUpdate = coroutine.wrap(function(self)
+            if self.funcs == nil then return end
+            for _f in self.funcs do
+                local f = coroutine.wrap(_f)
+
+                repeat
+                    repeat until oldUpdate(yield())
+                    local out = f(self, self.Character)
+
+                    yield(out)
+                until out == nil
+            end
+            self.CoUpdate = nil
+            return false
+        end)
+        print("new")
+        self:CoUpdate()
+    end
+end
+
+---@public
+---@param deltaTime number
+---@return boolean
+function Types.CoTimedCharacterData:Update(deltaTime)
+    if self:CoUpdate(deltaTime) then
+        return true
+    end
+    return false
+end
+
+---@class Types.CoAllTimedCharacterData: Types.AllTimedCharacterData
+---@field private funcs? (fun(self:Types.CoTimedCharacterData, character:Barotrauma.Character):boolean?)[]
+Types.CoAllTimedCharacterData = setmetatable(util.itertools.CopyTable(Types.AllTimedCharacterData), Types.AllTimedCharacterData)
+Types.CoAllTimedCharacterData.__index = Types.CoAllTimedCharacterData
+
+do
+    local new = Types.CoTimedCharacterData.new
+
+    ---@protected
+    ---@param character Barotrauma.Character
+    function Types.CoAllTimedCharacterData:Add(character)
+        self[character] = new(self.delay, self.noise, character, self.funcs)
+    end
 end
 
 do
@@ -819,15 +1019,20 @@ do
 
     ---@public
     ---@param module Types.Module
-    ---@param timeBetween? number
+    ---@param delay? number
+    ---@param noise? number
     ---@param init? table
-    ---@return Types.TimedCharacterData
-    function Types.TimedCharacterData.new(module, timeBetween, init)
+    ---@param funcs? (fun(self:Types.CoTimedCharacterData, character:Barotrauma.Character):boolean?)[]
+    ---@return Types.CoAllTimedCharacterData
+    function Types.CoAllTimedCharacterData.new(module, delay, noise, init, funcs)
         init = init and CopyTable(init) or {}
-        init.timeBetween = timeBetween or module.options["timeBetween"]
+        init.delay = delay or module.options["timeBetween"]
+        init.noise = noise
+
         local t = module:RegisterTable(init, "ROUND_END", "CHARACTER_DEATH")
 
-        return setmetatable(t, Types.TimedCharacterData)
+        t.funcs = funcs
+        return setmetatable(t, Types.CoAllTimedCharacterData)
     end
 end
 

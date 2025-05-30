@@ -30,7 +30,7 @@ local function activateEatFoodInInventory(self, options)
     local Filter = util.itertools.FilterList
     local ToList = util.itertools.ToList
     
-    local allPetData = Types.TimedCharacterData.new(self, options["timeBetween"])
+    local allPetData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
     local foodItemTags = Types.Set.new()
     local checkState = Types.Set.new()
     
@@ -82,47 +82,50 @@ local function activateEatFoodInInventory(self, options)
         local inventory = pet.Inventory
 
         if inventory then
-            local bestItem = nil
-            local bestTargetParams = nil
-            local highestPriority = 0.0
+            local bestItem
+            local bestTargetParams
+            local foods = {}
+            local i = 0
 
-            ---@type Barotrauma.PetBehavior.Food[]
-            local foods = ToList(Filter(petbehavior.foods,
-                function(food)
-                    return foodItemTags[food.Tag] and
-                        food.TargetParams
-                end))
+            for food in petbehavior.foods do
+                if  foodItemTags[food.Tag] and
+                    food.TargetParams
+                then
+                    i = i + 1
+                    foods[i] = food
+                end
+            end
+            if i <= 0 then goto skip end
 
-            if #foods <= 0 then goto done end
+            do
+                local highestPriority = 0.0
 
-            for item in Filter(inventory.GetAllItems(false),
-                function(item)
-                    return item.AiTarget ~= nil
-                end) do
-                for food in foods do
-                    local tag = food.Tag
+                for item in inventory:SBAI_findAllItems(false, false, function(item) return item.AiTarget ~= nil end) do
+                    for food in foods do
+                        local tag = food.Tag
 
-                    if  (item.HasTag(tag) or
-                        item.Prefab.Identifier == tag)
-                    then
-                        local targetParams = food.TargetParams
+                        if  (item.HasTag(tag) or
+                            item.Prefab.Identifier == tag)
+                        then
+                            local targetParams = food.TargetParams
 
-                        if targetParams then
-                            local priority = food.Priority
+                            if targetParams then
+                                local priority = food.Priority
 
-                            if priority > highestPriority then
-                                bestItem = item
-                                bestTargetParams = targetParams
-                                highestPriority = priority
-                                if priority >= 100 then
-                                    goto done
+                                if priority > highestPriority then
+                                    bestItem = item
+                                    bestTargetParams = targetParams
+                                    highestPriority = priority
+                                    if priority >= 100 then
+                                        goto skip
+                                    end
                                 end
                             end
                         end
                     end
                 end
             end
-            ::done::
+            ::skip::
             return bestItem, bestTargetParams
         end
     end
@@ -191,10 +194,10 @@ local function activateEatFoodInInventory(self, options)
         then
             local pet = instance.Character
             local petData = allPetData:Get(pet)
-            local eatTarget = petData["eatTarget"] --[[@type Barotrauma.Item]]
+            local eatTarget = petData.eatTarget --[[@type Barotrauma.Item]]
 
             if  eatTarget or
-                petData.timer:UpdateClock()
+                petData:UpdateClock()
             then
                 if checkState[instance.State] then
                     local targetParams
@@ -233,7 +236,7 @@ local function activateEatFoodInInventory(self, options)
                 else
                     eatTarget = nil
                 end
-                petData["eatTarget"] = eatTarget
+                petData.eatTarget = eatTarget
             end
         end
     end, Hook.HookMethodType.After)
@@ -243,71 +246,71 @@ end
 ---@param options table
 local function activateBotsPlayWhenIdle(self, options)
     self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
-    local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
-    local ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
-
+    
     local Character = Character
-    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
-    local PET_PLAY = Constants.ID_OBJECTIVE.PET_PLAY
-    local Sad = self:RegisterEnumTable("Barotrauma.PetBehavior+StatusIndicatorType").Sad --[[@type Barotrauma.PetBehavior.StatusIndicatorType]]
+    local PETPLAY = Constants.ID_OBJECTIVE.PETPLAY
 
-    local Filter = util.itertools.FilterList
-    local GetClosest = util.GetClosest
-    local ToList = util.itertools.ToList
+    local GetFirst = util.itertools.GetFirst
+    local Partial5 = util.functools.Partial5
 
-    local allCharacterData = Types.TimedCharacterData.new(self, options["timeBetween"])
+    local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
 
     self:AddPatch("Barotrauma.AIObjectiveIdle", "Act", nil,
     function(instance, ptable)
         local character = instance.character
         local characterData = allCharacterData:Get(character)
 
-        if  characterData.timer:Update(ptable["deltaTime"])
-            and not characterData["petplayObj"]
+        if  characterData:Update(ptable["deltaTime"])
+            and not characterData.petplayObj
         then
-            local submarine = character.Submarine
-            
             ---@type Barotrauma.Character
-            local closestSadPet = GetClosest(character.WorldPosition, ToList(Filter(Character.CharacterList,
-                function(pet)
-                    return pet.IsPet and
-                        pet.AIController.PetBehavior.GetCurrentStatusIndicatorType() == Sad and
-                        submarine == pet.Submarine and
-                        character.IsOnFriendlyTeam(pet) and
-                        character.CanSeeTarget(pet, nil, true, false)
-                end)))
+            local nearbyUnhappyPet = GetFirst(Character.CharacterList,
+            function(pet)
+                if  pet.IsPet and
+                    character.IsOnFriendlyTeam(pet)
+                then
+                    local petBehavior = pet.AIController.PetBehavior
+                        
+                    if  petBehavior.PlayTimer <= 0 and
+                        petBehavior.Happiness < petBehavior.HappyThreshold
+                    then
+                        return character.CanInteractWith(pet)
+                    end
+                end
+            end)
 
-            if closestSadPet then
+            if nearbyUnhappyPet then
                 local function constructor()
-                    local objective = AIObjectiveGoTo(closestSadPet, character, character.AIController.ObjectiveManager, false, false, 1, 50.0)
+                    local objective = AIObjectiveGoTo(nearbyUnhappyPet, character, character.AIController.ObjectiveManager, false, false, 1, 100.0)
                     
                     objective.AllowGoingOutside = false
                     objective.DebugLogWhenFails = false
                     objective.IgnoreIfTargetDead = true
                     objective.SpeakIfFails = false
 
-                    local petbehavior = closestSadPet.AIController.PetBehavior --[[@type Barotrauma.PetBehavior]]
-                    local unhappyThreshold = petbehavior.UnhappyThreshold
+                    local petbehavior = nearbyUnhappyPet.AIController.PetBehavior --[[@type Barotrauma.PetBehavior]]
+                    local happyThreshold = petbehavior.HappyThreshold
 
-                    function objective.AbortCondition()
-                        return petbehavior.Happiness > unhappyThreshold
+                    function objective:AbortCondition()
+                        return petbehavior.Happiness > happyThreshold or
+                            nearbyUnhappyPet.IsDead
                     end
+
+                    local cleanupSubObj = Partial5(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGoTo, characterData, "petplayObj")
 
                     objective.Completed.add(
                     function()
-                        closestSadPet.AIController.PetBehavior.Play(character)
-                        return instance:SBAI_cleanupSubObj(objective, AIObjectiveGoTo, characterData, "petplayObj")
+                        petbehavior.Play(character)
+                        return cleanupSubObj()
                     end)
-                    objective.Abandoned.add(function() return instance:SBAI_cleanupSubObj(objective, AIObjectiveGoTo, characterData, "petplayObj") end)
+                    objective.Abandoned.add(cleanupSubObj)
                     return objective
-                end
+                end 
 
-                ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "petplayObj", PET_PLAY, true, true, constructor)
+                ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "petplayObj", PETPLAY, true, false, constructor)
             end
         end
     end, Hook.HookMethodType.Before)
-
-    ModMainObjProp(IDLE, "Idle", PET_PLAY, "ConcurrentObjectives", true)
 end
 
 local petItemIds
@@ -373,11 +376,23 @@ local function activateCleanableProduce(self, options)
     end)
 end
 
+-- ---@param self Types.Module
+-- local function activateFollowRestrictions(self)
+--     self:AddPatch("Barotrauma.AITarget", "ShouldBeIgnored", nil,
+--     function(instance, ptable)
+--         if instance. then
+--             print("yas")
+--         end
+--     end, Hook.HookMethodType.Before)
+-- end
+
 ---@param self Types.Module
 local function activate(self)
     self:DoOption("EatFoodInInventory", activateEatFoodInInventory)
     self:DoOption("BotsPlayWhenIdle", activateBotsPlayWhenIdle)
     self:DoOption("CleanableProduce", activateCleanableProduce)
+
+    --activateFollowRestrictions(self)
 
     -- self:AddPatch("Barotrauma.AIObjectiveIdle", "Wander", nil,
     -- function(instance, ptable)

@@ -14,9 +14,9 @@ LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reacto
 local function activate(self)
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
 
-    local CONTAIN_ITEM = Constants.ID_OBJECTIVE_BASE.CONTAIN_ITEM
-    local OPERATE_REACTOR = Constants.ID_OBJECTIVE_BASE.OPERATE_REACTOR
-    local POWER_UP = Constants.ID_OBJECTIVE_BASE.POWER_UP
+    local CONTAIN_ITEM = Constants.ID_OBJECTIVE_BASE.CONTAINITEM
+    local OPERATE_REACTOR = Constants.ID_OBJECTIVE_BASE.OPERATEREACTOR
+    local POWER_UP = Constants.ID_OBJECTIVE_BASE.POWERUP
 
     local numFuelRods = self.options["numFuelRods"] --[[@type integer]]
     local minimumCondition = self.options["minimumCondition"] --[[@type integer]]
@@ -52,14 +52,21 @@ local function activate(self)
         else
             local Powered = Components.Powered
             local Reactor = Components.Reactor
-            local new = Types.Timer.new
 
-            allCharacterData = Types.TimedCharacterData.new(self, 10.0, {
-                ---@param self Types.TimedCharacterData
+            allCharacterData = Types.AllTimedCharacterData.new(self, 10.0, nil, {
+                ---@param self Types.AllTimedCharacterData
                 ---@param character Barotrauma.Character
                 Add=function(self, character)
-                    self[character] = {timer=new(self.timeBetween), isAutoReactorOn=false, buffer=0, lastTurbine=0, lastFission=0}
-                end})
+                    getmetatable(self).Add(self, character)
+
+                    local t = self[character]
+
+                    t.isAutoReactorOn = false
+                    t.buffer = 0
+                    t.lastTurbine = 0
+                    t.lastFission = 0
+                end
+            })
 
             self:AddPatch("Barotrauma.AIObjectiveOperateItem", "Act", nil,
             function(instance, ptable)
@@ -69,20 +76,20 @@ local function activate(self)
                     local character = instance.character
                     local characterData = allCharacterData:Get(character)
                     
-                    if characterData.timer:Update(ptable["deltaTime"]) then
+                    if characterData:Update(ptable["deltaTime"]) then
                         local item = instance.Component.Item
                         local reactor = item.GetComponent(Reactor) --[[@type Barotrauma.Items.Components.Reactor]]
-                        local isAutoReactorOn = characterData["isAutoReactorOn"] --[[@type boolean]]
-                        local buffer = characterData["buffer"] --[[@type integer]]
+                        local isAutoReactorOn = characterData.isAutoReactorOn --[[@type boolean]]
+                        local buffer = characterData.buffer --[[@type integer]]
                         local turbineTime = reactor.lastReceivedTurbineOutputSignalTime
                         local fissionTime = reactor.lastReceivedFissionRateSignalTime
 
                         if  isAutoReactorOn then
-                            buffer = (buffer + 1)*((turbineTime == characterData["lastTurbine"] or fissionTime == characterData["lastFission"]) and
+                            buffer = (buffer + 1)*((turbineTime == characterData.lastTurbine or fissionTime == characterData.lastFission) and
                             item.GetComponent(Powered).CurrPowerConsumption < 0 and
                             1 or 0)
                         else
-                            buffer = (buffer + 1)*((turbineTime ~= characterData["lastTurbine"] and fissionTime ~= characterData["lastFission"]) and
+                            buffer = (buffer + 1)*((turbineTime ~= characterData.lastTurbine and fissionTime ~= characterData.lastFission) and
                             1 or 0)
                         end
                         
@@ -93,16 +100,16 @@ local function activate(self)
 
                         if isAutoReactorOn then
                             reactor.AutoTemp = false
-                            if not characterData["isAutoReactorOn"] then 
+                            if not characterData.isAutoReactorOn then 
                                 character.Speak(TextManager.Get("orderdialogself.operatereactor.powerup.sbai").Value, nil, 0.0,
                                 Identifier("orderdialogself.operatereactor.powerup.sbai"), 300.0)
                             end
                         end
 
-                        characterData["isAutoReactorOn"] = isAutoReactorOn
-                        characterData["buffer"] = buffer
-                        characterData["lastTurbine"] = turbineTime
-                        characterData["lastFission"] = fissionTime
+                        characterData.isAutoReactorOn = isAutoReactorOn
+                        characterData.buffer = buffer
+                        characterData.lastTurbine = turbineTime
+                        characterData.lastFission = fissionTime
                     end
                 end
             end, Hook.HookMethodType.Before)

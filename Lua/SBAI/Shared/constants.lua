@@ -15,34 +15,62 @@ local Constants = {
     D_NONTHREATENING_STUN=20,
 
     ---@enum Constants.ID_ORDER
-    ID_ORDER = {
-        FABRICATE_ITEMS = Identifier("sbai_fabricateitems"),
-        IGNORE_ROOM = Identifier("sbai_ignoreroom"),
+    ID_ORDER={
+        FABRICATEITEMS = Identifier("sbai_fabricateitems"),
+        IGNOREROOM = Identifier("sbai_ignoreroom"),
         PERFORM = Identifier("sbai_perform"),
-        SBAI_CATEGORY = Identifier("sbai"),
+        SBAICATEGORY = Identifier("sbai"),
         UNIGNORE_ROOM = Identifier("sbai_unignoreroom")
     },
 
     ---@enum ID_OBJECTIVE
-    ID_OBJECTIVE = {
+    ID_OBJECTIVE={
         PERFORM = Identifier("sbai_perform"),
-        PET_PLAY = Identifier("sbai_petplay")
+        PETPLAY = Identifier("sbai_petplay"),
+        REPLENISH = Identifier("sbai_replenish"),
+        REPLENISHCLEAN = Identifier("sbai_replenishclean")
     },
 
     ---@enum ID_OBJECTIVE_BASE
-    ID_OBJECTIVE_BASE = {
-        CONTAIN_ITEM = Identifier("contain item"),
-        DECONSTRUCT_ITEM = Identifier("deconstruct item"),
-        GET_ITEM = Identifier("get item"),
+    ID_OBJECTIVE_BASE={
+        CLEANUPITEM = Identifier("cleanup item"),
+        CONTAINITEM = Identifier("contain item"),
+        DECONSTRUCTITEM = Identifier("deconstruct item"),
+        GETITEM = Identifier("get item"),
         GOTO = Identifier("go to"),
         IDLE = Identifier("idle"),
-        LOAD_ITEM = Identifier("load item"),
-        LOAD_ITEMS = Identifier("loaditems"),
-        OPERATE_ITEM = Identifier("operate item"),
-        OPERATE_REACTOR = Identifier("operatereactor"),
-        POWER_UP = Identifier("powerup"),
+        LOADITEM = Identifier("load item"),
+        LOADITEMS = Identifier("loaditems"),
+        OPERATEITEM = Identifier("operate item"),
+        OPERATEREACTOR = Identifier("operatereactor"),
+        POWERUP = Identifier("powerup"),
         WAIT = Identifier("wait")
-    }
+    },
+    ---@enum ITEMS_PER_FRAME
+    ITEMS_PER_FRAME={
+        OTHER=10,
+        PLAYER=100
+    },
+
+    ---@enum TYPE_OBJECTIVE_BASE
+    TYPE_OBJECTIVE_BASE={
+        CLEANUPITEM = "Barotrauma.AIObjectiveCleanupItem",
+        CONTAINITEM = "Barotrauma.AIObjectiveContainItem",
+        DECONSTRUCTITEM = "Barotrauma.AIObjectiveDeconstructItem",
+        GETITEM = "Barotrauma.AIObjectiveGetItem",
+        GOTO = "Barotrauma.AIObjectiveGoTo",
+        IDLE = "Barotrauma.AIObjectiveIdle",
+        LOADITEM = "Barotrauma.AIObjectiveLoadItem",
+        LOADITEMS = "Barotrauma.AIObjectiveLoadItems",
+        BASE = "Barotrauma.AIObjective",
+        OPERATEITEM = "Barotrauma.AIObjectiveOperateItem",
+        OPERATEREACTOR = "Barotrauma.AIObjectiveOperateItem",
+        POWERUP = "Barotrauma.AIObjectiveOperateItem",
+        WAIT = "Barotrauma.AIObjectiveGoTo"
+    },
+
+    ID_COMMON={Identifier("smallitem"), Identifier("mediumitem")},
+    ID_EMPTY = Identifier.Empty
 }
 -- ---@enum NETWORK_MSG
 -- Constants.NETWORK_MSG = {
@@ -63,8 +91,10 @@ do
     local ID_OBJECTIVE_BASE = Constants.ID_OBJECTIVE_BASE
 
     Constants.ID_OBJECTIVE_TO_BASE = setmetatable({
-        [Constants.ID_OBJECTIVE.PERFORM]=Constants.ID_OBJECTIVE_BASE.OPERATE_ITEM,
-        [Constants.ID_OBJECTIVE.PET_PLAY]=Constants.ID_OBJECTIVE_BASE.GOTO,
+        [Constants.ID_OBJECTIVE.PERFORM]=Constants.ID_OBJECTIVE_BASE.OPERATEITEM,
+        [Constants.ID_OBJECTIVE.PETPLAY]=Constants.ID_OBJECTIVE_BASE.GOTO,
+        [Constants.ID_OBJECTIVE.REPLENISH]=Constants.ID_OBJECTIVE_BASE.CONTAINITEM,
+        [Constants.ID_OBJECTIVE.REPLENISHCLEAN]=Constants.ID_OBJECTIVE_BASE.CLEANUPITEM
     },
     {
         ---@param t table<ID_OBJECTIVE|ID_OBJECTIVE_BASE,ID_OBJECTIVE_BASE>

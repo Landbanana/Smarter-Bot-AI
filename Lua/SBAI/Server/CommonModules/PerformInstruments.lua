@@ -2,6 +2,16 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
+LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjective"], "ConcurrentObjectives")
+LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "ConcurrentObjectives")
+LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "ConcurrentObjectives")
+LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "ConcurrentObjectives")
+
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjective"], "get_ConcurrentObjectives")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "get_ConcurrentObjectives")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "get_ConcurrentObjectives")
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "get_ConcurrentObjectives")
+
 local instrumentInvSlots
 
 do
@@ -43,16 +53,32 @@ do
     })
 end
 
+local setupObjProperties
+
+do
+    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
+    local PERFORM = Constants.ID_ORDER.PERFORM
+    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
+
+    local ModObjProp
+
+    function setupObjProperties(self)
+        if ModObjProp then return end
+        ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
+
+        ModObjProp("ConcurrentObjectives", IDLE, PERFORM, true)
+        ModObjProp("ConcurrentObjectives", WAIT, PERFORM, true)
+        ModObjProp("AllowAutomaticItemUnequipping", IDLE, PERFORM, false)
+        ModObjProp("AllowMultipleInstances", PERFORM, nil, false)
+    end
+end
+
 ---@param self Types.CommonModule
 local function activate(self)
-    local mod = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties")
-    local ModObjProp = mod.ModObjProp --[[@type fun(objId:Barotrauma.Identifier, objSuffix:string, propertyName:string, value:any)]]
-    local ModMainObjProp = mod.ModMainObjProp --[[@type fun(mainObjId:Barotrauma.Identifier, mainObjSuffix:string, subObjId:Barotrauma.Identifier, propertyName:string, value:any)]]
+    setupObjProperties(self)
 
     local Aim = InputType.Aim
     local hornItemId = Identifier("hornitem")
-    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
-    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
@@ -82,9 +108,11 @@ local function activate(self)
                 Timer.Wait(function() objective.Abandon = true end, 1000)
             end
             
-            return true
+            return false
         end
     end, Hook.HookMethodType.Before)
+
+    --local concurrentIds = {Identifier("idle"), Identifier("wait")}
 
     -- self:AddPatch("Barotrauma.AIObjective", "get_ConcurrentObjectives", nil,
     -- function(instance, ptable)
@@ -100,12 +128,10 @@ local function activate(self)
     --     end
     -- end, Hook.HookMethodType.Before)
 
-    ModMainObjProp(IDLE, "Idle", PERFORM, "ConcurrentObjectives", true)
-    ModMainObjProp(WAIT, "GoTo", PERFORM, "ConcurrentObjectives", true)
-    ModMainObjProp(IDLE, "Idle", PERFORM, "AllowAutomaticItemUnequipping", false)
+    
 
-    --ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
-    ModObjProp(PERFORM, "OperateItem", "AllowMultipleInstances", false)
+      --ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
+    
 
     -- self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
     -- function(instance, ptable)

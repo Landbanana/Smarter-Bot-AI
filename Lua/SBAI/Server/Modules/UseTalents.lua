@@ -35,30 +35,11 @@ end
 local activateInstrumentTalent
 
 do
-    local allCharacterInstrumentData --[[@type Types.TimedCharacterData]]
+    local allCharacterInstrumentData --[[@type Types.AllTimedCharacterData]]
     local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}>]]
     local allInstrumentObjectiveData
 
-    local makeOperateObjective
     local anyNeedBuff
-
-    do
-        local AIObjectiveOperateItem = AIObjectiveOperateItem
-        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
-
-        ---@param character Barotrauma.Character
-        ---@param itemComponent Barotrauma.Items.Components.ItemComponent
-        ---@param itemId Barotrauma.Identifier
-        ---@param objectiveManager Barotrauma.AIObjectiveManager
-        ---@return Barotrauma.AIObjectiveOperateItem
-        function makeOperateObjective(character, itemComponent, itemId, objectiveManager)
-            local objective = AIObjectiveOperateItem(itemComponent, character, objectiveManager, itemId, true)
-
-            objective.Identifier = PERFORM
-
-            return objective
-        end
-    end
 
     do
         local Character = Character
@@ -71,7 +52,7 @@ do
         function anyNeedBuff(afflictionId, maxDistance, allowSelf, character)
             local startPos = character.WorldPosition
             local foundUnbuffed = false
-
+            
             for crewmate in Character.GetFriendlyCrew(character) do
                 if  not allowSelf and
                     crewmate == character
@@ -107,7 +88,7 @@ do
         local Contains = util.itertools.Contains
         local xPath = util.xPath
 
-        allCharacterInstrumentData = Types.TimedCharacterData.new(self)
+        allCharacterInstrumentData = Types.AllTimedCharacterData.new(self)
 
         ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}
         allInstrumentTalentData = setmetatable({}, {
@@ -201,12 +182,14 @@ do
         
         local AIObjectiveGetItem = AIObjectiveGetItem
         local AIObjectiveOperateItem = AIObjectiveOperateItem
-        local GET_ITEM = Constants.ID_OBJECTIVE_BASE.GET_ITEM
+        local GET_ITEM = Constants.ID_OBJECTIVE_BASE.GETITEM
         local PERFORM = Constants.ID_OBJECTIVE.PERFORM
         local RangedWeapon = Components.RangedWeapon
         local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
 
+        local Any = util.itertools.Any
         local Distance = Vector2.Distance
+        local GetItemPrefab = ItemPrefab.GetItemPrefab
         local Partial3 = util.functools.Partial3
         local Partial5 = util.functools.Partial5
 
@@ -257,15 +240,17 @@ do
                 if character.HasTalent(talentId) then
                     local characterData = allCharacterInstrumentData:Get(character)
                     --local curSubObjective = instance.CurrentSubObjective --[[@type Barotrauma.AIObjective]]
-
-                    if  characterData.timer:Update(ptable["deltaTime"]) and
+                    
+                    if  characterData:Update(ptable["deltaTime"]) and
                         prePatch(instance)
                     then
                         local inventory = character.Inventory
-                        local instrument = characterData["instrument"] or
+                        local instrument = characterData.instrument or
                             inventory:SBAI_findAllItems(nil, true, function(item) return validInstruments[item.Prefab.Identifier] end)()
-
-                        if not instrument then
+                        
+                        if  not instrument and
+                            Any(validInstruments:ToList(), function(id) inventory.CanProbablyBePut(GetItemPrefab(id)) end)
+                        then
                             local function constructor()
                                 local objective = AIObjectiveGetItem(character, validInstruments, instance.objectiveManager, true, true)
 
@@ -279,10 +264,9 @@ do
                                 end
 
                                 local cleanup = Partial3(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGetItem)
-
-
+                                
                                 objective.Completed.add(function()
-                                    characterData["instrument"] = objective.TargetItem
+                                    characterData.instrument = objective.TargetItem
                                     return cleanup()
                                 end)
                                 objective.Abandoned.add(function()
@@ -307,66 +291,6 @@ do
                             ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "performObjective", PERFORM, true, false, ((not stopAfterBuffed) or anyNeedBuffFull(character)) and constructor or nil)
                         end
                     end
-                
-                    -- if  characterData.timer:Update(ptable["deltaTime"]) and
-                    --     prePatch(instance) and
-                    --     not characterData["getItemObjective"] and
-                    --     (not curSubObjective or
-                    --     curSubObjective.Identifier ~= GET_ITEM)
-                    -- then
-                    --     local performObjective = characterData["performObjective"] --[[@type Barotrauma.AIObjectiveOperateItem]]
-                        
-                    --     if  not stopAfterBuffed or
-                    --         anyNeedBuffFull(character) or
-                    --         (not performObjective and
-                    --         curSubObjective and
-                    --         curSubObjective.Identifier == PERFORM)
-                    --     then
-                    --         local function constructor()
-                    --             local objective = AIObjectiveGetItem(character, validInstruments, instance.objectiveManager, true, true)
-
-                    --             objective.AllowDangerousPressure = false
-                    --             objective.AllowToFindDivingGear = false
-                    --             objective.AllowStealing = false
-                    --             objective.AllowVariants = true
-
-                    --             if instance.Identifier == WAIT then
-                    --                 objective.AbortCondition = abortWaitGetItem
-                    --             end
-
-                    --             local cleanup = Partial5(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGetItem, characterData, "getItemObjective")
-
-                    --             objective.Completed.add(
-                    --                 function()
-                    --                     cleanup()
-                                        
-                    --                     local item = objective.TargetItem
-
-                    --                     if item == nil then return end
-                                        
-                    --                     local function operateConstructorFull()
-                    --                         local subObj = AIObjectiveOperateItem(item.GetComponent(RangedWeapon), character, instance.objectiveManager, item.Prefab.Identifier, true)
-
-                    --                         subObj.Identifier = PERFORM
-
-                    --                         local subCleanup = Partial5(instance.SBAI_cleanupSubObj, instance, subObj, AIObjectiveOperateItem, characterData, "performObjective")
-
-                    --                         subObj.Completed.add(subCleanup)
-                    --                         subObj.Abandoned.add(subCleanup)
-                    --                         return subObj
-                    --                     end
-                                        
-                    --                     instance:SBAI_tryAddSubObjective(characterData, "performObjective", true, false, operateConstructorFull)
-                    --                 end)
-
-                    --             objective.Abandoned.add(cleanup)
-                    --             return objective
-                    --         end
-                    --         ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "getItemObjective", false, true, constructor)
-                    --     elseif performObjective then
-                    --         performObjective.Abandon = true
-                    --     end
-                    -- end
                 end
             end, Hook.HookMethodType.Before)
             ::continue::
@@ -430,7 +354,7 @@ function Assistant.JengaMaster(self, options)
 
     local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
     local untouchedContainers = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
-    local allCharacterData = Types.TimedCharacterData.new(self, options["timeBetween"])
+    local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
 
     self:AddInit(
     function()
@@ -477,8 +401,8 @@ function Assistant.JengaMaster(self, options)
         then
             local characterData = allCharacterData:Get(character)
             
-            if  characterData.timer:Update(ptable["deltaTime"]) and
-                not characterData["goToObj"]
+            if  characterData:Update(ptable["deltaTime"]) and
+                not characterData.goToObj
             then
                 local closestContainer = GetClosest(character.WorldPosition, FindItems(character, untouchedContainers:ToList())) --[[@type Barotrauma.Item]]
 
@@ -493,7 +417,7 @@ function Assistant.JengaMaster(self, options)
                         objective.SpeakIfFails = false
 
                         local function cleanup()
-                            characterData["goToObj"] = nil
+                            characterData.goToObj = nil
                             instance.RemoveSubObjective(AIObjectiveGoTo, objective)
                         end
 

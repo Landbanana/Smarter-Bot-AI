@@ -7,11 +7,16 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
 local ID_ORDER = Constants.ID_ORDER
 
-local IGNORE_ROOM = ID_ORDER.IGNORE_ROOM
-local FABRICATE_ITEMS = ID_ORDER.FABRICATE_ITEMS
+local IGNORE_ROOM = ID_ORDER.IGNOREROOM
+local FABRICATE_ITEMS = ID_ORDER.FABRICATEITEMS
 local PERFORM = ID_ORDER.PERFORM
-local SBAI_CATEGORY = ID_ORDER.SBAI_CATEGORY
+local SBAI_CATEGORY = ID_ORDER.SBAICATEGORY
 local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
+
+---@param self Types.Module
+local function activateFollowOrder(self)
+    
+end
 
 ---@param self Types.Module
 local function activateIgnoreRoomOrder(self)
