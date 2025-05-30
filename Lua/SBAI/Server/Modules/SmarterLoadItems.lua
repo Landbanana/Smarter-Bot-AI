@@ -64,7 +64,7 @@ do
     ---@param self Types.Module
     function addPatches(self)
         local ItemContainer = Components.ItemContainer
-        local LOAD_ITEMS = Constants.ID_OBJECTIVE_BASE.LOAD_ITEMS
+        local LOAD_ITEMS = Constants.ID_OBJECTIVE_BASE.LOADITEMS
 
         local Contains = util.itertools.Contains
         local FindItem = util.FindItem
@@ -103,10 +103,9 @@ do
                         end
 
                         if  not item.IsFullCondition and
-                            not item.ConditionIncreasedRecently and (
+                            not (item.ConditionIncreasedRecently and 
                                 character.HasItem(item) or
-                                instance.CanEquip(item, false)
-                            )
+                                instance.CanEquip(item, false))
                         then
                             return true
                         end
