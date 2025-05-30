@@ -44,10 +44,10 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "c
 
 local ID_ORDER = Constants.ID_ORDER
 
-local IGNORE_ROOM = ID_ORDER.IGNORE_ROOM
-local FABRICATE_ITEMS = ID_ORDER.FABRICATE_ITEMS
+local IGNORE_ROOM = ID_ORDER.IGNOREROOM
+local FABRICATE_ITEMS = ID_ORDER.FABRICATEITEMS
 local PERFORM = ID_ORDER.PERFORM
-local SBAI_CATEGORY = ID_ORDER.SBAI_CATEGORY
+local SBAI_CATEGORY = ID_ORDER.SBAICATEGORY
 local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
 
 local orderCategoryPrefix = SBAI_CATEGORY.Value.."_" --[[@type string]]
@@ -66,7 +66,7 @@ local function activateOrderGui(self)
     local Zero = Vector2.Zero
 
     local Any = util.itertools.Any
-    local GetPointsOnCircumference = util.GetPointsOnCircumference
+    local GetPointsOnCircumference = util.mathtools.GetPointsOnCircumference
     local None = util.itertools.None
     local sort = table.sort
 
@@ -140,44 +140,66 @@ local function activateOrderGui(self)
     --     -- end)
     -- end)
 
-    local offsets --[=[@type Microsoft.Xna.Framework.Vector2[]]=]
-    local offsetIndex --[[@type integer]]
+    
 
-    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
-    function(instance, ptable)
-        offsets = GetPointsOnCircumference(Zero, instance.nodeDistance, #instance.availableCategories + 1, math.rad(197.5))
-        offsetIndex = 1
-    end, Hook.HookMethodType.Before)
+    do
+        local rad = math.rad
+        local yield = coroutine.yield
 
-    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNode", nil,
-    function(instance, ptable)
-        if offsets then
-            ptable["offset"] = offsets[offsetIndex].ToPoint()
-            offsetIndex = offsetIndex + 1
-        end
-    end, Hook.HookMethodType.Before)
+        local addCategory = coroutine.wrap(
+        function()
+            while true do
+                local state, offsets = yield()
+                
+                if state == 1 then
+                    local i = 1
+                    
+                    state = yield(true)
+                    
+                    while state == 2 do
+                        state = yield(offsets[i].ToPoint())
+                        i = i + 1
+                    end
+                    yield(true)
+                    yield(offsets[i].ToPoint(), i)
+                end
+            end
+        end)
+        addCategory()
 
-    self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
-    function(instance, ptable)
-        if offsets then
-            local offset = offsets[offsetIndex].ToPoint()
+        self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
+        function(instance, ptable)
+            addCategory(1, GetPointsOnCircumference(Zero, instance.nodeDistance, #instance.availableCategories + 1, rad(197.5)))
+        end, Hook.HookMethodType.Before)
+
+        self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNode", nil,
+        function(instance, ptable)
+            local offset = addCategory(2)
             
-            offsets = nil
-            instance.CreateOrderCategoryNode(orderCategory, offset, offsetIndex)
-            offsetIndex = nil
+            if offset then
+                ptable["offset"] = offset
+            end
+        end, Hook.HookMethodType.Before)
 
-            local optionNodes = instance.optionNodes
+        self:AddPatch("Barotrauma.CrewManager", "CreateOrderCategoryNodes", nil,
+        function(instance, ptable)
+            if addCategory(3) then
+                instance.CreateOrderCategoryNode(orderCategory, addCategory())
 
-            optionNode = optionNodes[#optionNodes]
-        end
-        local tooltip = TextManager.Get("ordercategorytitle."..SBAI_CATEGORY.Value)
+                local optionNodes = instance.optionNodes
 
-        instance.CreateNodeIcon(One, optionNode.Button.RectTransform, sprite, HotPink, tooltip)
+                optionNode = optionNodes[#optionNodes]
+            end
 
-        local button = optionNode.Button --[[@type Barotrauma.GUIButton]]
+            local tooltip = TextManager.Get("ordercategorytitle."..SBAI_CATEGORY.Value)
 
-        button.GetChild(Int32(button.CountChildren - 2)).RectTransform.SetAsLastChild() --[[@type Barotrauma.GUIImage]]
-    end, Hook.HookMethodType.After)
+            instance.CreateNodeIcon(One, optionNode.Button.RectTransform, sprite, HotPink, tooltip)
+
+            local button = optionNode.Button --[[@type Barotrauma.GUIButton]]
+
+            button.GetChild(Int32(button.CountChildren - 2)).RectTransform.SetAsLastChild() --[[@type Barotrauma.GUIImage]]
+        end, Hook.HookMethodType.After)
+    end
 
     local keyMap = {Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9}
     local prefabs = {}
