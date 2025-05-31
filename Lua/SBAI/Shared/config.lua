@@ -163,6 +163,12 @@ do
 
     defaults:CreateSection("CrewStaysInSub")
 
+    section = defaults:CreateSection("DeconstructAdditions")
+    subsection = section:CreateSection("MoveInBulk")
+    subsection:CreateOption("maxCheck", 32, Config.OPTION_TYPE.int, nil, 2, 128)
+
+    section:CreateSection("OnlyUseShipDeconstructor")
+
     section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
@@ -235,8 +241,6 @@ do
     subsection:CreateOption("chairs", true, Config.OPTION_TYPE.boolean)
 
     section:CreateOption("stayInBedIfHurt", true, Config.OPTION_TYPE.boolean)
-
-    defaults:CreateSection("UseShipDeconstructorIfAvailable")
 
     section = defaults:CreateSection("UseTalents")
     section:CreateOption("idle", true, Config.OPTION_TYPE.boolean)

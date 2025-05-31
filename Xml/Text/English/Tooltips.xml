@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
+  <GUI.tooltips.deconstructadditions>Some improvements to the "Deconstruct Items" order</GUI.tooltips.deconstructadditions>
+  <GUI.tooltips.deconstructadditions.moveinbulk>When gathering items to deconstruct, the AI will also look for other items marked for deconstruction in the same stack/container and add said items to their inventory</GUI.tooltips.deconstructadditions.moveinbulk>
+  <GUI.tooltips.deconstructadditions.moveinbulk.maxcheck>Sets the maximum amount of additional items to check for (lower values may help with lag spikes)</GUI.tooltips.deconstructadditions.moveinbulk.maxcheck>
+  <GUI.tooltips.deconstructadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.deconstructadditions.onlyuseshipdeconstructor>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
   <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
@@ -51,7 +55,6 @@
   <GUI.tooltips.usefurniture.autousewhenidle.beds>Bots will use beds when they idle</GUI.tooltips.usefurniture.autousewhenidle.beds>
   <GUI.tooltips.usefurniture.autousewhenidle.chairs>Bots will use chairs when they idle</GUI.tooltips.usefurniture.autousewhenidle.chairs>
   <GUI.tooltips.usefurniture.stayinbedifhurt>If a bot is sleeping in a bed, the bot is injured, and the bed is in a safe location, then they will remain in the bed until healed</GUI.tooltips.usefurniture.stayinbedifhurt>
-  <GUI.tooltips.useshipdeconstructorifavailable>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.useshipdeconstructorifavailable>
   <GUI.tooltips.usetalents.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.idle>
   <GUI.tooltips.usetalents.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.wait>
   <GUI.tooltips.usetalents>Lets the AI utilize some talents that they previously couldn't</GUI.tooltips.usetalents>

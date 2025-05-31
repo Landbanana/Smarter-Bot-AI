@@ -14,6 +14,7 @@
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ModifyObjectiveProperties.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/PerformInstruments.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/DeconstructAdditions.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/Orders.lua" />
@@ -23,7 +24,6 @@
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/SmarterPets.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/SmarterLoadItems.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseFurniture.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseShipDeconstructorIfAvailable.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/UseTalents.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/config.lua" />
   <Other file="%ModDir%/Lua/SBAI/Shared/constants.lua" />
