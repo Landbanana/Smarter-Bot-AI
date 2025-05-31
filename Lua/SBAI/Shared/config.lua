@@ -163,11 +163,14 @@ do
 
     defaults:CreateSection("CrewStaysInSub")
 
-    section = defaults:CreateSection("DeconstructionAdditions")
-    subsection = section:CreateSection("MoveInBulk")
+    section = defaults:CreateSection("CleaningAdditions")
+    subsection = section:CreateSection("PurchasedItemCrates", false)
+    subsection:CreateOption("autoOrder", "*deconstruct;ignore", Config.OPTION_TYPE.int, "radio")
+
+    subsection = section:CreateSection("DeconstructInBulk")
     subsection:CreateOption("maxCheck", 32, Config.OPTION_TYPE.int, nil, 2, 128)
 
-    section:CreateSection("OnlyUseShipDeconstructor")
+    section:CreateOption("OnlyUseShipDeconstructor", true, Config.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)

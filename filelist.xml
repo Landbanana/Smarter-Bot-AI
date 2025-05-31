@@ -14,7 +14,7 @@
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ModifyObjectiveProperties.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/PerformInstruments.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
-  <Other file="%ModDir%/Lua/SBAI/Server/Modules/DeconstructionAdditions.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleaningAdditions.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipArmor.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/Orders.lua" />
