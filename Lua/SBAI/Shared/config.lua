@@ -19,6 +19,8 @@ Config.defaults = {
     MIN_CONDITION_PERCENTAGE = 0,
     MIN_TIME_BETWEEN = 5,
     MAX_TIME_BETWEEN = 1000,
+    MIN_MIN_HEALTH_PERCENTAGE = 10.0,
+    MAX_MIN_HEALTH_PERCENTAGE = 90.0,
     CONFIG = {}
 }
 
@@ -159,9 +161,12 @@ do
     ---subsection = section:CreateSection("CleanWalls")
     ---subsection:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
-    --defaults:CreateSection("CombatTweaks")
+    section = defaults:CreateSection("CombatTweaks")
 
-    defaults:CreateSection("CrewStaysInSub")
+    section:CreateOption("PreventAttackingHandcuffed", true, Config.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("ArrestHumansInPlayerSub")
+    subsection:CreateOption("minHealth", 75.0, Config.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
 
     section = defaults:CreateSection("CleaningAdditions")
     subsection = section:CreateSection("PurchasedItemCrates", false)
@@ -171,6 +176,8 @@ do
     subsection:CreateOption("maxCheck", 32, Config.OPTION_TYPE.int, nil, 2, 128)
 
     section:CreateOption("OnlyUseShipDeconstructor", true, Config.OPTION_TYPE.boolean)
+
+    defaults:CreateSection("CrewStaysInSub")
 
     section = defaults:CreateSection("EquipArmor")
     section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
@@ -187,8 +194,6 @@ do
     section:CreateOption("minimumCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     section = defaults:CreateSection("Orders", false)
-
-    defaults:CreateSection("PreventAttackingHandcuffed")
 
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")
@@ -258,7 +263,7 @@ do
     subsubsection:CreateOption("timeBetween", 120, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsubsection = subsection:CreateSection("NonThreatening")
-    subsubsection:CreateOption("ragdollHealthPercent", 75.0, Config.OPTION_TYPE.float, nil, 10, 90) 
+    subsubsection:CreateOption("minHealth", 75.0, Config.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
     -- subsubsection:CreateOption("Accordion", true, Config.OPTION_TYPE.boolean)
     -- subsubsection:CreateOption("Bikehorn", true, Config.OPTION_TYPE.boolean)
     -- subsubsection:CreateOption("Guitar", true, Config.OPTION_TYPE.boolean)

@@ -313,7 +313,7 @@ function Assistant.NonThreatening(self, options)
     local appliedStun = Constants.D_NONTHREATENING_STUN
     local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
 
-    local ragdollHealthPercent = options["ragdollHealthPercent"] --[[@type number]]
+    local minHealh = options["minHealh"] --[[@type number]]
 
     self:AddPatch("Barotrauma.AIObjectiveCombat", "Act", nil,
     function(instance, ptable)
@@ -323,7 +323,7 @@ function Assistant.NonThreatening(self, options)
             not (character.Stun > 0) and
             not character.Params.Health.StunImmunity and
             instance.IsEnemyClose(instance.CloseDistance) and
-            character.HealthPercentage < ragdollHealthPercent
+            character.HealthPercentage < minHealh
         then
             local controller = character.AIController --[[@type Barotrauma.HumanAIController]]
             local curHull = character.CurrentHull
