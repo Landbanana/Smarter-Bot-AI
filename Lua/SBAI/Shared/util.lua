@@ -233,8 +233,8 @@ end
 ---@param v V
 ---@return boolean
 function util.itertools.Contains(t, v)
-    for val in t do
-        if val == v then
+    for _v in t do
+        if _v == v then
             return true
         end
     end

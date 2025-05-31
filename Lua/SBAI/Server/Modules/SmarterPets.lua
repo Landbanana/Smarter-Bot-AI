@@ -28,7 +28,6 @@ local function activateEatFoodInInventory(self, options)
     -- local Protect = options["overrideProtectOwner"] and AIState.Protect or nil
     
     local Filter = util.itertools.FilterList
-    local ToList = util.itertools.ToList
     
     local allPetData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
     local foodItemTags = Types.Set.new()

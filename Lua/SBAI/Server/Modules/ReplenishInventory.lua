@@ -145,9 +145,7 @@ do
                         end
                     end
                     if containedTags:IsEmpty() then goto continue end
-
                     
-
                     local utilizedTags = new()
                     
                     for rwElement in xPath2(xElement, "//RangedWeapon") do
@@ -691,10 +689,6 @@ end
 local activate
 
 do
-    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
-    local REPLENISH = Constants.ID_OBJECTIVE.REPLENISH
-    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
-
     local Any = util.itertools.Any
 
     ---@param self Types.Module
@@ -729,4 +723,4 @@ do
     end
 end
 
-return Types.Module.new(activate, deactivate)
+return Types.Module.new(activate)
