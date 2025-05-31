@@ -13,19 +13,35 @@ Types.TYPES = {
 Types.Set = {type=Types.TYPES.SET}
 Types.Set.__index = Types.Set
 
----@return Types.Set
-function Types.Set.new(t)
-    if t then
-        local temp = {}
+do
+    local next = next
 
-        for v in t do
-            temp[v] = true
+    function Types.Set:__len()
+        local i = 0
+
+        for _ in next, self do
+            i = i + 1
         end
-        t = temp
-    else
-        t = {}
+        return i
     end
-    return setmetatable(t, Types.Set)
+end
+
+do
+    local Set = Types.Set
+    local setmetatable = setmetatable
+
+    ---@return Types.Set
+    function Types.Set.new(t)
+        if t then
+            local _t = {}
+
+            for v in t do
+                _t[v] = true
+            end
+            return setmetatable(_t, Set)
+        end
+        return setmetatable({}, Set)
+    end
 end
 
 do
@@ -53,6 +69,7 @@ end
 
 do
     local IsSet = Types.Set.IsSet
+    local next = next
 
     ---@generic T
     ---@param self Types.Set<T>
@@ -98,18 +115,19 @@ do
     local IsSet = Types.Set.IsSet
 
     local new = Types.Set.new
+    local next = next
 
     ---@generic T
     ---@param self Types.Set<T>
     ---@param t T[]|Types.Set<T>
     function Types.Set:Intersection_Update(t)
         if not IsSet(t) then
-            local temp = new()
+            local _t = new()
 
             for v in t do
-                temp:Add(v)
+                _t:Add(v)
             end
-            t = temp
+            t = _t
         end
 
         for k in next, self do
@@ -133,6 +151,7 @@ end
 
 do
     local IsSet = Types.Set.IsSet
+    local next = next
 
     ---@generic T
     ---@param self Types.Set<T>
@@ -163,6 +182,7 @@ end
 
 do
     local IsSet = Types.Set.IsSet
+    local next = next
 
     ---@generic T
     ---@param self Types.Set<T>
@@ -190,14 +210,15 @@ function Types.Set:Symmetric_Difference(t)
     return out
 end
 
----@generic T
----@param self Types.Set<T>
----@return boolean
-function Types.Set:IsEmpty()
-    for _ in next, self do
-        return false
+do
+    local next = next
+
+    ---@generic T
+    ---@param self Types.Set<T>
+    ---@return boolean
+    function Types.Set:IsEmpty()
+        return next(self) == nil
     end
-    return true
 end
 
 do
@@ -240,6 +261,7 @@ end
 do
     local clock = os.clock
     local D_TIMER_NOISE = Constants.D_TIMER_NOISE
+    local Timer = Types.Timer
 
     ---@public
     ---@param delay Types.Timer
@@ -253,10 +275,10 @@ do
         }
 
         if not noise or noise <= 0 then
-            t.Reset = Types.Timer.ResetNoNoise
+            t.Reset = Timer.ResetNoNoise
         end
 
-        setmetatable(t, Types.Timer)
+        setmetatable(t, Timer)
         t:Reset()
         return t
     end
@@ -517,7 +539,7 @@ do
     ---@return ...
     function Types.Module:AddCommonModule(requirePath)
         local commonModules = self.commonModules
-
+        
         if not commonModules then
             commonModules = {}
             self.commonModules = commonModules
@@ -538,7 +560,7 @@ do
             for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
                 newNamespace = newNamespace + stackAdd
             end
-
+            
             commonModule:Activate(self, newNamespace)
         end
         return unpack(requireOut, 2, n)

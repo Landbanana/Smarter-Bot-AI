@@ -3,33 +3,40 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 do
-    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
+    local descriptor
 
-    local descriptor =  Descriptors["Barotrauma.AIObjectiveCombat"]
-    LuaUserData.MakeMethodAccessible(descriptor, "IsEnemyClose")
-    LuaUserData.MakeFieldAccessible(descriptor, "CloseDistance")
+    AutoRegisterType("Barotrauma.TalentStatIdentifier")
 
-    ---@class Barotrauma.AIObjectiveCombat
-    ---@field CloseDistance System.Single
-
-    LuaUserData.RegisterType("Barotrauma.TalentStatIdentifier")
-    
     ---@class Barotrauma.TalentStatIdentifier
     ---@field Stat Barotrauma.TalenItemStats
     ---@field TalentIdentifier Barotrauma.Identifier
     ---@field UniqueCharacterId System.UInt32
     ---@field Save System.Boolean
 
-    LuaUserData.MakeFieldAccessible(LuaUserData.RegisterType("Barotrauma.ItemStatManager"), "talentStats")
+    descriptor =  Descriptors["Barotrauma.AIObjectiveCombat"]
+    MakeFieldAccessible(descriptor, "CloseDistance")
+    MakeMethodAccessible(descriptor, "IsEnemyClose")
+
+    ---@class Barotrauma.AIObjectiveCombat
+    ---@field CloseDistance System.Single
+
+    MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
+    
+    MakeFieldAccessible(AutoRegisterType("Barotrauma.ItemStatManager"), "talentStats")
 
     ---@class Barotrauma.ItemStatManager
     ---@field talentStats System.Collections.Generic.Dictionary*1Barotrauma*TalentStatIdentifier*1System*Single
     
     descriptor = Descriptors["Barotrauma.AIObjectiveGoTo"]
-    LuaUserData.MakePropertyAccessible(descriptor, "PathSteering")
-    LuaUserData.MakePropertyAccessible(descriptor, "SteeringManager")
+    MakePropertyAccessible(descriptor, "PathSteering")
+    MakePropertyAccessible(descriptor, "SteeringManager")
 
-    LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveGetItem"], "Act")
+    MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveGetItem"], "Act")
 end
 
 local activateInstrumentTalent

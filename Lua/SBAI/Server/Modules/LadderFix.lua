@@ -1,7 +1,12 @@
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"], "host")
+do
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local Descriptors = Descriptors
+
+    MakeFieldAccessible(Descriptors["Barotrauma.SteeringManager"], "host")
+    MakeFieldAccessible(Descriptors["Barotrauma.IndoorsSteeringManager"], "host")
+end
 
 ---@param self Types.Module
 local function activate(self)

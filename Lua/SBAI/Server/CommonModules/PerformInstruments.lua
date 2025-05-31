@@ -2,16 +2,6 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjective"], "ConcurrentObjectives")
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "ConcurrentObjectives")
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "ConcurrentObjectives")
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "ConcurrentObjectives")
-
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjective"], "get_ConcurrentObjectives")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveOperateItem"], "get_ConcurrentObjectives")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "get_ConcurrentObjectives")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "get_ConcurrentObjectives")
-
 local instrumentInvSlots
 
 do

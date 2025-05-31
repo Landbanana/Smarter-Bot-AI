@@ -59,7 +59,7 @@ local function activate(self)
 
         ---@alias MapEntityCategory
         ---|`"None"`
-        ---|`"Structure "`
+        ---|`"Structure"`
         ---|`"Decorative"`
         ---|`"Machine"`
         ---|`"Medical"`
@@ -81,16 +81,14 @@ local function activate(self)
         ---@param categoryStr MapEntityCategory
         ---@return boolean
         local function hasCategory(instance, categoryStr)
-            local targetCategory = mapEntityCategories[categoryStr]
-
-            return HasFlag(instance.Category, targetCategory)
+            return HasFlag(instance.Category, mapEntityCategories[categoryStr])
         end
 
         AddMethod("hasCategory", hasCategory)
         ---@class Barotrauma.ItemPrefab
         ---@field public SBAI_hasCategory fun(instance:Barotrauma.ItemPrefab, categoryStr:MapEntityCategory):boolean
     end
-
+    
 end
 
 return Types.CommonModule.new(activate)

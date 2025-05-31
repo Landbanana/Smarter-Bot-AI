@@ -1,14 +1,21 @@
 local Constants = require("SBAI.Shared.constants")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "fireTimer")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "meltDownTimer")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedTurbineOutputSignalTime")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "lastReceivedFissionRateSignalTime")
+do
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local Descriptors = Descriptors
+    local descriptor
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
+    descriptor = Descriptors["Barotrauma.Items.Components.Reactor"]
+    MakeFieldAccessible(descriptor, "fireTimer")
+    MakeFieldAccessible(descriptor, "lastReceivedTurbineOutputSignalTime")
+    MakeFieldAccessible(descriptor, "lastReceivedFissionRateSignalTime")
+    MakeFieldAccessible(descriptor, "meltDownTimer")
+    MakeMethodAccessible(descriptor, "GetGeneratedHeat")
 
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Reactor"], "GetGeneratedHeat")
+    MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
+end
 
 ---@param self Types.Module
 local function activate(self)

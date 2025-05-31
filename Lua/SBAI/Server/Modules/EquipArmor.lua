@@ -10,9 +10,9 @@ local function activate(self)
     local Wearable = Components.Wearable
     
     local Any = util.itertools.Any
-    local FilterList = util.itertools.FilterList
-    local HasFlag = util.mathtools.HasFlag
     local Contains = util.itertools.Contains
+    local HasFlag = util.mathtools.HasFlag
+    local Partial1 = util.functools.Partial1
 
     local clothesSlotTypes = {InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset}
     local allCharacterData = Types.AllTimedCharacterData.new(self)
@@ -27,17 +27,16 @@ local function activate(self)
             local inventory = character.Inventory --[[@type Barotrauma.CharacterInventory]]
             local filteredClothesSlotTypes = 0
 
-            for slotType in FilterList(clothesSlotTypes, function(slotType) return not inventory.GetItemInLimbSlot(slotType) end) do
-                filteredClothesSlotTypes = filteredClothesSlotTypes + slotType
+            for slotType in clothesSlotTypes do
+                if not inventory.GetItemInLimbSlot(slotType) then
+                    filteredClothesSlotTypes = filteredClothesSlotTypes + slotType
+                end
             end
 
             if filteredClothesSlotTypes == 0 then return end
 
-            ---@param slot Barotrauma.InvSlotType
-            ---@return boolean
-            local function testSlot(slot)
-                return HasFlag(filteredClothesSlotTypes, slot)
-            end
+            ---@type fun(slot:Barotrauma.InvSlotType):boolean
+            local testSlot = Partial1(HasFlag, filteredClothesSlotTypes)
 
             for item in inventory:SBAI_findAllItems(nil, true,
                 function(item)
@@ -47,8 +46,10 @@ local function activate(self)
                         not Contains(character.HeldItems, item) and
                         Any(item.AllowedSlots, testSlot)
                 end) do
-                for v in FilterList(item.AllowedSlots, testSlot) do
-                    if inventory.TryPutItem(item, character, {v}, true, true) then
+                for slot in item.AllowedSlots do
+                    if  testSlot(slot) and
+                        inventory.TryPutItem(item, character, {slot}, true, true)
+                    then
                         return character.OnWearablesChanged()
                     end
                 end

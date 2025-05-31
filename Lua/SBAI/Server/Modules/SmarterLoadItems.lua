@@ -54,7 +54,7 @@ do
     ---@param self Types.Module
     ---@param options table
     function activateLoadType(self, options)
-        local loadType = self.namespace.stack[#self.namespace.stack]
+        local loadType = self:GetSection()
         local loadTypeData = LOAD_TYPE_DATA[loadType]
 
         insert(activeLoadData, {Identifier(loadType), loadTypeData[1], loadTypeData[2], loadTypeData[3], options["minimumCondition"]})

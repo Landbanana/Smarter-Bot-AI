@@ -2,19 +2,25 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.RegisterType("Barotrauma.AITargetMemory")
+do
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
 
-LuaUserData.RegisterType("Barotrauma.PetBehavior+Food")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.PetBehavior"], "foods")
+    AutoRegisterType("Barotrauma.AITargetMemory")
+    AutoRegisterType("Barotrauma.PetBehavior+Food")
 
---LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.EnemyAIController"], "currentTargetMemory")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.EnemyAIController"], "currentTargetingParams")
---LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.EnemyAIController"], "GetTargetMemory")
---LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.EnemyAIController"], "SelectedAiTarget")
+    --MakeFieldAccessible(Descriptors["Barotrauma.EnemyAIController"], "currentTargetMemory")
+    MakeFieldAccessible(Descriptors["Barotrauma.EnemyAIController"], "currentTargetingParams")
+    MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems")
+    MakeFieldAccessible(Descriptors["Barotrauma.PetBehavior"], "foods")
+    
+    --MakePropertyAccessible(Descriptors["Barotrauma.EnemyAIController"], "SelectedAiTarget")
+    MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "PreferredContainers")
 
-LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.ItemPrefab"], "PreferredContainers")
-
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Item"], "_cleanableItems")
+    --LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.EnemyAIController"], "GetTargetMemory")
+end
 
 ---@param self Types.Module
 ---@param options table

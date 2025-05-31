@@ -244,20 +244,25 @@ end
 do
     local wrap = coroutine.wrap
     local yield = coroutine.yield
+
+    local function co(l, p)
+        yield()
+        for v in l do
+            if p(v) then
+                yield(v)
+            end
+        end
+    end
     
     ---@generic T
-    ---@param t T[]|fun():T?
+    ---@param l T[]|fun():T?
     ---@param p fun(v:T):boolean
     ---@return fun():T?
-    function util.itertools.FilterList(t, p)
-        return wrap(
-        function()
-            for v in t do
-                if p(v) then
-                    yield(v)
-                end
-            end
-        end)
+    function util.itertools.FilterList(l, p)
+        local out = wrap(co)
+
+        out(l, p)
+        return out
     end
 end
 
@@ -306,8 +311,18 @@ do
 end
 
 do
+    local next = next
     local wrap = coroutine.wrap
     local yield = coroutine.yield
+
+    local function co(t, p)
+        yield()
+        for k, v in next, t do
+            if p(k, v) then
+                yield(k, v)
+            end
+        end
+    end
     
     ---@generic K
     ---@generic V
@@ -315,14 +330,10 @@ do
     ---@param p fun(k:K, v:V):boolean
     ---@return fun():(K?,V?)
     function util.itertools.FilterTable(t, p)
-        return wrap(
-        function()
-            for k, v in next, t do
-                if p(k, v) then
-                    yield(k, v)
-                end
-            end
-        end)
+        local out = wrap(co)
+
+        out(t, p)
+        return out
     end
 end
 

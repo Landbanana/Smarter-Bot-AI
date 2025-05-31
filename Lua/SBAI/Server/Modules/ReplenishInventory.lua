@@ -2,26 +2,39 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "Act")
+do
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
+    local descriptor
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "subObjectives")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "subObjectives")
+    AutoRegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
+    AutoRegisterType("Barotrauma.AIObjectiveMoveItem")
 
---LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
+    descriptor = Descriptors["Barotrauma.AIObjectiveContainItem"]
+    MakeFieldAccessible(descriptor, "getItemObjective")
+    MakeMethodAccessible(descriptor, "Act")
 
-LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
+    MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveIdle"], "subObjectives")
+    MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveGoTo"], "subObjectives")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.ItemInventory"], "slots")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CharacterInventory"], "slots")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Inventory"], "TrySwapping")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.ItemInventory"], "TrySwapping")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CharacterInventory"], "TrySwapping")
+    --MakeFieldAccessible(Descriptors["Barotrauma.Inventory"], "slots")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "getItemObjective")
+    MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 
-LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
+    descriptor = Descriptors["Barotrauma.Inventory"]
+    MakeFieldAccessible(descriptor, "slots")
+    MakeMethodAccessible(descriptor, "TrySwapping")
+
+    descriptor = Descriptors["Barotrauma.ItemInventory"]
+    MakeFieldAccessible(descriptor, "slots")
+    MakeMethodAccessible(descriptor, "TrySwapping")
+
+    descriptor = Descriptors["Barotrauma.CharacterInventory"]
+    MakeFieldAccessible(descriptor, "slots")
+    MakeMethodAccessible(descriptor, "TrySwapping")
+end
 
 local activateGenericItem
 
@@ -129,7 +142,6 @@ do
             local utilizerIds = {}
 
             for prefab in Prefabs do
-                
                 if not prefab:SBAI_hasCategory("Weapon") then goto continue end
 
                 do
@@ -137,7 +149,6 @@ do
                     local containedTags = new()
 
                     for contElement in xPath2(xElement, "//ItemContainer//Containable") do
-                        
                         for tag in xGetItemTags(contElement) do
                             if specificTargetTags[tag] then
                                 containedTags:Add(tag)
@@ -276,287 +287,381 @@ do
     end
 end
 
-local sharedPatch
-
-local allCharacterData
-local getNextTarget
-local objPredicateData
+local generateSharedPatch
 
 do
     local AIObjectiveCleanupItem = AIObjectiveCleanupItem
     local AIObjectiveContainItem = AIObjectiveContainItem
     local GOTO = Constants.ID_OBJECTIVE_BASE.GOTO
+    local ItemContainer = Components.ItemContainer
     local REPLENISH_CLEAN = Constants.ID_OBJECTIVE.REPLENISHCLEAN
     local REPLENISH = Constants.ID_OBJECTIVE.REPLENISH
 
-    ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
-    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-    function sharedPatch(instance, ptable)
-        local character = instance.character
-        local submarine = character.Submarine
-
-        if  instance.Identifier ~= GOTO and
-            submarine and
-            submarine.Info.IsPlayer
-        then
-            local characterData = allCharacterData:Get(character)
-            
-            if  characterData:Update(ptable["deltaTime"]) and
-                not characterData.containItemObj and
-                not characterData.cleanupItemObj and
-                getNextTarget(characterData, character) and
-                objPredicateData[instance.Identifier](instance, character)
-            then
-                local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
-                local targetContainer = characterData.targetContainer --[[@type Barotrauma.Items.Components.ItemContainer]]
-                local targetSlot = characterData.targetSlot --[[@type integer]]
-                local curSection = characterData.curSection --[[@type table]]
-                
-                local targetTags = curSection.utilizerIds[targetContainer.Item.Prefab.Identifier]
-
-                targetTags = next(targetTags == true and curSection.specificTargetTags or targetTags)
-                
-                local function constructor()
-                    local objective = AIObjectiveContainItem(character, targetTags, targetContainer, instance.objectiveManager)
-
-                    objective.Identifier = REPLENISH
-                    
-                    objective.AllowDangerousPressure = false
-                    objective.AllowStealing = false
-                    objective.AllowToFindDivingGear = false
-                    --objective.ConditionLevel = 100.0
-                    objective.Equip = false
-                    --objective.MoveWholeStack = true
-                    --objective.RemoveEmpty = true
-                    objective.RemoveExistingWhenNecessary = true
-                    objective.TargetSlot = targetSlot
-                    --objective.ItemCount = math.max(1, targetContainer.GetMaxStackSize(targetSlot) - #targetContainer.Inventory.slots[targetSlot + 1].Items)
-
-                    do
-                        local slot = targetContainer.Inventory.slots[targetSlot + 1]
-                        local maxStackSize = targetContainer.GetMaxStackSize(targetSlot)
-
-                        function objective:AbortCondition()
-                            return maxStackSize <= #slot.Items and
-                                slot.Items[1].IsFullCondition and
-                                characterData.replenishCleanObj == nil
-                        end
-                    end
-
-                    -- if curSection.rechargerTag ~= nil then
-                    --     objective.ConditionLevel = 100.0
-                    -- else
-                    --     objective.ConditionLevel = 15
-                    -- end
-
-                    local function cleanup()
-                        return instance:SBAI_cleanupSubObj(objective, AIObjectiveContainItem, characterData, "containItemObj", "targetItem", "targetContainer", "targetSlot", "curSection")
-                    end
-                    objective.Completed.add(
-                        function()
-                            if targetItem then
-                                local inventory = targetItem.ParentInventory
-
-                                if  inventory == character.Inventory or
-                                    inventory == nil
-                                then
-                                    
-                                    local function constructor()
-                                        local subObjective = AIObjectiveCleanupItem(targetItem, character, objective.objectiveManager)
-
-                                        local function cleanup()
-                                            return instance:SBAI_cleanupSubObj(subObjective, AIObjectiveCleanupItem, characterData, "replenishCleanObj")
-                                        end
-
-                                        subObjective.Completed.add(cleanup)
-                                        subObjective.Abandoned.add(cleanup)
-
-                                        return subObjective
-                                    end
-                                    instance:SBAI_tryAddSubObjective(characterData, "replenishCleanObj", REPLENISH_CLEAN, false, true, constructor)
-                                end
-                            end
-                            return cleanup()
-                        end
-                    )
-                    objective.Abandoned.add(cleanup)
-                    -- function()
-                    --     if targetItem then
-                    --         local inventory = targetItem.ParentInventory
-
-                    --         if  inventory == targetContainer.Inventory and
-                    --             not targetItem.IsFullCondition
-                    --         then
-                    --             local subObjective = objective.getItemObjective
-                                
-                    --             if subObjective then
-                    --                 local itemToContain = subObjective.TargetItem
-                                    
-                    --                 if itemToContain then
-                    --                     inventory.TryPutItem(itemToContain, targetSlot, true, true, character, true, true)
-                    --                 end
-                    --             end
-                    --         end
-                    --     end
-                    --     return cleanup()
-                    -- end)
-                    return objective
-                end
-                
-                ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "containItemObj", REPLENISH, true, false, constructor)
-            end
-        end
-    end
-end
-
-local getTargetItem
-
-do
-    local ItemContainer = Components.ItemContainer
-
     local GetSpecificSlots = util.GetSpecificSlots
-
+    
+    ---@param allCharacterData Types.AllTimedCharacterData
+    ---@param objPredicateData table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>
+    ---@param idMap table
     ---@param fillEmpty boolean
-    ---@param character Barotrauma.Character
-    ---@param idMapData table
-    function getTargetItem(fillEmpty, character, idMapData)
-        local inventory =  character.Inventory
-        local utilizerIds = idMapData.utilizerIds --[[@type Types.Set<Barotrauma.Identifier>]]
-        local targetTags = idMapData.targetIds:Union(idMapData.specificTargetTags) --[[@type Types.Set<Barotrauma.Identifier>]]
-        local minimumCondition = idMapData.minimumCondition --[[@type number]]
-        local minimumEquippedCondition = idMapData.minimumEquippedCondition --[[@type number]]
-        
-        targetTags:Add(idMapData.targetTag)
-
-        for container in inventory:SBAI_findAllItems(nil, true,
-            function(container)
-                return utilizerIds[container.Prefab.Identifier] ~= nil
-            end) do
-            local minCon = character.HasEquippedItem(container) and minimumEquippedCondition or minimumCondition
-            local validSlots = GetSpecificSlots(container, targetTags)
-            local itemContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
-            local contInventory = itemContainer.Inventory
-
+    ---@return fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    function generateSharedPatch(allCharacterData, objPredicateData, idMap, fillEmpty)
+        ---@param character Barotrauma.Character
+        ---@param idMapData table
+        local function getTargetItem(character, idMapData)
+            local inventory =  character.Inventory
+            local utilizerIds = idMapData.utilizerIds --[[@type Types.Set<Barotrauma.Identifier>]]
+            local targetTags = idMapData.targetIds:Union(idMapData.specificTargetTags) --[[@type Types.Set<Barotrauma.Identifier>]]
+            local minimumCondition = idMapData.minimumCondition --[[@type number]]
+            local minimumEquippedCondition = idMapData.minimumEquippedCondition --[[@type number]]
             
-            
-            for s in validSlots do
-                local curItem = container.OwnInventory.GetItemAt(s)
-                local maxStack = itemContainer.GetMaxStackSize(s)
+            targetTags:Add(idMapData.targetTag)
 
-                if curItem then
-                    if maxStack > 1 then
-                        if #contInventory.slots[s + 1].Items / maxStack * 100 < minCon then
+            for container in inventory:SBAI_findAllItems(nil, true,
+                function(container)
+                    return utilizerIds[container.Prefab.Identifier] ~= nil
+                end) do
+                local minCon = character.HasEquippedItem(container) and minimumEquippedCondition or minimumCondition
+                local validSlots = GetSpecificSlots(container, targetTags)
+                local itemContainer = container.GetComponent(ItemContainer) --[[@type Barotrauma.Items.Components.ItemContainer]]
+                local contInventory = itemContainer.Inventory
+                
+                for s in validSlots do
+                    local curItem = container.OwnInventory.GetItemAt(s)
+                    local maxStack = itemContainer.GetMaxStackSize(s)
+
+                    if curItem then
+                        if maxStack > 1 then
+                            if #contInventory.slots[s + 1].Items / maxStack * 100 < minCon then
+                                return curItem, itemContainer, s
+                            end
+                        end
+                        if  curItem.ConditionPercentage < minCon then
                             return curItem, itemContainer, s
                         end
+                    elseif fillEmpty then
+                        return nil, itemContainer, s
                     end
-                    if  curItem.ConditionPercentage < minCon then
-                        return curItem, itemContainer, s
-                    end
-                elseif fillEmpty then
-                    return nil, itemContainer, s
                 end
-            
+            end
+            return nil, nil, -1
+        end
+
+        local function getNextTarget(characterData, character)
+            local sectionName, idMapData = next(idMap, characterData.lastSectionName)
+
+            if sectionName == nil then
+                sectionName, idMapData = next(idMap)
+            end
+
+            characterData.lastSectionName = sectionName
+
+            local targetItem, targetContainer, targetSlot = getTargetItem(character, idMapData)
+
+            if targetContainer then
+                characterData.targetItem = targetItem
+                characterData.targetContainer = targetContainer
+                characterData.targetSlot = targetSlot
+                characterData.curSection = idMap[sectionName]
+                return true
+            end
+            return false
+        end
+
+        ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
+        ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+        return function(instance, ptable)
+            local character = instance.character
+            local submarine = character.Submarine
+
+            if  instance.Identifier ~= GOTO and
+                submarine and
+                submarine.Info.IsPlayer
+            then
+                local characterData = allCharacterData:Get(character)
+                
+                if  characterData:Update(ptable["deltaTime"]) and
+                    not characterData.containItemObj and
+                    not characterData.cleanupItemObj and
+                    getNextTarget(characterData, character) and
+                    objPredicateData[instance.Identifier](instance, character)
+                then
+                    local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
+                    local targetContainer = characterData.targetContainer --[[@type Barotrauma.Items.Components.ItemContainer]]
+                    local targetSlot = characterData.targetSlot --[[@type integer]]
+                    local curSection = characterData.curSection --[[@type table]]
+                    
+                    local targetTags = curSection.utilizerIds[targetContainer.Item.Prefab.Identifier]
+
+                    targetTags = next(targetTags == true and curSection.specificTargetTags or targetTags)
+                    
+                    local function constructor()
+                        local objective = AIObjectiveContainItem(character, targetTags, targetContainer, instance.objectiveManager)
+
+                        objective.Identifier = REPLENISH
+                        
+                        objective.AllowDangerousPressure = false
+                        objective.AllowStealing = false
+                        objective.AllowToFindDivingGear = false
+                        --objective.ConditionLevel = 100.0
+                        objective.Equip = false
+                        --objective.MoveWholeStack = true
+                        --objective.RemoveEmpty = true
+                        objective.RemoveExistingWhenNecessary = true
+                        objective.TargetSlot = targetSlot
+                        --objective.ItemCount = math.max(1, targetContainer.GetMaxStackSize(targetSlot) - #targetContainer.Inventory.slots[targetSlot + 1].Items)
+
+                        do
+                            local slot = targetContainer.Inventory.slots[targetSlot + 1]
+                            local maxStackSize = targetContainer.GetMaxStackSize(targetSlot)
+
+                            function objective:AbortCondition()
+                                return maxStackSize <= #slot.Items and
+                                    slot.Items[1].IsFullCondition and
+                                    characterData.replenishCleanObj == nil
+                            end
+                        end
+
+                        -- if curSection.rechargerTag ~= nil then
+                        --     objective.ConditionLevel = 100.0
+                        -- else
+                        --     objective.ConditionLevel = 15
+                        -- end
+
+                        local function cleanup()
+                            return instance:SBAI_cleanupSubObj(objective, AIObjectiveContainItem, characterData, "containItemObj", "targetItem", "targetContainer", "targetSlot", "curSection")
+                        end
+                        objective.Completed.add(
+                            function()
+                                if targetItem then
+                                    local inventory = targetItem.ParentInventory
+
+                                    if  inventory == character.Inventory or
+                                        inventory == nil
+                                    then
+                                        
+                                        local function constructor()
+                                            local subObjective = AIObjectiveCleanupItem(targetItem, character, objective.objectiveManager)
+
+                                            local function cleanup()
+                                                return instance:SBAI_cleanupSubObj(subObjective, AIObjectiveCleanupItem, characterData, "replenishCleanObj")
+                                            end
+
+                                            subObjective.Completed.add(cleanup)
+                                            subObjective.Abandoned.add(cleanup)
+
+                                            return subObjective
+                                        end
+                                        instance:SBAI_tryAddSubObjective(characterData, "replenishCleanObj", REPLENISH_CLEAN, false, true, constructor)
+                                    end
+                                end
+                                return cleanup()
+                            end
+                        )
+                        objective.Abandoned.add(cleanup)
+                        -- function()
+                        --     if targetItem then
+                        --         local inventory = targetItem.ParentInventory
+
+                        --         if  inventory == targetContainer.Inventory and
+                        --             not targetItem.IsFullCondition
+                        --         then
+                        --             local subObjective = objective.getItemObjective
+                                    
+                        --             if subObjective then
+                        --                 local itemToContain = subObjective.TargetItem
+                                        
+                        --                 if itemToContain then
+                        --                     inventory.TryPutItem(itemToContain, targetSlot, true, true, character, true, true)
+                        --                 end
+                        --             end
+                        --         end
+                        --     end
+                        --     return cleanup()
+                        -- end)
+                        return objective
+                    end
+                    
+                    ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "containItemObj", REPLENISH, true, false, constructor)
+                end
             end
         end
-        return nil, nil, -1
     end
-end
-
----@param obj Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
----@param character Barotrauma.Character
----@return boolean
-local function checkFriendlyOutpost(obj, character)
-    return Level.IsLoadedFriendlyOutpost and
-        character.IsOnPlayerTeam and
-        not character.IsFriendlyNPCTurnedHostile
 end
 
 local activateGenericObj
 
 do
-    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
-    local REPLENISH = Constants.ID_OBJECTIVE.REPLENISH
-    local REPLENISH_CLEAN = Constants.ID_OBJECTIVE.REPLENISHCLEAN
+    ---@param obj Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
+    ---@param character Barotrauma.Character
+    ---@return boolean
+    local function checkFriendlyOutpost(obj, character)
+        return Level.IsLoadedFriendlyOutpost and
+            character.IsOnPlayerTeam and
+            not character.IsFriendlyNPCTurnedHostile
+    end
 
-    local Partial1 = util.functools.Partial1
+    local ID_OBJECTIVE_BASE = Constants.ID_OBJECTIVE_BASE
+    local IDLE = ID_OBJECTIVE_BASE.IDLE
+    local TYPE_OBJECTIVE_BASE = Constants.TYPE_OBJECTIVE_BASE
+
 
     ---@param self Types.Module
     ---@param options table
-    ---@param idMap table
-    ---@param timeBetween number
+    ---@param objPredicateData table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>
+    ---@param sharedPatch fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    function activateGenericObj(self, options, objPredicateData, sharedPatch)
+        local onlyAtFriendlyOutposts = options["onlyAtFriendlyOutposts"] --[[@type boolean]]
+        local sectionName = self:GetSection():upper()
+        local ID = ID_OBJECTIVE_BASE[sectionName]
+        local pred --[[@type fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean]]
+
+        if ID == IDLE then
+            if onlyAtFriendlyOutposts then
+                pred = checkFriendlyOutpost
+            else
+                pred = util.True
+            end
+        else
+            if onlyAtFriendlyOutposts then
+                ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
+                ---@param character Barotrauma.Character
+                ---@return boolean
+                function pred(instance, character)
+                    return instance:SBAI_isAtWaitObjective() and
+                        checkFriendlyOutpost(instance, character)
+                end
+            else
+                ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
+                ---@param character Barotrauma.Character
+                ---@return boolean
+                function pred(instance, character)
+                    return instance:SBAI_isAtWaitObjective()
+                end
+            end
+        end
+        objPredicateData[ID]=pred
+        
+        return self:AddPatch(TYPE_OBJECTIVE_BASE[sectionName], "Act", nil, sharedPatch, Hook.HookMethodType.Before)
+    end
+end
+
+local postPatch
+
+do
+    local AIObjectiveCleanupItem = AIObjectiveCleanupItem
+    local AIObjectiveIdle = AIObjectiveIdle
+    local REPLENISH = Constants.ID_OBJECTIVE.REPLENISH
+    local REPLENISH_CLEAN = Constants.ID_OBJECTIVE.REPLENISHCLEAN
+
+    ---@param self Types.Module
+    ---@param allCharacterData Types.AllTimedCharacterData
     ---@param forceSameItemType boolean
     ---@param forceGEQQuality boolean
-    ---@param fillEmpty boolean
-    function activateGenericObj(self, options, idMap, timeBetween, forceSameItemType, forceGEQQuality, fillEmpty)
-        if not allCharacterData then
-            objPredicateData = {}
+    function postPatch(self, allCharacterData, forceSameItemType, forceGEQQuality)
+        local filterHelper
 
-            do
-                local oldGetTargetItem = getTargetItem
-
-                ---@type fun(character:Barotrauma.Character, idMapData:table):(Barotrauma.Item|nil, Barotrauma.Item.T|nil, integer)
-                getTargetItem = Partial1(oldGetTargetItem, fillEmpty)
-            end
-
-            function getNextTarget(characterData, character)
-                local sectionName, idMapData = next(idMap, characterData.lastSectionName)
-
-                if sectionName == nil then
-                    sectionName, idMapData = next(idMap)
-                end
-
-                characterData.lastSectionName = sectionName
-
-                local targetItem, targetContainer, targetSlot = getTargetItem(character, idMapData)
-
-                if targetContainer then
-                    characterData.targetItem = targetItem
-                    characterData.targetContainer = targetContainer
-                    characterData.targetSlot = targetSlot
-                    characterData.curSection = idMap[sectionName]
-                    return true
-                end
-                return false
-            end
-
-            allCharacterData = Types.AllTimedCharacterData.new(self, timeBetween, nil, nil)
-                -- ---@param characterData Types.CoTimedCharacterData
-                -- local function(characterData)
-                --     for sectionName, idMapData in next, idMap do
-                --         local targetItem, targetContainer, targetSlot = getTargetItem(characterData.character, idMapData)
-
-                --         if targetContainer then
-                --             characterData.targetItem = targetItem
-                --             characterData.targetContainer = targetContainer
-                --             characterData.targetSlot = targetSlot
-                --             characterData.curSection = idMap[sectionName]
-                --             yield(true)
-                --         else
-                --             yield(false)
-                --         end
-                --     end
-                --     yield(nil)
-                -- end
-
-            ---@param instance Barotrauma.AIObjectiveContainItem|Barotrauma.AIObjectiveGetItem
-            ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-            ---@return boolean
-            local function filterHelper(instance, ptable)
-                if ptable.ReturnValue then
-                    local item = ptable["item"] --[[@type Barotrauma.Item]]
-                    local characterData = allCharacterData:Get(instance.character)
-                    local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
-                    
-                    if  not targetItem or
-                        (not forceSameItemType or
-                        targetItem.Prefab.Identifier == item.Prefab.Identifier) and
-                        (not forceGEQQuality or
-                        targetItem.Quality <= item.Quality)
-                    then
-                        local container = item.Container
+        if forceSameItemType then
+            if forceGEQQuality then
+                ---@param instance Barotrauma.AIObjectiveContainItem|Barotrauma.AIObjectiveGetItem
+                ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                ---@return boolean
+                function filterHelper(instance, ptable)
+                    if ptable.ReturnValue then
+                        local item = ptable["item"] --[[@type Barotrauma.Item]]
+                        local characterData = allCharacterData:Get(instance.character)
+                        local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
                         
+                        if  not targetItem or
+                            (targetItem.Prefab.Identifier == item.Prefab.Identifier and
+                            targetItem.Quality <= item.Quality)
+                        then
+                            local container = item.Container
+                            
+                            if container ~= nil then
+                                local curSection = characterData.curSection
+                                local rechargerTag = curSection.rechargerTag
+
+                                return not curSection.utilizerIds[container.Prefab.Identifier] and
+                                    (rechargerTag == nil or
+                                    (item.IsFullCondition and
+                                    container.HasTag(rechargerTag)))
+                            end
+                            return true
+                        end
+                    end
+                    return false
+                end
+            else
+                ---@param instance Barotrauma.AIObjectiveContainItem|Barotrauma.AIObjectiveGetItem
+                ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                ---@return boolean
+                function filterHelper(instance, ptable)
+                    if ptable.ReturnValue then
+                        local item = ptable["item"] --[[@type Barotrauma.Item]]
+                        local characterData = allCharacterData:Get(instance.character)
+                        local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
+                        
+                        if  not targetItem or
+                            targetItem.Prefab.Identifier == item.Prefab.Identifier
+                        then
+                            local container = item.Container
+                            
+                            if container ~= nil then
+                                local curSection = characterData.curSection
+                                local rechargerTag = curSection.rechargerTag
+
+                                return not curSection.utilizerIds[container.Prefab.Identifier] and
+                                    (rechargerTag == nil or
+                                    (item.IsFullCondition and
+                                    container.HasTag(rechargerTag)))
+                            end
+                            return true
+                        end
+                    end
+                    return false
+                end
+            end
+        else
+            if forceGEQQuality then
+                ---@param instance Barotrauma.AIObjectiveContainItem|Barotrauma.AIObjectiveGetItem
+                ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                ---@return boolean
+                function filterHelper(instance, ptable)
+                    if ptable.ReturnValue then
+                        local item = ptable["item"] --[[@type Barotrauma.Item]]
+                        local characterData = allCharacterData:Get(instance.character)
+                        local targetItem = characterData.targetItem --[[@type Barotrauma.Item]]
+                        
+                        if  not targetItem or
+                            targetItem.Quality <= item.Quality
+                        then
+                            local container = item.Container
+                            
+                            if container ~= nil then
+                                local curSection = characterData.curSection
+                                local rechargerTag = curSection.rechargerTag
+
+                                return not curSection.utilizerIds[container.Prefab.Identifier] and
+                                    (rechargerTag == nil or
+                                    (item.IsFullCondition and
+                                    container.HasTag(rechargerTag)))
+                            end
+                            return true
+                        end
+                    end
+                    return false
+                end
+            else
+                ---@param instance Barotrauma.AIObjectiveContainItem|Barotrauma.AIObjectiveGetItem
+                ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                ---@return boolean
+                function filterHelper(instance, ptable)
+                    if ptable.ReturnValue then
+                        local item = ptable["item"] --[[@type Barotrauma.Item]]
+                        local container = item.Container
+                            
                         if container ~= nil then
-                            local curSection = characterData.curSection
+                            local curSection = allCharacterData:Get(instance.character).curSection
                             local rechargerTag = curSection.rechargerTag
 
                             return not curSection.utilizerIds[container.Prefab.Identifier] and
@@ -566,123 +671,77 @@ do
                         end
                         return true
                     end
+                    return false
                 end
-                return false
             end
+        end
 
-            do
-                local AIObjectiveIdle = AIObjectiveIdle
+        self:AddPatch("Barotrauma.AIObjectiveGetItem", "CheckItem", nil,
+        function(instance, ptable)
+            local curSubObj = instance.objectiveManager.GetObjective(AIObjectiveIdle).CurrentSubObjective
 
-                self:AddPatch("Barotrauma.AIObjectiveGetItem", "CheckItem", nil,
-                function(instance, ptable)
-                    local curSubObj = instance.objectiveManager.GetObjective(AIObjectiveIdle).CurrentSubObjective
-
-                    if  curSubObj and
-                        curSubObj.Identifier == REPLENISH
-                    then
-                        return filterHelper(instance, ptable)
-                    end
-                end, Hook.HookMethodType.After)
+            if  curSubObj and
+                curSubObj.Identifier == REPLENISH
+            then
+                return filterHelper(instance, ptable)
             end
+        end, Hook.HookMethodType.After)
 
-            do
-                self:AddPatch("Barotrauma.AIObjectiveContainItem", "CheckItem", nil,
-                function(instance, ptable)
-                    if instance.Identifier == REPLENISH then
-                        return filterHelper(instance, ptable)
-                    end
-                end, Hook.HookMethodType.After)
+        self:AddPatch("Barotrauma.AIObjectiveContainItem", "CheckItem", nil,
+        function(instance, ptable)
+            if instance.Identifier == REPLENISH then
+                return filterHelper(instance, ptable)
             end
+        end, Hook.HookMethodType.After)
 
-            do
-                local AIObjectiveCleanupItem = AIObjectiveCleanupItem
+        self:AddPatch("Barotrauma.AIObjectiveContainItem", "<Act>b__75_5", nil,
+        function(instance, ptable)
+            if instance.Identifier == REPLENISH then
+                local itemToContain = instance.getItemObjective.TargetItem
 
-                self:AddPatch("Barotrauma.AIObjectiveContainItem", "<Act>b__75_5", nil,
-                function(instance, ptable)
-                    if instance.Identifier == REPLENISH then
-                        local itemToContain = instance.getItemObjective.TargetItem
+                if itemToContain then
+                    local character = instance.character
+                    local inventory = itemToContain.ParentInventory
 
-                        if itemToContain then
-                            local character = instance.character
-                            local inventory = itemToContain.ParentInventory
-
-                            if inventory == character.Inventory then
-                                local utilizerInventory = instance.container.Inventory
-                                local targetSlot = instance.TargetSlot
-                                local targetSlotItem = utilizerInventory.slots[targetSlot + 1]
-                                local targetItem = targetSlotItem.Items[1] --[[@type Barotrauma.Item]]
-                                
-                                if targetItem then
-                                    if not targetItem.Combine(itemToContain, character) then
-                                        if  targetItem.ConditionPercentage < itemToContain.ConditionPercentage or
-                                            #targetSlotItem.Items < #inventory.slots[inventory.FindIndex(itemToContain) + 1].Items
-                                        then
-                                            if utilizerInventory.TrySwapping(targetSlot, itemToContain, character, true, true) then
-                                                targetItem, itemToContain = itemToContain, targetItem
-                                            end
-                                        end
-                                    end
-                                end
-
-                                if  itemToContain and
-                                    not itemToContain.Removed
+                    if inventory == character.Inventory then
+                        local utilizerInventory = instance.container.Inventory
+                        local targetSlot = instance.TargetSlot
+                        local targetSlotItem = utilizerInventory.slots[targetSlot + 1]
+                        local targetItem = targetSlotItem.Items[1] --[[@type Barotrauma.Item]]
+                        
+                        if targetItem then
+                            if not targetItem.Combine(itemToContain, character) then
+                                if  targetItem.ConditionPercentage < itemToContain.ConditionPercentage or
+                                    #targetSlotItem.Items < #inventory.slots[inventory.FindIndex(itemToContain) + 1].Items
                                 then
-                                    local characterData = allCharacterData[character]
-
-                                    local function constructor()
-                                        local subObjective = AIObjectiveCleanupItem(itemToContain, character, instance.objectiveManager)
-
-                                        local function cleanup()
-                                            return instance:SBAI_cleanupSubObj(subObjective, AIObjectiveCleanupItem, characterData, "replenishCleanObj")
-                                        end
-                                        subObjective.Completed.add(cleanup)
-                                        subObjective.Abandoned.add(cleanup)
-                                        return subObjective
+                                    if utilizerInventory.TrySwapping(targetSlot, itemToContain, character, true, true) then
+                                        targetItem, itemToContain = itemToContain, targetItem
                                     end
-                                    instance:SBAI_tryAddSubObjective(characterData, "replenishCleanObj", REPLENISH_CLEAN, false, false, constructor)
                                 end
                             end
                         end
-                    end
-                end, Hook.HookMethodType.Before)
-            end
-        end
 
-        local onlyAtFriendlyOutposts = options["onlyAtFriendlyOutposts"] --[[@type boolean]]
-        local sectionName = self:GetSection():upper()
+                        if  itemToContain and
+                            not itemToContain.Removed
+                        then
+                            local characterData = allCharacterData[character]
 
-        do
-            local ID = Constants.ID_OBJECTIVE_BASE[sectionName]
-            local pred  --[[@type fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean]]
+                            local function constructor()
+                                local subObjective = AIObjectiveCleanupItem(itemToContain, character, instance.objectiveManager)
 
-            if ID == IDLE then
-                if onlyAtFriendlyOutposts then
-                    pred = checkFriendlyOutpost
-                else
-                    pred = util.True
-                end
-            else
-                if onlyAtFriendlyOutposts then
-                    ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
-                    ---@param character Barotrauma.Character
-                    ---@return boolean
-                    function pred(instance, character)
-                        return instance:SBAI_isAtWaitObjective() and
-                            checkFriendlyOutpost(instance, character)
-                    end
-                else
-                    ---@param instance Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo
-                    ---@param character Barotrauma.Character
-                    ---@return boolean
-                    function pred(instance, character)
-                        return instance:SBAI_isAtWaitObjective()
+                                local function cleanup()
+                                    return instance:SBAI_cleanupSubObj(subObjective, AIObjectiveCleanupItem, characterData, "replenishCleanObj")
+                                end
+                                subObjective.Completed.add(cleanup)
+                                subObjective.Abandoned.add(cleanup)
+                                return subObjective
+                            end
+                            instance:SBAI_tryAddSubObjective(characterData, "replenishCleanObj", REPLENISH_CLEAN, false, false, constructor)
+                        end
                     end
                 end
             end
-            objPredicateData[ID]=pred
-        end
-
-        self:AddPatch(Constants.TYPE_OBJECTIVE_BASE[sectionName], "Act", nil, sharedPatch, Hook.HookMethodType.Before)
+        end, Hook.HookMethodType.Before)
     end
 end
 
@@ -690,6 +749,7 @@ local activate
 
 do
     local Any = util.itertools.Any
+    local new = Types.AllTimedCharacterData.new
 
     ---@param self Types.Module
     function activate(self)
@@ -697,7 +757,6 @@ do
         self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
         local idMap = {}
-        local options = self.options
 
         self:DoOption("Ammunition", activateGenericItem, idMap)
         self:DoOption("BatteryCells", activateGenericItem, idMap)
@@ -707,18 +766,22 @@ do
         if Any(idMap) then
             self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
             self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
-            local ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
+            --local ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
 
             --ModObjProp("ConcurrentObjectives", IDLE, REPLENISH, true)
             --ModObjProp("ConcurrentObjectives", WAIT, REPLENISH, true)
 
-            local timeBetween = options["timeBetween"]
-            local fillEmpty = options["fillEmpty"]
-            local forceSameItemType = options["forceSameItemType"]
-            local forceQualityGEQ = options["forceQualityGEQ"]
+            local options = self.options
+            local allCharacterData = new(self, options["timeBetween"], nil, nil)
+            local objPredicateData = {} --[[@type table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>]]
+            local sharedPatch = generateSharedPatch(allCharacterData, objPredicateData, idMap, options["fillEmpty"])
             
-            self:DoOption("Idle", activateGenericObj, idMap, timeBetween, forceSameItemType, forceQualityGEQ, fillEmpty)
-            self:DoOption("Wait", activateGenericObj, idMap, timeBetween, forceSameItemType, forceQualityGEQ, fillEmpty)
+            self:DoOption("Idle", activateGenericObj, objPredicateData, sharedPatch)
+            self:DoOption("Wait", activateGenericObj, objPredicateData, sharedPatch)
+
+            if Any(objPredicateData) then
+                return postPatch(self, allCharacterData, options["forceSameItemType"], options["forceQualityGEQ"])
+            end
         end
     end
 end
