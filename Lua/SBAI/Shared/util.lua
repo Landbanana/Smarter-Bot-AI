@@ -1199,9 +1199,11 @@ do
     local function AutoRegisterType(className)
         local descriptor
 
-        if IsRegistered(className) then
+        if  IsRegistered(className) then
             descriptor = Descriptors[className]
-        else
+        end
+
+        if  descriptor == nil then
             descriptor = upcall(RegisterType, className)
 
             local type = descriptor.Type
