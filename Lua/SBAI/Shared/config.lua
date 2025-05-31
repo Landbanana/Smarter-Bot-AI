@@ -163,7 +163,7 @@ do
 
     defaults:CreateSection("CrewStaysInSub")
 
-    section = defaults:CreateSection("DeconstructAdditions")
+    section = defaults:CreateSection("DeconstructionAdditions")
     subsection = section:CreateSection("MoveInBulk")
     subsection:CreateOption("maxCheck", 32, Config.OPTION_TYPE.int, nil, 2, 128)
 
