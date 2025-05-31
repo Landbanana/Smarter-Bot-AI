@@ -129,7 +129,18 @@ do
     end)
 end
 
-local uniquePropertyData = setmetatable({}, {
+local uniquePropertyData
+
+do
+    local setmetatable = setmetatable
+    local rawset = rawset
+    local tostring = tostring
+
+    local function readOnlyNewIndex(t, k, v)
+        if t[k] ~= v then error(2, "Read-only table") end
+    end
+
+    uniquePropertyData = setmetatable({}, {
     __index=function(t1, k1)
         local out1 = setmetatable({propertyName=k1}, {
             __index=function(t2, k2)
@@ -152,37 +163,30 @@ local uniquePropertyData = setmetatable({}, {
                                 allPropertyData[propertyName][objId][subObjId] = value
                                 --print(propertyName.."."..objId.Value.."."..subObjId.Value.."."..tostring(value))
                                 makePatch(propertyName, objId, subObjId, value)
-                                rawset(t4,tostring(k4),tostring(value))
+                                rawset(t4, tostring(k4), tostring(value))
                                 return true
                             end,
-                            __newindex=function(t4, k4, v4)
-                                if t4[k4] ~= v4 then error(2, "Read-only table") end
-                            end
+                            __newindex=readOnlyNewIndex
                         })
 
-                        rawset(t3,k3,out3)
+                        rawset(t3, k3, out3)
                         return out3
                     end,
-                    __newindex=function(t3, k3, v3)
-                        if t3[k3] ~= v3 then error(2, "Read-only table") end
-                    end
+                    __newindex=readOnlyNewIndex
                 })
 
-                rawset(t2,k2,out2)
+                rawset(t2, k2, out2)
                 return out2
             end,
-            __newindex=function(t2, k2, v2)
-                if t2[k2] ~= v2 then error(2, "Read-only table") end
-            end
+            __newindex=readOnlyNewIndex
         })
         
-        rawset(t1,k1,out1)
+        rawset(t1, k1, out1)
         return out1
     end,
-    __newindex=function(t1, k1, v1)
-        if t1[k1] ~= v1 then error(2, "Read-only table") end
-    end
+    __newindex=readOnlyNewIndex
 })
+end
 
 local ModObjProp
 
