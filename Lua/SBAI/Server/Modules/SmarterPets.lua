@@ -30,10 +30,8 @@ local function activateEatFoodInInventory(self, options)
     local AIState = self:RegisterEnumTable("Barotrauma.AIState")
 
     local Eat = AIState.Eat
-    -- local Follow = AIState.Follow
-    -- local Protect = options["overrideProtectOwner"] and AIState.Protect or nil
     
-    local Filter = util.itertools.FilterList
+    local FilterList = util.itertools.FilterList
     
     local allPetData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
     local foodItemTags = Types.Set.new()
@@ -44,6 +42,9 @@ local function activateEatFoodInInventory(self, options)
     if options["overrideProtectOwner"] then checkState:Add(AIState.Protect) end
 
     do
+        local CharacterPrefabs = CharacterPrefab.Prefabs
+        local ItemPrefabs = ItemPrefab.Prefabs
+
         local Any = util.itertools.Any
         local Contains = util.itertools.Contains
         local xPath = util.xPath
@@ -51,20 +52,22 @@ local function activateEatFoodInInventory(self, options)
         ---@type table<Barotrauma.Identifier,boolean>
         local checkedTags = setmetatable({}, {
             __index=function(t, k)
-                t[k] = Any(ItemPrefab.Prefabs,
+                local out = Any(ItemPrefabs,
                     ---@param prefab Barotrauma.ItemPrefab
                     function(prefab)
                         return Contains(prefab.Tags, k) or
                             prefab.Identifier == k
                     end)
-                return t[k]
+                
+                t[k] = out
+                return out
             end
         })
 
-        for prefab in CharacterPrefab.Prefabs do
+        for prefab in CharacterPrefabs do
             local xElement = prefab.ConfigElement
 
-            for petElement in Filter(xPath(xElement, "ai/petbehavior"),
+            for petElement in FilterList(xPath(xElement, "ai/petbehavior"),
                 function(petElement)
                     return petElement.GetAttributeFloat("hungerincreaserate", 0.25) > 0.0
                 end) do
@@ -79,59 +82,69 @@ local function activateEatFoodInInventory(self, options)
         end
     end
 
-    ---@param pet Barotrauma.Character
-    ---@param petbehavior Barotrauma.PetBehavior
-    ---@return Barotrauma.Item?
-    ---@return Barotrauma.CharacterParams.TargetParams?
-    local function findFood(pet, petbehavior)
-        local inventory = pet.Inventory
+    local findFood
 
-        if inventory then
-            local bestItem
-            local bestTargetParams
-            local foods = {}
-            local i = 0
+    do
+        ---@param item Barotrauma.Item
+        ---@return boolean
+        local function itemHasAITarget(item)
+            return item.AiTarget ~= nil
+        end
 
-            for food in petbehavior.foods do
-                if  foodItemTags[food.Tag] and
-                    food.TargetParams
-                then
-                    i = i + 1
-                    foods[i] = food
+        ---@param pet Barotrauma.Character
+        ---@param petbehavior Barotrauma.PetBehavior
+        ---@return Barotrauma.Item?
+        ---@return Barotrauma.CharacterParams.TargetParams?
+        function findFood(pet, petbehavior)
+            local inventory = pet.Inventory
+
+            if inventory then
+                local bestItem
+                local bestTargetParams
+                local foods = {}
+                local i = 0
+
+                for food in petbehavior.foods do
+                    if  foodItemTags[food.Tag] and
+                        food.TargetParams
+                    then
+                        i = i + 1
+                        foods[i] = food
+                    end
                 end
-            end
-            if i <= 0 then goto skip end
+                if i <= 0 then goto skip end
 
-            do
-                local highestPriority = 0.0
+                do
+                    local highestPriority = 0.0
 
-                for item in inventory:SBAI_findAllItems(false, false, function(item) return item.AiTarget ~= nil end) do
-                    for food in foods do
-                        local tag = food.Tag
+                    for item in inventory:SBAI_findAllItems(false, false, itemHasAITarget) do
+                        for food in foods do
+                            local tag = food.Tag
 
-                        if  (item.HasTag(tag) or
-                            item.Prefab.Identifier == tag)
-                        then
-                            local targetParams = food.TargetParams
+                            if  (item.HasTag(tag) or
+                                item.Prefab.Identifier == tag)
+                            then
+                                local targetParams = food.TargetParams
 
-                            if targetParams then
-                                local priority = food.Priority
+                                if targetParams then
+                                    local priority = food.Priority
 
-                                if priority > highestPriority then
-                                    bestItem = item
-                                    bestTargetParams = targetParams
-                                    highestPriority = priority
-                                    if priority >= 100 then
-                                        goto skip
+                                    if priority > highestPriority then
+                                        bestItem = item
+                                        bestTargetParams = targetParams
+                                        highestPriority = priority
+                                        if priority >= 100 then
+                                            goto skip
+                                        end
                                     end
                                 end
                             end
                         end
                     end
                 end
+                ::skip::
+                return bestItem, bestTargetParams
             end
-            ::skip::
-            return bestItem, bestTargetParams
         end
     end
 
@@ -375,7 +388,7 @@ local function activateCleanableProduce(self, options)
             if  petItemIds[item.Prefab.Identifier] and
                 not cleanableItems.Contains(item)
             then
-                Item._cleanableItems.Add(item)
+                cleanableItems.Add(item)
             end
         end
     end)

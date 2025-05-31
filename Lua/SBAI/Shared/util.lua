@@ -279,13 +279,13 @@ function util.itertools.GetFirst(t, p)
 end
 
 ---@generic T
----@param func fun():T?
+---@param f fun():T?
 ---@return T[]
-function util.itertools.ToList(func)
+function util.itertools.ToList(f)
     local i = 0
     local t = {}
 
-    for v in func do
+    for v in f do
         i = i + 1
         t[i] = v
     end

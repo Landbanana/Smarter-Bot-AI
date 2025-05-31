@@ -745,42 +745,37 @@ do
     end
 end
 
-local activate
+---@param self Types.Module
+local function activate(self)
+    self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
-do
     local Any = util.itertools.Any
-    local new = Types.AllTimedCharacterData.new
 
-    ---@param self Types.Module
-    function activate(self)
-        self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
+    local idMap = {}
 
-        local idMap = {}
+    self:DoOption("Ammunition", activateGenericItem, idMap)
+    self:DoOption("BatteryCells", activateGenericItem, idMap)
+    self:DoOption("OxygenTanks", activateGenericItem, idMap)
+    self:DoOption("WeldingFuel", activateGenericItem, idMap)
 
-        self:DoOption("Ammunition", activateGenericItem, idMap)
-        self:DoOption("BatteryCells", activateGenericItem, idMap)
-        self:DoOption("OxygenTanks", activateGenericItem, idMap)
-        self:DoOption("WeldingFuel", activateGenericItem, idMap)
+    if Any(idMap) then
+        self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
+        self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+        --local ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
 
-        if Any(idMap) then
-            self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
-            self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
-            --local ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
+        --ModObjProp("ConcurrentObjectives", IDLE, REPLENISH, true)
+        --ModObjProp("ConcurrentObjectives", WAIT, REPLENISH, true)
 
-            --ModObjProp("ConcurrentObjectives", IDLE, REPLENISH, true)
-            --ModObjProp("ConcurrentObjectives", WAIT, REPLENISH, true)
+        local options = self.options
+        local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"], nil, nil)
+        local objPredicateData = {} --[[@type table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>]]
+        local sharedPatch = generateSharedPatch(allCharacterData, objPredicateData, idMap, options["fillEmpty"])
+        
+        self:DoOption("Idle", activateGenericObj, objPredicateData, sharedPatch)
+        self:DoOption("Wait", activateGenericObj, objPredicateData, sharedPatch)
 
-            local options = self.options
-            local allCharacterData = new(self, options["timeBetween"], nil, nil)
-            local objPredicateData = {} --[[@type table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>]]
-            local sharedPatch = generateSharedPatch(allCharacterData, objPredicateData, idMap, options["fillEmpty"])
-            
-            self:DoOption("Idle", activateGenericObj, objPredicateData, sharedPatch)
-            self:DoOption("Wait", activateGenericObj, objPredicateData, sharedPatch)
-
-            if Any(objPredicateData) then
-                return postPatch(self, allCharacterData, options["forceSameItemType"], options["forceQualityGEQ"])
-            end
+        if Any(objPredicateData) then
+            return postPatch(self, allCharacterData, options["forceSameItemType"], options["forceQualityGEQ"])
         end
     end
 end

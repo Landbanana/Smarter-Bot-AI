@@ -113,8 +113,6 @@ do
                 
                 local instrumentIds = Types.Set.new()
 
-                
-
                 do
                     local ids = abilityConditionItem.GetAttributeIdentifierArray("identifiers")
 

@@ -1084,3 +1084,6 @@ return Types
 ---@field public GetComponent fun(componentType:Barotrauma.Item.T):Barotrauma.Item.T
 
 ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
+
+---@class Barotrauma.Character
+---@field public AIController Barotrauma.AIController|Barotrauma.HumanAIController|Barotrauma.EnemyAIController

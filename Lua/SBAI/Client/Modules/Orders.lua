@@ -7,40 +7,50 @@ if Game.IsSingleplayer then
     deactivateShared = nil
 end
 
-LuaUserData.RegisterType("Barotrauma.CrewManager+OptionNode")
-LuaUserData.RegisterType("Barotrauma.Order+OrderTargetType")
+do
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
+    local descriptor
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
+    AutoRegisterType("Barotrauma.CrewManager+OptionNode")
+    AutoRegisterType("Barotrauma.Order+OrderTargetType")
 
---LuaUserData.RegisterType("System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
--- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "isContextual")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "commandFrame")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "contextualOrders")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "hullContext")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "wallContext")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "characterContext")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "itemContext")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeSize")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetTargetSubmarine")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CanCharacterBeHeard")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetFirstNodeAngle")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "GetCircumferencePointCount")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderCategoryNode")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateOrderNode")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodes")
-LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateNodeIcon",
-{"Microsoft.Xna.Framework.Vector2", "Barotrauma.RectTransform", "Barotrauma.Sprite", "Microsoft.Xna.Framework.Color", "Barotrauma.LocalizedString"})
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "nodeDistance")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "availableCategories")
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.CrewManager"], "optionNodes")
+    MakeFieldAccessible(Descriptors["Barotrauma.Hull"], "avoidStaying")
 
-LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
+    --LuaUserData.RegisterType("System.Collections.Generic.List`1[[Barotrauma.CrewManager+OptionNode]]")
+    -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CrewManager"], "CreateShortcutNodes")
+    descriptor = Descriptors["Barotrauma.CrewManager"]
+    MakeFieldAccessible(descriptor, "nodeDistance")
+    MakeFieldAccessible(descriptor, "availableCategories")
+    MakeFieldAccessible(descriptor, "optionNodes")
+    MakeFieldAccessible(descriptor, "isContextual")
+    MakeFieldAccessible(descriptor, "commandFrame")
+    MakeFieldAccessible(descriptor, "contextualOrders")
+    MakeFieldAccessible(descriptor, "hullContext")
+    MakeFieldAccessible(descriptor, "wallContext")
+    MakeFieldAccessible(descriptor, "characterContext")
+    MakeFieldAccessible(descriptor, "itemContext")
+    MakeFieldAccessible(descriptor, "nodeSize")
+    MakeMethodAccessible(descriptor, "GetFirstNodeAngle")
+    MakeMethodAccessible(descriptor, "GetTargetSubmarine")
+    MakeMethodAccessible(descriptor, "CreateShortcutNodes")
+    MakeMethodAccessible(descriptor, "CanCharacterBeHeard")
+    MakeMethodAccessible(descriptor, "GetFirstNodeAngle")
+    MakeMethodAccessible(descriptor, "GetCircumferencePointCount")
+    MakeMethodAccessible(descriptor, "IsOrderAvailable", {"Barotrauma.OrderPrefab"})
+    MakeMethodAccessible(descriptor, "CreateOrderCategoryNodes")
+    MakeMethodAccessible(descriptor, "CreateOrderCategoryNode")
+    MakeMethodAccessible(descriptor, "CreateOrderNodes")
+    MakeMethodAccessible(descriptor, "CreateOrderNode")
+    MakeMethodAccessible(descriptor, "CreateNodes")
+    MakeMethodAccessible(descriptor, "CreateNodeIcon",
+    {"Microsoft.Xna.Framework.Vector2", "Barotrauma.RectTransform", "Barotrauma.Sprite", "Microsoft.Xna.Framework.Color", "Barotrauma.LocalizedString"})
+    
+
+    MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
+end
 
 local ID_ORDER = Constants.ID_ORDER
 
@@ -59,7 +69,7 @@ local function activateOrderGui(self)
     local HotPink = Color.HotPink
     local One = Vector2.One
     local OptionNode = self:RegisterStatic("Barotrauma.CrewManager+OptionNode")
-    local OrderPrefab = OrderPrefab
+    local OrderPrefabs = OrderPrefab.Prefabs
     local OrderTargetTypeEntity = OrderPrefab.OrderTargetType.Entity
     local Sprite = Sprite
     local TextManager = TextManager
@@ -214,7 +224,7 @@ local function activateOrderGui(self)
 
             local i = 0
 
-            for prefab in OrderPrefab.Prefabs do
+            for prefab in OrderPrefabs do
                 local id = prefab.Identifier
 
                 if  id:StartsWith(orderCategoryPrefix) and
