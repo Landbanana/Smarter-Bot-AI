@@ -753,7 +753,6 @@ do
 
     ---@param self Types.Module
     function activate(self)
-        self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
         self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
         local idMap = {}
