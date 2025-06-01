@@ -88,7 +88,45 @@ local function activate(self)
         ---@class Barotrauma.ItemPrefab
         ---@field public SBAI_hasCategory fun(instance:Barotrauma.ItemPrefab, categoryStr:MapEntityCategory):boolean
     end
-    
+
+    do
+        local InvSlotType = InvSlotType
+        local new = Types.Set.new
+        local xPath2 = util.xPath2
+
+        ---@param instance Barotrauma.ItemPrefab
+        ---@return Types.Set<Barotrauma.InvSlotType>
+        ---@return table<integer, Types.Set<Barotrauma.InvSlotType>>
+        local function getInvSlots(instance)
+            local reg = new()
+            local comp = {}
+
+            for elementName in {"//Holdable", "//Wearable", "//Pickable", "//MeleeWeapon", "//Throwable"} do
+                for holdable in xPath2(instance.ConfigElement.Element, elementName) do
+                    for slotGroup in holdable.Attribute("slots").Value:gmatch("([^,]+),?") do
+                        local set = new()
+                        local slot = 0
+
+                        for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
+                            local newSlot = InvSlotType[addedSlot]
+
+                            slot = slot + newSlot
+                            set:Add(newSlot)
+                        end
+                        if set[slot] then
+                            reg:Add(slot)
+                        else
+                            comp[slot] = set
+                        end
+                    end
+                end
+            end
+            return reg, comp
+        end
+        AddMethod("getInvSlots", getInvSlots)
+        ---@class Barotrauma.ItemPrefab
+        ---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Types.Set<Barotrauma.InvSlotType>, table<integer, Types.Set<Barotrauma.InvSlotType>>)
+    end
 end
 
 return Types.CommonModule.new(activate)
