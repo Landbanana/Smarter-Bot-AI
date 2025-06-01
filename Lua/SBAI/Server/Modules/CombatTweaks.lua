@@ -2,7 +2,15 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 do
-    LuaUserData.MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "Mode")
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    --local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    --local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
+    --local descriptor
+
+    MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Turret"], "tryingToCharge")
+    MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "Mode")
 end
 
 local function activatePreventAttackingHandcuffed(self, options)
@@ -35,10 +43,54 @@ local function activateArrestHumansInPlayerSub(self, options)
     local handlockerId = Identifier("handlocker")
     local stunnerId = Identifier("stunner")
 
+    local onlyPreviouslyCuffed = options["onlyPreviouslyCuffed"]
     local minHealth = options["minHealth"]
 
-    self:AddPatch("Barotrauma.AIObjectiveFightIntruders", "ObjectiveConstructor", nil,
-    function(instance, ptable)
+    local targetPredicate
+
+    if onlyPreviouslyCuffed then
+        local cuffedPrisoners = Types.Set.new(self:RegisterTable(nil, "ROUND_END"))
+
+        self:AddInit(
+        function()
+            for c in Character.CharacterList do --[[@cast c Barotrauma.Character]]
+                if  not c.IsOnPlayerTeam and
+                    c.IsHandcuffed and
+                    c.IsInPlayerSub
+                then
+                    cuffedPrisoners:Add(c)
+                end
+            end
+        end)
+
+        self:AddPatch("Barotrauma.Items.Components.Wearable", "Equip", nil,
+        function(instance, ptable)
+            local item = instance.Item
+
+            if item.HasTag(handlockerId) then
+                local character = ptable["character"] --[[@type Barotrauma.Character]]
+
+                if  not cuffedPrisoners[character] and
+                    not character.IsOnPlayerTeam and
+                    character.LastAttacker.IsOnPlayerTeam and
+                    character.IsHandcuffed
+                then
+                    print(character.Name)
+                    cuffedPrisoners:Add(character)
+                end
+            end
+        end, Hook.HookMethodType.After)
+        
+        ---@param target Barotrauma.Character
+        function targetPredicate(target)
+            return cuffedPrisoners[target]
+        end
+    else
+        targetPredicate = util.True
+    end
+
+    self:AddPatch("Barotrauma.AIObjectiveFightIntruders", "ObjectiveConstructor", nil, 
+    function (instance, ptable)
         local character = instance.character
 
         if  character.IsOnPlayerTeam and
@@ -56,7 +108,8 @@ local function activateArrestHumansInPlayerSub(self, options)
                     local target = ptable["target"] --[[@type Barotrauma.Character]]
                     
                     if  target.IsHuman and
-                        target.IsInPlayerSub
+                        target.IsInPlayerSub and
+                        targetPredicate(target)
                     then
                         combatObj.Mode = Arrest
                     end
@@ -80,9 +133,27 @@ local function activateArrestHumansInPlayerSub(self, options)
 end
 
 ---@param self Types.Module
+---@param options table
+local function activatePreSpinTurrets(self, options)
+    self:AddPatch("Barotrauma.Items.Components.Turret", "Update", nil,
+    function(instance, ptable)
+        if instance.MaxChargeTime > 0 then
+            instance.tryingToCharge = true
+        end
+    end, Hook.HookMethodType.Before)
+
+    -- self:AddPatch("Barotrauma.Character", "TryPutItemInBag", nil,
+    -- function(instance, ptable)
+    --     print(ptable["item"])
+    -- end, Hook.HookMethodType.Before)
+        
+end
+
+---@param self Types.Module
 local function activate(self)
     self:DoOption("PreventAttackingHandcuffed", activatePreventAttackingHandcuffed)
     self:DoOption("ArrestHumansInPlayerSub", activateArrestHumansInPlayerSub)
+    self:DoOption("PreSpinTurrets", activatePreSpinTurrets)
 end
 
 return Types.Module.new(activate)

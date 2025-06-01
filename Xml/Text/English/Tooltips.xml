@@ -2,13 +2,15 @@
 <infotexts language="English" nowhitespace="false" translatedname="English">
   <GUI.tooltips.cleaningadditions>Some improvements to the "Deconstruct Items" and "Cleanup Items" orders</GUI.tooltips.cleaningadditions>
   <GUI.tooltips.cleaningadditions.purchaseditemcrates>Set an automatic order to be added to any new crates received from merchants</GUI.tooltips.cleaningadditions.purchaseditemcrates>
-  <GUI.tooltips.cleaningadditions.autoorder>Either deconstruct new crates or ignore them to prevent automatic cleanup</GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>
+  <GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>Either deconstruct new crates or ignore them to prevent automatic cleanup</GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>
   <GUI.tooltips.cleaningadditions.deconstructinbulk>When gathering items to deconstruct, the AI will also look for other items marked for deconstruction in the same stack/container and add said items to their inventory</GUI.tooltips.cleaningadditions.deconstructinbulk>
   <GUI.tooltips.cleaningadditions.deconstructinbulk.maxcheck>Sets the maximum amount of additional items to check for (lower values may help with lag spikes)</GUI.tooltips.cleaningadditions.deconstructinbulk.maxcheck>
   <GUI.tooltips.combattweaks>Various changes to the player crew combat AI</GUI.tooltips.combattweaks>
   <GUI.tooltips.combattweaks.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.combattweaks.preventattackinghandcuffed>
   <GUI.tooltips.combattweaks.arresthumansinplayersub>AI set to "Fight Intruders" will prioritize Arresting hostile humans in the player sub, as long as they have a stun weapon and handcuffs</GUI.tooltips.combattweaks.arresthumansinplayersub>
-  <GUI.tooltips.combattweaks.minhealth>AI will switch back to generic offensive combat if their health goes below this percentage</GUI.tooltips.combattweaks.minhealth>
+  <GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>Should the AI only handcuff humans that have already been cuffed before (such as prisoners)</GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>
+  <GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>AI will switch back to generic offensive combat if their health goes below this percentage</GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>
+  <GUI.tooltips.combattweaks.prespinturrets>Allow the AI to spin-up turrents (such as a chaingun) before combat starts, allowing them to fire much faster</GUI.tooltips.combattweaks.prespinturrets>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>
   <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
