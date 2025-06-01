@@ -163,12 +163,13 @@ do
 
     section = defaults:CreateSection("CombatTweaks")
 
+    --section = defaults:CreateSection("CrewLoadout")
+
     section:CreateOption("PreventAttackingHandcuffed", true, Config.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("ArrestHumansInPlayerSub")
     subsection:CreateOption("onlyPreviouslyCuffed", false, Config.OPTION_TYPE.boolean)
     subsection:CreateOption("minHealth", 75.0, Config.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
-
 
     section:CreateOption("PreSpinTurrets", true, Config.OPTION_TYPE.boolean)
 

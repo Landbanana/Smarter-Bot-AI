@@ -7,8 +7,10 @@
   <Other file="%ModDir%/Lua/Autorun/init.lua" />
   <Other file="%ModDir%/Lua/SBAI.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/configGui.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/crewPolicyGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/fabricateOrderGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/guiUtil.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/itemPickerGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/MuteSingleplayerBotConversations.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/Orders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/AIObjectiveExpansion.lua" />

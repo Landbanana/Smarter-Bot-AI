@@ -4,6 +4,7 @@ local guiUtil = require("SBAI.Client.guiUtil")
 local ForceUpperCase = guiUtil.Constants.ForceUpperCase
 
 local D_PADDING = guiUtil.Constants.D_PADDING
+local D_SLOT_SIZE = guiUtil.Constants.D_SLOT_SIZE
 
 local D_WIDTH = guiUtil.Constants.D_WIDTH
 local D_HEIGHT = guiUtil.Constants.D_HEIGHT
@@ -43,7 +44,6 @@ local function createItemList(parent)
 end
 
 local function createFabricatorGUI()
-    
     local screenSize = Game.GameScreen.Frame.Rect.Size
 
     local mainFrame = GUI.Frame(RectTransform(Point(screenSize.X*0.4, screenSize.Y*0.6), nil, GUI.Anchor.Center), "ItemUI")
@@ -95,9 +95,7 @@ local function createFabricatorGUI()
         rectTransform.MaxSize = Point(Constants.MAX_INT, itemFilterBox.Rect.Height)
     end
 
-
     local itemList = createItemList(paddedItemGroup)
-    
 
     AddFrame(topFrame, Vector2(0.01, 0.9), GUI.Anchor.Center, "VerticalLine")
 
@@ -132,9 +130,11 @@ local function createFabricatorGUI()
     
     local inputInventoryFrame = AddFrame(inputGroup, Vector2(0.7, 0.8), nil, "null", true)
     local inputInventoryGroup = guiUtil.AddLayoutGroup(inputInventoryFrame, Vector2.One, GUI.Anchor.Center, nil, true, GUI.Anchor.CenterLeft)
-    local minEdgeSize = math.min(inputInventoryFrame.Rect.Width, inputInventoryFrame.Rect.Height)
+    inputInventoryGroup.RelativeSpacing = 0.03
 
-    guiUtil.AddItemCarousel(inputInventoryGroup, Point(minEdgeSize, minEdgeSize), nil, true, ItemPrefab.GetItemPrefab("bikehorn"), ItemPrefab.GetItemPrefab("poop"))
+    local minEdgeSize = math.min(inputInventoryFrame.Rect.Width, inputInventoryFrame.Rect.Height)*0.8
+
+    --guiUtil.AddItemCarousel(inputInventoryGroup, Point(minEdgeSize, minEdgeSize), nil, true, ItemPrefab.GetItemPrefab("bikehorn"), ItemPrefab.GetItemPrefab("poop"))
 
     return mainFrame
 end
