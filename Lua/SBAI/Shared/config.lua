@@ -20,10 +20,18 @@ Config.defaults = {
 local defaultCrewLoadout = ""
 
 do
+    local allPrefabData = {}
+    local i = 0
+
     for prefab in JobPrefab.Prefabs do
         if not prefab.HiddenJob then
-            defaultCrewLoadout = defaultCrewLoadout..prefab.Identifier.Value..":;;;;;;;;;;;;;;;;;"
+            i = i + 1
+            allPrefabData[i] = {prefab.Name, prefab.Identifier}
         end
+    end
+    table.sort(allPrefabData, function(p1, p2) return p1[1] < p2[1] end)
+    for prefabData in allPrefabData do
+        defaultCrewLoadout = defaultCrewLoadout..prefabData[2].Value..":;;;;;;;;;;;;;;;;;"
     end
 end
 
