@@ -1,18 +1,11 @@
 local Constants = require("SBAI.Shared.constants")
+local configTypes = require("SBAI.Shared.Types.configTypes")
 
 local networking = require("SBAI.Shared.networking")
 local member = networking.member
 local MSG = networking.MSG
 
 local Config = {data={}}
-
----@enum OptionType
-Config.OPTION_TYPE = {
-    string="string",
-    int="int",
-    float="float",
-    boolean="boolean"
-}
 
 Config.defaults = {
     MAX_CONDITION_PERCENTAGE = 95,
@@ -24,265 +17,147 @@ Config.defaults = {
     CONFIG = {}
 }
 
----@class ConfigOption
----@field public specialData any
----@field public value string|boolean|number
----@field public optionType string|boolean|number
----@field public specialType? string
----@field public min? number
----@field public max? number
-local ConfigOption = {}
-ConfigOption.__index = ConfigOption
-
----@param default boolean|string|number
----@param optionType Config.OPTION_TYPE
----@param specialType? string
----@param min? number
----@param max? number
----@return ConfigOption
----@overload fun(default:string, optionType:Config.OPTION_TYPE.string, specialType:nil):ConfigOption
----@overload fun(default:number, optionType:Config.OPTION_TYPE.int|Config.OPTION_TYPE.float, specialType:nil, min:number, max:number):ConfigOption
----@overload fun(default:string, optionType:Config.OPTION_TYPE.int, specialType:"radio"):ConfigOption
----@overload fun(default:boolean, optionType:Config.OPTION_TYPE.boolean, specialType:nil):ConfigOption
-function ConfigOption.new(default, optionType, specialType, min, max)
-    local t = setmetatable({}, ConfigOption) ---@type ConfigOption
-
-    if optionType == Config.OPTION_TYPE.int then --[[@cast default string]]
-        if specialType == "radio" then
-            local newDefault = 1
-            local specialData = {}
-            
-            min = 1
-            max = 0
-
-            for o in default:gmatch("([^;]+);?") do
-                if o:startsWith("*") then
-                    o = o:sub(2)
-                    newDefault = max + 1
-                end
-                max = max + 1
-                specialData[max] = o
-            end
-            t.specialData = specialData
-            default = newDefault
-            min = 1
-        end
-    end
-
-    t.optionType = optionType
-    t.specialType = specialType
-    t.min = min
-    t.max = max
-    t:Set(default)
-    return t
-end
+local defaultCrewLoadout = ""
 
 do
-    local clamp = math.clamp
-
-    ---@param value boolean|string|number
-    function ConfigOption:Set(value)
-        local optionType = type(value)
-
-        if optionType == "number" and self.optionType == "float" or self.optionType == "int" then
-            self.value = clamp(value, self.min, self.max)
-        elseif optionType ~= self.optionType then
-            error("incorrect option type provided (should be a "..self.optionType.." not a "..optionType..")", 2)
-        else
-            self.value = value
+    for prefab in JobPrefab.Prefabs do
+        if not prefab.HiddenJob then
+            defaultCrewLoadout = defaultCrewLoadout..prefab.Identifier.Value..":;;;;;;;;;;;;;;;;;"
         end
     end
 end
 
----@public
----@return table
-function ConfigOption:Flatten()
-    return self.value
-end
-
----@class ConfigSection
-local ConfigSection = {}
-ConfigSection.__index = ConfigSection
-
----@public
----@return ConfigSection
-function ConfigSection.new()
-    local t = setmetatable({}, ConfigSection) ---@type ConfigSection
-    return t
-end
-
----@public
----@param name string
----@param default string|number|boolean
----@param optionType Config.OPTION_TYPE
----@param specialType? string
----@param min? number
----@param max? number
----@return ConfigOption
----@overload fun(self:ConfigSection, name:string, default:string, optionType:Config.OPTION_TYPE.string, specialType:nil):ConfigOption
----@overload fun(self:ConfigSection, name:string, default:string, optionType:Config.OPTION_TYPE.int, specialType:"radio"):ConfigOption
----@overload fun(self:ConfigSection, name:string, default:number, optionType:Config.OPTION_TYPE.int|Config.OPTION_TYPE.float, specialType:nil, min:number, max:number):ConfigOption
----@overload fun(self:ConfigSection, name:string, default:boolean, optionType:Config.OPTION_TYPE.boolean, specialType:nil):ConfigOption
-function ConfigSection:CreateOption(name, default, optionType, specialType, min, max)
-    self[name] = ConfigOption.new(default, optionType, specialType, min, max)
-    return self[name]
-end
-
----@public
----@param name string
----@param default? boolean
----@return ConfigSection
-function ConfigSection:CreateSection(name, default)
-    if default == nil then default = true end
-
-    self[name] = ConfigSection.new()
-    self[name]:CreateOption("enable", default, "boolean")
-    return self[name]
-end
-
----@public
----@return table
-function ConfigSection:Flatten()
-    local t = {}
-    
-    for k, v in pairs(self) do --[[@cast k string]]  --[[@cast v ConfigSection|ConfigOption]]
-        t[k] = v:Flatten()
-    end
-    return t
-end
-
 do
-    local defaults = ConfigSection.new()
+    local defaults = configTypes.ConfigSection.new()
     local section
     local subsection
     local subsubsection
     
     ---section = defaults:CreateSection("CleaningAdditions")
     ---subsection = section:CreateSection("CleanWalls")
-    ---subsection:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    ---subsection:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section = defaults:CreateSection("CombatTweaks")
 
-    --section = defaults:CreateSection("CrewLoadout")
-
-    section:CreateOption("PreventAttackingHandcuffed", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("PreventAttackingHandcuffed", true, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("ArrestHumansInPlayerSub")
-    subsection:CreateOption("onlyPreviouslyCuffed", false, Config.OPTION_TYPE.boolean)
-    subsection:CreateOption("minHealth", 75.0, Config.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
+    subsection:CreateOption("onlyPreviouslyCuffed", false, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
 
-    section:CreateOption("PreSpinTurrets", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("PreSpinTurrets", true, configTypes.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("CleaningAdditions")
     subsection = section:CreateSection("PurchasedItemCrates", false)
-    subsection:CreateOption("autoOrder", "*deconstruct;ignore", Config.OPTION_TYPE.int, "radio")
+    subsection:CreateOption("autoOrder", "*deconstruct;ignore", configTypes.OPTION_TYPE.int, "radio")
 
     subsection = section:CreateSection("DeconstructInBulk")
-    subsection:CreateOption("maxCheck", 32, Config.OPTION_TYPE.int, nil, 2, 128)
+    subsection:CreateOption("maxCheck", 32, configTypes.OPTION_TYPE.int, nil, 2, 128)
 
-    section:CreateOption("OnlyUseShipDeconstructor", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("OnlyUseShipDeconstructor", true, configTypes.OPTION_TYPE.boolean)
 
     defaults:CreateSection("CrewStaysInSub")
 
-    section = defaults:CreateSection("EquipArmor")
-    section:CreateOption("timeBetween", 60, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section = defaults:CreateSection("EquipItems")
+    section:CreateOption("CrewLoadout", defaultCrewLoadout, configTypes.OPTION_TYPE.string, "loadout")
+    section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section = defaults:CreateSection("LadderFix")
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section = defaults:CreateSection("MuteSingleplayerBotConversations", false)
-    section:CreateOption("BlockAllBotChat", false, Config.OPTION_TYPE.boolean)
+    section:CreateOption("BlockAllBotChat", false, configTypes.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("OperateReactorTweaks")
-    section:CreateOption("behavior", "mostlyVanilla;*fuelOnlyWhenController;fuelOnly", Config.OPTION_TYPE.int, "radio")
-    section:CreateOption("numFuelRods", 1, Config.OPTION_TYPE.int, nil, 1, 4)
-    section:CreateOption("minimumCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    section:CreateOption("behavior", "mostlyVanilla;*fuelOnlyWhenController;fuelOnly", configTypes.OPTION_TYPE.int, "radio")
+    section:CreateOption("numFuelRods", 1, configTypes.OPTION_TYPE.int, nil, 1, 4)
+    section:CreateOption("minimumCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     section = defaults:CreateSection("Orders", false)
 
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")
-    subsection:CreateOption("onlyAtFriendlyOutposts", false, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("onlyAtFriendlyOutposts", false, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Wait")
-    subsection:CreateOption("onlyAtFriendlyOutposts", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("onlyAtFriendlyOutposts", true, configTypes.OPTION_TYPE.boolean)
 
-    section:CreateOption("timeBetween", 30, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-    section:CreateOption("fillEmpty", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("forceSameItemType", false, Config.OPTION_TYPE.boolean)
-    section:CreateOption("forceQualityGEQ", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("fillEmpty", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("forceSameItemType", false, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("forceQualityGEQ", true, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Ammunition")
-    subsection:CreateOption("minimumCondition", 80, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 80, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("BatteryCells")
-    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 95, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 95, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("WeldingFuel")
-    subsection:CreateOption("minimumCondition", 75, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
+    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
 
     section = defaults:CreateSection("SmarterLoadItems")
 
     subsection = section:CreateSection("BatteryCells")
     
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 90, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
     section = defaults:CreateSection("SmarterPets")
 
     subsection = section:CreateSection("EatFoodInInventory")
-    subsection:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-    subsection:CreateOption("overrideProtectOwner", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsection:CreateOption("overrideProtectOwner", true, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("BotsPlayWhenIdle")
-    subsection:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section:CreateSection("CleanableProduce")
 
     section = defaults:CreateSection("UseFurniture")
     subsection = section:CreateSection("AutoUseWhenIdle")
-    subsection:CreateOption("beds", true, Config.OPTION_TYPE.boolean)
-    subsection:CreateOption("chairs", true, Config.OPTION_TYPE.boolean)
+    subsection:CreateOption("beds", true, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("chairs", true, configTypes.OPTION_TYPE.boolean)
 
-    section:CreateOption("stayInBedIfHurt", true, Config.OPTION_TYPE.boolean)
+    section:CreateOption("stayInBedIfHurt", true, configTypes.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("UseTalents")
-    section:CreateOption("idle", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("wait", true, Config.OPTION_TYPE.boolean)
-    section:CreateOption("timeBetween", 15, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Assistant")
     subsubsection = subsection:CreateSection("InspiringTunes")
-    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
     
     subsubsection = subsection:CreateSection("JengaMaster")
-    subsubsection:CreateOption("timeBetween", 120, Config.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    subsubsection:CreateOption("timeBetween", 120, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsubsection = subsection:CreateSection("NonThreatening")
-    subsubsection:CreateOption("minHealth", 75.0, Config.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
-    -- subsubsection:CreateOption("Accordion", true, Config.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Bikehorn", true, Config.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Guitar", true, Config.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Harmonica", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
+    -- subsubsection:CreateOption("Accordion", true, configTypes.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Bikehorn", true, configTypes.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Guitar", true, configTypes.OPTION_TYPE.boolean)
+    -- subsubsection:CreateOption("Harmonica", true, configTypes.OPTION_TYPE.boolean)
     
-    -- subsection:CreateOption("ChonkyHonks", true, Config.OPTION_TYPE.boolean)
+    -- subsection:CreateOption("ChonkyHonks", true, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Captain")
     subsubsection = subsection:CreateSection("SteadyTune")
-    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
 
     subsection = section:CreateSection("Engineer")
     subsubsection = subsection:CreateSection("MelodicRespite")
-    subsubsection:CreateOption("stopAfterBuffed", true, Config.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
 
     Config.defaults.CONFIG = defaults
 end

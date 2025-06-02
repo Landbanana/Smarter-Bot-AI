@@ -51,7 +51,7 @@ local function activate(self)
 
         AddMethod("getSpecifiedContainables", getSpecifiedContainables)
         ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_getSpecifiedContainables fun(instance:Barotrauma.ItemPrefab):Types.Set<Barotrauma.Identifier>
+        ---@field public SBAI_getSpecifiedContainables fun(instance:Barotrauma.ItemPrefab):Set<Barotrauma.Identifier>
     end
 
     do
@@ -95,8 +95,8 @@ local function activate(self)
         local xPath2 = util.xPath2
 
         ---@param instance Barotrauma.ItemPrefab
-        ---@return Types.Set<Barotrauma.InvSlotType>
-        ---@return table<integer, Types.Set<Barotrauma.InvSlotType>>
+        ---@return Set<Barotrauma.InvSlotType>
+        ---@return table<integer, Set<Barotrauma.InvSlotType>>
         local function getInvSlots(instance)
             local reg = new()
             local comp = {}
@@ -125,7 +125,7 @@ local function activate(self)
         end
         AddMethod("getInvSlots", getInvSlots)
         ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Types.Set<Barotrauma.InvSlotType>, table<integer, Types.Set<Barotrauma.InvSlotType>>)
+        ---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Set<Barotrauma.InvSlotType>, table<integer, Set<Barotrauma.InvSlotType>>)
     end
 end
 

@@ -18,9 +18,9 @@ local ignoredHulls
 local activeOrders --[=[@type Barotrauma.CrewManager.ActiveOrder[]]=]
 
 ---@param self Types.Module
----@return Types.Set<Barotrauma.Hull>
+---@return Set<Barotrauma.Hull>
 local function activateIgnoreRoomOrder(self)
-    ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Types.Set<Barotrauma.Hull>]]
+    ignoredHulls = Types.Set.new(self:RegisterTable(nil, "ROUND_END")) --[[@type Set<Barotrauma.Hull>]]
 
     self:RegisterStrongRef("Game.GameSession.CrewManager.ActiveOrders", "System.Collections.Generic.List`1[[Barotrauma.CrewManager+ActiveOrder]]", "Barotrauma.CrewManager",
     function(strongRef)

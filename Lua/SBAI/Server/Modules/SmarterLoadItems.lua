@@ -3,28 +3,34 @@ local util = require("SBAI.Shared.util")
 local Types = require("SBAI.Shared.types")
 
 do
-    local descriptor --[[@type MoonSharp.Interpreter.Interop.IUserDataDescriptor]]
 
-    LuaUserData.RegisterType("Barotrauma.AIObjectiveMoveItem")
+    local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
+    local MakePropertyAccessible = LuaUserData.MakePropertyAccessible
+    local MakeMethodAccessible = LuaUserData.MakeMethodAccessible
+    local AutoRegisterType = util.AutoRegisterType
+    local Descriptors = Descriptors
+    local descriptor
+
+    AutoRegisterType("Barotrauma.AIObjectiveMoveItem")
 
     ---@class Barotrauma.AIObjectiveMoveItem: Barotrauma.AIObjectiveDecontainItem
 
-    descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItems")
-    LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
+    descriptor = AutoRegisterType("Barotrauma.AIObjectiveLoadItems")
+    MakePropertyAccessible(descriptor, "TargetContainerTags")
 
     ---@class Barotrauma.AIObjectiveLoadItems: Barotrauma.AIObjectiveLoop*1Barotrauma*Item
     ---@field TargetContainerTags System.Collections.Immutable.ImmutableArray*1Barotrauma*Identifier
 
-    descriptor = LuaUserData.RegisterType("Barotrauma.AIObjectiveLoadItem")
-    LuaUserData.MakeMethodAccessible(descriptor, "CanEquip")
+    descriptor = AutoRegisterType("Barotrauma.AIObjectiveLoadItem")
+    MakeMethodAccessible(descriptor, "CanEquip")
     --LuaUserData.MakeMethodAccessible(descriptor, "IsValidContainable")
-    LuaUserData.MakePropertyAccessible(descriptor, "TargetContainerTags")
-    LuaUserData.MakePropertyAccessible(descriptor, "Container")
-    LuaUserData.MakePropertyAccessible(descriptor, "ItemContainer")
-    LuaUserData.MakeFieldAccessible(descriptor, "targetItem")
-    LuaUserData.MakeFieldAccessible(descriptor, "ignoredItems")
+    MakePropertyAccessible(descriptor, "TargetContainerTags")
+    MakePropertyAccessible(descriptor, "Container")
+    MakePropertyAccessible(descriptor, "ItemContainer")
+    MakeFieldAccessible(descriptor, "targetItem")
+    MakeFieldAccessible(descriptor, "ignoredItems")
 
-    LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "item")
+    MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveContainItem"], "item")
 
     ---@class Barotrauma.AIObjectiveLoadItem: Barotrauma.AIObjective
     ---@field IsValidContainable fun(item:Barotrauma.Item):System.Boolean

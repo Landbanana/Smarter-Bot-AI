@@ -1,8 +1,12 @@
 local SBAI = require("SBAI")
 local util = require("SBAI.Shared.util")
 local Config = require("SBAI.Shared.config")
+local configTypes = require("SBAI.Shared.Types.configTypes")
 local Constants = require("SBAI.Shared.constants")
 local guiUtil = require("SBAI.Client.guiUtil")
+local crewLoadoutGui
+
+local activateCrewLoadoutGui = require("SBAI.Client.crewLoadoutGui")
 
 local ForceUpperCase = guiUtil.Constants.ForceUpperCase
 
@@ -88,7 +92,7 @@ do
         -- local currentOption --[[@type string]]
         -- local currentValue --[[@type string|number|boolean|table]]
 
-        local typeTable --[[@type table<OptionType|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
+        local typeTable --[[@type table<OPTION_TYPE|"table", fun(defaults:ConfigSection, option:table, value:`optionType`|table)>]]
         local mainFontIds = util.AsIdentifiers("LargeFont", "SubHeadingFont")
 
         ---@param defaults ConfigSection|ConfigOption
@@ -127,13 +131,76 @@ do
         ---@param defaults ConfigSection|ConfigOption
         ---@param option string
         ---@param value number
-        ---@param optionType OptionType
+        local function processString(defaults, option, value)
+            MakeNamedCut(defaults, option)
+
+            local changeAdder = addToUnsavedChanges(namespace)
+            
+            if defaults.specialType == "loadout" then
+                local data = {}
+                local unsavedData
+                local i = 0
+
+                for job, loadoutIds in value:gmatch("([^:;]+):([^:]+;)") do
+                    local loadoutData = {}
+                    local j = 0
+                    
+                    for id in loadoutIds:gmatch("([^:;]*);") do
+                        j = j + 1
+                        loadoutData[j] = Identifier(id)
+                    end
+                    i = i + 1
+                    data[i] = {[Identifier(job)]=loadoutData}
+                end
+                
+                local function changeAdderWrap(_data)
+                    local _value = ""
+
+                    unsavedData = _data
+
+                    for jobIdAndLoadoutData in _data do
+                        local jobId, loadoutdata = next(jobIdAndLoadoutData) --[=[@type Barotrauma.Identifier, Barotrauma.Identifiers[]]=]
+
+                        _value = _value..jobId.Value..":"
+
+                        for itemId in loadoutdata do
+                            _value = _value..itemId.Value..";"
+                        end
+                    end
+                    return changeAdder(_value)
+                end
+                
+                if not crewLoadoutGui then crewLoadoutGui = activateCrewLoadoutGui(changeAdderWrap, data) end
+                
+                local button = guiUtil.AddButton(currentOptionCut.Content, Point(2*clickableSize, clickableSize), GUI.Anchor.CenterLeft, "EDIT", nil, false,
+                function()
+                    
+
+                    -- local closeButton = guiUtil.AddButton(mainFrame.Parent, Game.GameScreen.Frame.Rect.Size, GUI.Anchor.TopLeft, nil, "null", true,
+                    -- function(button, obj)
+                    --     button.RectTransform.Parent = nil
+                    -- end)
+                    -- closeButton.Color = Color.Transparent
+                    crewLoadoutGui.UserData = unsavedData or data
+                    crewLoadoutGui.RectTransform.Parent = mainFrame.RectTransform
+                end)
+
+                button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
+            end
+
+            --TODO
+        end
+
+        ---@param defaults ConfigSection|ConfigOption
+        ---@param option string
+        ---@param value number
+        ---@param optionType OPTION_TYPE
         local function processNumber(defaults, option, value, optionType)
             MakeNamedCut(defaults, option)
 
             local changeAdder = addToUnsavedChanges(namespace)
 
-            if optionType == Config.OPTION_TYPE.int and defaults.specialType == "radio" then
+            if optionType == configTypes.OPTION_TYPE.int and defaults.specialType == "radio" then
                 local radioGroup = RadioButtonGroup()
                 local layoutGroupRect = AddLayoutGroup(currentOptionCut.Content, Point(currentOptionCut.Content.Rect.Width - currentOptionCut.Content.GetChild(Int32(currentOptionCut.Content.CountChildren - 1)).Rect.Width, currentOptionCut.Content.Rect.Height), GUI.Anchor.CenterRight, nil, true, GUI.Anchor.CenterLeft).RectTransform
 
@@ -165,7 +232,7 @@ do
                     currentOptionCut.Content.RectTransform,
                     GUI.Anchor.CenterLeft
                 ),
-                optionType == Config.OPTION_TYPE.float and NumberType.Float or optionType == Config.OPTION_TYPE.int and NumberType.Int,
+                optionType == configTypes.OPTION_TYPE.float and NumberType.Float or optionType == configTypes.OPTION_TYPE.int and NumberType.Int,
                 nil,
                 GUI.Alignment.Left
             )
@@ -173,7 +240,7 @@ do
             local zeroCheck = false
             local forcedDefault = false
 
-            if optionType == Config.OPTION_TYPE.float then
+            if optionType == configTypes.OPTION_TYPE.float then
                 numberInput.MinValueFloat = defaults.min
                 numberInput.MaxValueFloat = defaults.max
                 numberInput.FloatValue = unsavedChanges[namespace()] or value
@@ -243,12 +310,10 @@ do
 
         ---@type table<OptionType|"table", fun(defaults:ConfigSection|ConfigOption, option:table, value:`optionType`|table)>
         typeTable = {
-            [Config.OPTION_TYPE.string]=function(defaults, option, value) --[[@cast value string]]
-            
-            end,
-            [Config.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.float) end,
-            [Config.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, Config.OPTION_TYPE.int) end,
-            [Config.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
+            [configTypes.OPTION_TYPE.string]=function(defaults, option, value) return processString(defaults, option, value) end,
+            [configTypes.OPTION_TYPE.float]=function(defaults, option, value) return processNumber(defaults, option, value, configTypes.OPTION_TYPE.float) end,
+            [configTypes.OPTION_TYPE.int]=function(defaults, option, value) return processNumber(defaults, option, value, configTypes.OPTION_TYPE.int) end,
+            [configTypes.OPTION_TYPE.boolean]=function(defaults, option, value) --[[@cast value boolean]]
                 if option == "enable" then
                     xSpacing = xSpacing - 4*D_PADDING
                     MakeNamedCut(defaults, namespace.stack[#namespace.stack - 1])
@@ -453,7 +518,7 @@ local function MakeSBAIMenu(parent)
     )
     bigBrain.ToolTip = "big brain"
 
-    --bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
+    bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
     
     local availableTextWidth = (bottomRightCut.Rect.Width - bigBrainSize.X - D_PADDING)/2
 
@@ -499,12 +564,13 @@ local function ShowSBAIMenu(parent)
     end
 end
 
--- ---@param parent Barotrauma.GUIComponent
--- function MakeCrewPolicyMenu(parent)
---     local mainFrame = require("SBAI.Client.fabricateOrderGui")
+---@param parent Barotrauma.GUIComponent
+function MakeCrewPolicyMenu(parent)
+    --local mainFrame = require("SBAI.Client.itemPickerGui")
 
---     mainFrame.RectTransform.Parent = parent.RectTransform
--- end
+    --mainFrame.RectTransform.Parent = parent.RectTransform
+    require("SBAI.Client.crewPolicyGui").RectTransform.Parent = parent.RectTransform
+end
 
 
 ---@param namespace Namespace

@@ -366,7 +366,7 @@ local function activateCleanWalls(self, options)
         self:AddPatch("Barotrauma.Decal", "Clean", nil,
         function(instance, ptable)
             local hull = instance.hull --[[@type Barotrauma.Hull]]
-            local hullData = rawget(allHullData, hull) --[[@type {decals:Types.Set, n:integer}]]
+            local hullData = rawget(allHullData, hull) --[[@type {decals:Set, n:integer}]]
 
             if  hullData and
                 instance.BaseAlpha <= MIN_ALPHA

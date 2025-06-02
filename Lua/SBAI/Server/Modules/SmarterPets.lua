@@ -355,7 +355,7 @@ local function activateCleanableProduce(self, options)
         end
     end
 
-    for id in next, petItemIds do
+    for id in petItemIds do
         local prefab = GetItemPrefab(id)
 
         if prefab then
@@ -374,7 +374,7 @@ local function activateCleanableProduce(self, options)
     function()
         local newPrefConts = GetItemPrefab(Constants.D_PETITEM_TEMPLATE).PreferredContainers
 
-        for id in next, petItemIds do
+        for id in petItemIds do
             local prefab = GetItemPrefab(id)
     
             if #prefab.PreferredContainers <= 0 then
@@ -429,7 +429,7 @@ local function deactivate(self)
 
         DoWithTemporaryRegistrations({"System.Collections.Immutable.ImmutableArray`1[[Barotrauma.PreferredContainer,"..Constants.CLR_TYPE_POSTFIX.."]]"},
         function()
-            for id in next, petItemIds do
+            for id in petItemIds do
                 local prefab = GetItemPrefab(id)
                 local oldPrefConts = prefab.PreferredContainers
         

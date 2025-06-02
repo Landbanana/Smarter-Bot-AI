@@ -8,29 +8,51 @@ Types.TYPES = {
     SET=1
 }
 
----@class Types.Set<T>: {[T]: true}
+---@class Set<T>: {[T]: true}
 ---@field public type Types.TYPES.SET
 Types.Set = {type=Types.TYPES.SET}
 Types.Set.__index = Types.Set
 
 do
     local next = next
-
-    function Types.Set:__len()
-        local i = 0
-
-        for _ in next, self do
-            i = i + 1
-        end
-        return i
+    
+    ---@generic T
+    ---@param t Set<T>
+    ---@param k T
+    ---@return T
+    local function _iter(t, k)
+        k = next(t, k)
+        return k
     end
+
+    ---@private
+    ---@generic T
+    ---@param self Set<T>
+    ---@return fun(t:Set<T>, k:T):T
+    ---@return Set<T>
+    function Types.Set:__iterator()
+        return _iter, self
+    end
+end
+
+---@private
+---@return integer
+function Types.Set:__len()
+    local i = 0
+
+    for _ in self do
+        i = i + 1
+    end
+    return i
 end
 
 do
     local Set = Types.Set
     local setmetatable = setmetatable
 
-    ---@return Types.Set
+    ---@generic T
+    ---@param t table
+    ---@return Set<T>
     function Types.Set.new(t)
         if t then
             local _t = {}
@@ -54,36 +76,25 @@ do
 end
 
 ---@generic T
----@param self Types.Set<T>
+---@param self Set<T>
 ---@param k T
 function Types.Set:Add(k)
     self[k] = true
 end
 
 ---@generic T
----@param self Types.Set<T>
+---@param self Set<T>
 ---@param k T
 function Types.Set:Remove(k)
     self[k] = nil
 end
 
-do
-    local IsSet = Types.Set.IsSet
-    local next = next
-
-    ---@generic T
-    ---@param self Types.Set<T>
-    ---@param t T[]|Types.Set<T>
-    function Types.Set:Update(t)
-        if IsSet(t) then
-            for k in next, t do
-                self:Add(k)
-            end
-        else
-            for v in t do
-                self:Add(v)
-            end
-        end
+---@generic T
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
+function Types.Set:Update(t)
+    for k in t do
+        self:Add(k)
     end
 end
 
@@ -91,8 +102,8 @@ do
     local new = Types.Set.new
     
     ---@generic T
-    ---@param self Types.Set<T>
-    ---@return Types.Set<T>
+    ---@param self Set<T>
+    ---@return Set<T>
     function Types.Set:Copy()
         local out = new()
 
@@ -102,8 +113,8 @@ do
 end
 
 ---@generic T
----@param self Types.Set<T>
----@param t T[]|Types.Set<T>
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
 function Types.Set:Union(t)
     local out = self:Copy()
     
@@ -118,8 +129,8 @@ do
     local next = next
 
     ---@generic T
-    ---@param self Types.Set<T>
-    ---@param t T[]|Types.Set<T>
+    ---@param self Set<T>
+    ---@param t T[]|Set<T>|fun(...):T
     function Types.Set:Intersection_Update(t)
         if not IsSet(t) then
             local _t = new()
@@ -139,9 +150,9 @@ do
 end
 
 ---@generic T
----@param self Types.Set<T>
----@param t T[]|Types.Set<T>
----@return Types.Set<T>
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
+---@return Set<T>
 function Types.Set:Intersection(t)
     local out = self:Copy()
 
@@ -149,30 +160,19 @@ function Types.Set:Intersection(t)
     return out
 end
 
-do
-    local IsSet = Types.Set.IsSet
-    local next = next
-
-    ---@generic T
-    ---@param self Types.Set<T>
-    ---@param t T[]|Types.Set<T>
-    function Types.Set:Difference_Update(t)
-        if IsSet(t) then
-            for k in next, t do
-                self:Remove(k)
-            end
-        else
-            for v in t do
-                self:Remove(v)
-            end
-        end
+---@generic T
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
+function Types.Set:Difference_Update(t)
+    for k in t do
+        self:Remove(k)
     end
 end
 
 ---@generic T
----@param self Types.Set<T>
----@param t T[]|Types.Set<T>
----@return Types.Set<T>
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
+---@return Set<T>
 function Types.Set:Difference(t)
     local out = self:Copy()
 
@@ -180,29 +180,18 @@ function Types.Set:Difference(t)
     return out
 end
 
-do
-    local IsSet = Types.Set.IsSet
-    local next = next
-
-    ---@generic T
-    ---@param self Types.Set<T>
-    ---@param t T[]|Types.Set<T>
-    function Types.Set:Symmetric_Difference_Update(t)
-        if IsSet(t) then
-            for k in next, t do
-                self[k] = not self[k] and true or nil
-            end
-        else
-            for v in t do
-                self[v] = not self[v] and true or nil
-            end
-        end
+---@generic T
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
+function Types.Set:Symmetric_Difference_Update(t)
+    for k in t do
+        self[k] = not self[k] and true or nil
     end
 end
 
 ---@generic T
----@param self Types.Set<T>
----@param t T[]|Types.Set<T>
+---@param self Set<T>
+---@param t T[]|Set<T>|fun(...):T
 function Types.Set:Symmetric_Difference(t)
     local out = self:Copy()
 
@@ -214,7 +203,7 @@ do
     local next = next
 
     ---@generic T
-    ---@param self Types.Set<T>
+    ---@param self Set<T>
     ---@return boolean
     function Types.Set:IsEmpty()
         return next(self) == nil
@@ -225,20 +214,20 @@ do
     local ClearTable = util.itertools.ClearTable
 
     ---@generic T
-    ---@param self Types.Set<T>
+    ---@param self Set<T>
     function Types.Set:Clear()
         return ClearTable(self)
     end
 end
 
 ---@generic T
----@param self Types.Set<T>
+---@param self Set<T>
 ---@return T[]
 function Types.Set:ToList()
     local out = {}
     local i = 0
 
-    for k in next, self do
+    for k in self do
         i = i + 1
         out[i] = k
     end
@@ -325,7 +314,7 @@ end
 ---@field private commonModules table<string,Types.CommonModule>
 ---@field private hooks {identifier:string, name:string}[]
 ---@field private initializers fun()[]
----@field private methodRegistry Types.Set<string>
+---@field private methodRegistry Set<string>
 ---@field private patches {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}[]
 ---@field private tables {t:table, flags:number}[]
 ---@field private activate fun(self:Types.Module)
@@ -591,7 +580,7 @@ do
     ---@param className `T`
     ---@param methodName string
     ---@param parameterTypes? string[]
-    ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)
+    ---@param patch fun(instance:T, ptable:Barotrauma.LuaCsHook.ParameterTable)|`function(instance, ptable) end`
     ---@param hookType Barotrauma.LuaCsHook.HookMethodType
     ---|`Hook.HookMethodType.Before`
     ---|`Hook.HookMethodType.After`
@@ -712,7 +701,7 @@ function Types.Module:Activate(namespace, options)
     --         commonModule:Activate(self, newNamespace)
     --     end
     -- end
-
+    
     self:AddHook("roundStart", function() return self:init() end)
 end
 
@@ -721,6 +710,7 @@ do
 
     ---@public
     ---@param func fun()
+    ---|`fun() end`
     function Types.Module:AddInit(func)
         if not self.initializers then self.initializers = {} end
         insert(self.initializers, func)
@@ -752,7 +742,7 @@ do
             end
 
             if self.methodRegistry then
-                for v in next, self.methodRegistry do --[[@cast v string]]
+                for v in self.methodRegistry do --[[@cast v string]]
                     local className, methodName = v:match("^(.+)%.([%w_]+)$") --[[@type string,string]]
 
                     RemoveMethod(className, methodName)
@@ -824,7 +814,7 @@ do
 end
 
 ---@class Types.CommonModule: Types.Module
----@field private moduleRefs Types.Set<Types.Module>
+---@field private moduleRefs Set<Types.Module>
 Types.CommonModule = setmetatable({}, Types.Module)
 Types.CommonModule.__index = Types.CommonModule
 
@@ -950,7 +940,7 @@ function Types.AllTimedCharacterData:Get(character)
 end
 
 ---@class Types.NetworkMember
----@field private handlers table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Types.Set}>
+---@field private handlers table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Set}>
 Types.NetworkMember = {}
 Types.NetworkMember.__index = Types.NetworkMember
 
@@ -959,7 +949,7 @@ do
     local parse = json.parse
 
     ---@protected
-    ---@param self Types.Set
+    ---@param self Set
     ---@param data Barotrauma.Networking.IReadMessage
     ---@param client? Barotrauma.Networking.Client
     ---@return any
@@ -981,9 +971,9 @@ do
     local Receive = Networking.Receive
 
     local handlersMT = {
-        ---@param t table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Types.Set}>
+        ---@param t table<MSG,{base:fun(data:any, client:Barotrauma.Networking.Client?),set:Set}>
         ---@param k MSG
-        ---@return {base:fun(data:any),set:Types.Set}
+        ---@return {base:fun(data:any),set:Set}
         __index=function(t, k)
             t[k] = {set=new()}
             

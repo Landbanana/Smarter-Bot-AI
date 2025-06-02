@@ -43,7 +43,7 @@ local activateInstrumentTalent
 
 do
     local allCharacterInstrumentData --[[@type Types.AllTimedCharacterData]]
-    local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}>]]
+    local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}>]]
     local allInstrumentObjectiveData
 
     local anyNeedBuff
@@ -97,9 +97,9 @@ do
 
         allCharacterInstrumentData = Types.AllTimedCharacterData.new(self)
 
-        ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}
+        ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}
         allInstrumentTalentData = setmetatable({}, {
-            ---@param t {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Types.Set<Barotrauma.Identifier>}}
+            ---@param t {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}
             ---@param k Barotrauma.Identifier
             __index=function(t, k)
                 local prefab = TalentPrefab.TalentPrefabs[k]
@@ -203,7 +203,7 @@ do
         local afflictionId --[[@type Barotrauma.Identifier]]
         local allowSelf --[[@type boolean]]
         local maxDistance --[[@type number]]
-        local validInstruments --[[@type Types.Set<Barotrauma.Identifier>]]
+        local validInstruments --[[@type Set<Barotrauma.Identifier>]]
 
         do
             local instrumentTalentData = allInstrumentTalentData[talentId]

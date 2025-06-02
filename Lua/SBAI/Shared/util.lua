@@ -15,6 +15,22 @@ LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjective"], "subObjec
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.ItemContainer"], "slotRestrictions")
 LuaUserData.RegisterType("Barotrauma.Items.Components.ItemContainer+SlotRestrictions")
 
+do
+    local band = bit32.band
+
+    function util.mathtools.HasFlag(bitFlag, flag)
+        return band(bitFlag, flag) == flag
+    end
+end
+
+do
+    local btest = bit32.btest
+
+    function util.mathtools.HasAnyFlag(bitFlag, flag)
+        return btest(bitFlag, flag)
+    end
+end
+
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
 ---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
@@ -534,7 +550,7 @@ do
     do
         local CLEAR_REG = util.CLEAR_REG
 
-        local btest = bit32.btest
+        local HasFlag = util.mathtools.HasFlag
         local CopyTable = util.itertools.CopyTable
         local insert = table.insert
 
@@ -549,7 +565,7 @@ do
                 CHARACTER_DEATH=characterDeath,
                 ITEM_REMOVED=itemRemoved
             }) do
-                if btest(CLEAR_REG[flag], flags) then
+                if HasFlag(CLEAR_REG[flag], flags) then
                     insert(subRegistry, t)
                 end
             end
@@ -563,7 +579,7 @@ do
     do
         local CLEAR_REG = util.CLEAR_REG
 
-        local btest = bit32.btest
+        local HasFlag = util.mathtools.HasFlag
         local RemoveValue = util.itertools.RemoveValue
 
         ---@param t table
@@ -576,7 +592,7 @@ do
                 CHARACTER_DEATH=characterDeath,
                 ITEM_REMOVED=itemRemoved
             }) do
-                if btest(CLEAR_REG[flag], flags) then
+                if HasFlag(CLEAR_REG[flag], flags) then
                     RemoveValue(subRegistry, t)
                 end
             end
@@ -729,7 +745,7 @@ do
     local ItemContainer = Components.ItemContainer
     
     ---@param container Barotrauma.Item
-    ---@param targetTags Types.Set<Barotrauma.Identifier>
+    ---@param targetTags Set<Barotrauma.Identifier>
     ---@return integer[]?
     function util.GetSpecificSlots(container, targetTags)
         local itemContainer = container.GetComponent(ItemContainer)
@@ -1012,22 +1028,6 @@ do
             )
         end
         return coordinates
-    end
-end
-
-do
-    local band = bit32.band
-
-    function util.mathtools.HasFlag(bitFlag, flag)
-        return band(bitFlag, flag) == flag
-    end
-end
-
-do
-    local btest = bit32.btest
-
-    function util.mathtools.HasAnyFlag(bitFlag, flag)
-        return btest(bitFlag, flag)
     end
 end
 

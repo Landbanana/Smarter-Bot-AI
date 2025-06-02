@@ -57,8 +57,8 @@ do
     targetActionTypes:Add(ActionType.OnWearing)
     
     ---@param prefab Barotrauma.ItemPrefab
-    ---@param targetIds Types.Set<Barotrauma.Identifier>
-    ---@param specificTargetTags Types.Set<Barotrauma.Identifier>
+    ---@param targetIds Set<Barotrauma.Identifier>
+    ---@param specificTargetTags Set<Barotrauma.Identifier>
     ---@param targetTag Barotrauma.Identifier
     ---@return boolean
     local function isPrefabUtilizer(prefab, targetIds, specificTargetTags, targetTag)
@@ -136,7 +136,7 @@ do
         return isUtilizer
     end
     
-    ---@type table<string,fun(self:Types.Module, options:table, targetIds:Types.Set<Barotrauma.Identifier>, specificTargetTags:Types.Set<Barotrauma.Identifier>, targetTag:Barotrauma.Identifier, rechargerTag:Barotrauma.Identifier):((table<Barotrauma.Identifier,Barotrauma.Identifier>|Types.Set<Barotrauma.Identifier>), number, number)>
+    ---@type table<string,fun(self:Types.Module, options:table, targetIds:Set<Barotrauma.Identifier>, specificTargetTags:Set<Barotrauma.Identifier>, targetTag:Barotrauma.Identifier, rechargerTag:Barotrauma.Identifier):((table<Barotrauma.Identifier,Barotrauma.Identifier>|Set<Barotrauma.Identifier>), number, number)>
     local sectionNameToActivate = {
         Ammunition=function(self, options, targetIds, specificTargetTags, targetTag, rechargerTag)
             local utilizerIds = {}
@@ -175,9 +175,9 @@ do
                 ::continue::
             end
 
-            -- for id, utilizedTags in next, utilizerIds do
+            -- for id, utilizedTags in utilizerIds do
             --     print("--"..id.Value.."--")
-            --     for utilizedId in next, utilizedTags do
+            --     for utilizedId in utilizedTags do
             --         print(utilizedId)
             --     end
             -- end
@@ -195,7 +195,7 @@ do
                 end
             end
 
-            -- for id in next, utilizerIds do
+            -- for id in utilizerIds do
             --     print(id)
             -- end
 
@@ -213,7 +213,7 @@ do
                 end
             end
 
-            -- for id in next, utilizerIds do
+            -- for id in utilizerIds do
             --     print(id)
             -- end
             
@@ -232,7 +232,7 @@ do
                 end
             end
 
-            -- for id in next, utilizerIds do
+            -- for id in utilizerIds do
             --     print(id)
             -- end
 
@@ -309,8 +309,8 @@ do
         ---@param idMapData table
         local function getTargetItem(character, idMapData)
             local inventory =  character.Inventory
-            local utilizerIds = idMapData.utilizerIds --[[@type Types.Set<Barotrauma.Identifier>]]
-            local targetTags = idMapData.targetIds:Union(idMapData.specificTargetTags) --[[@type Types.Set<Barotrauma.Identifier>]]
+            local utilizerIds = idMapData.utilizerIds --[[@type Set<Barotrauma.Identifier>]]
+            local targetTags = idMapData.targetIds:Union(idMapData.specificTargetTags) --[[@type Set<Barotrauma.Identifier>]]
             local minimumCondition = idMapData.minimumCondition --[[@type number]]
             local minimumEquippedCondition = idMapData.minimumEquippedCondition --[[@type number]]
             
@@ -767,7 +767,7 @@ local function activate(self)
         --ModObjProp("ConcurrentObjectives", WAIT, REPLENISH, true)
 
         local options = self.options
-        local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"], nil, nil)
+        local allCharacterData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
         local objPredicateData = {} --[[@type table<Barotrauma.Identifier,fun(instance:Barotrauma.AIObjectiveIdle|Barotrauma.AIObjectiveGoTo, character:Barotrauma.Character):boolean>]]
         local sharedPatch = generateSharedPatch(allCharacterData, objPredicateData, idMap, options["fillEmpty"])
         

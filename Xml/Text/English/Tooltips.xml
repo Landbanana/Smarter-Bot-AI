@@ -13,8 +13,8 @@
   <GUI.tooltips.combattweaks.prespinturrets>Allow the AI to spin-up turrents (such as a chaingun) before combat starts, allowing them to fire much faster</GUI.tooltips.combattweaks.prespinturrets>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>
-  <GUI.tooltips.equiparmor>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equiparmor>
-  <GUI.tooltips.equiparmor.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equiparmor.timebetween>
+  <GUI.tooltips.equipitems>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems>
+  <GUI.tooltips.equipitems.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equipitems.timebetween>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
   <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
   <GUI.tooltips.mutesingleplayerbotconversations>CLIENT-SIDE: The same setting as "Disable bot conversations" for servers (muting random bot conversations) but works for singleplayer</GUI.tooltips.mutesingleplayerbotconversations>

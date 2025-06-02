@@ -3,6 +3,7 @@ local Types = require("SBAI.Shared.types")
 
 ---@param self Types.Module
 local function activate(self)
+    self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
 
     local deepdivingId = Identifier("lightdiving")

@@ -125,7 +125,7 @@ function guiUtil.AddButton(parent, size, anchor, text, style, ignoreColors, onCl
     local button = GUI.Button(
         RectTransform(
             size,
-            parent.rectTransform,
+            parent ~= nil and parent.rectTransform or nil,
             anchor
         ),
         text,
@@ -499,10 +499,11 @@ function guiUtil.AddItemPickerRow(parent, size, anchor, enumerator, n)
 end
 
 ---@param parent Barotrauma.GUIComponent
----@param selectedSlots table<Barotrauma.InvSlotType, Types.Set<Barotrauma.GUIButton>>
+---@param selectedSlots table<Barotrauma.InvSlotType, Set<Barotrauma.GUIButton>>
+---@param callback fun(button: Barotrauma.GUIButton, itemId?:Barotrauma.Identifier)
 ---@return Barotrauma.GUILayoutGroup
 ---@return fun(filter:fun(prefab:Barotrauma.ItemPrefab):boolean)
-function guiUtil.AddItemPicker(parent, selectedSlots)
+function guiUtil.AddItemPicker(parent, selectedSlots, callback)
     local innerGroup = guiUtil.AddLayoutGroup(parent, parent.Rect.Size - Point(2*D_PADDING, 2*D_PADDING), GUI.Anchor.TopLeft, nil, false, GUI.Anchor.TopCenter)
     local topBarGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, 3*D_PADDING), GUI.Anchor.TopCenter, nil, true, GUI.Anchor.Center)
     local bodyGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, innerGroup.Rect.Height - topBarGroup.Rect.Height), GUI.Anchor.Center, nil, true, GUI.Anchor.TopLeft)
@@ -531,6 +532,8 @@ function guiUtil.AddItemPicker(parent, selectedSlots)
 
         table.sort(orderedPrefabList, function(p1, p2) return p1.Name < p2.Name end)
     end
+
+    
     
     local function reload()
         list.ClearChildren()
@@ -626,7 +629,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots)
                         slotType = InvSlotType[addedSlot]
                         local matchingSlots = selectedSlots[slotType]
 
-                        if  not matchingSlots or 
+                        if  not matchingSlots or
                             matchingSlots:IsEmpty()
                         then
                             slots = {}
@@ -644,6 +647,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots)
                             button.GetChildByUserData(D_PADDING).Color = Color.White
                             button.ToolTip = nil
                             guiUtil.AddItemToSlot(button, obj)
+                            callback(button, obj.Identifier)
                         end
                         return
                     end
@@ -774,6 +778,40 @@ function guiUtil.AddItemCarousel(parent, size, anchor, includeRandomOption, ...)
     --icon.CanBeFocused = false
 
     
+end
+
+do
+    local function doUserData(button, obj)
+        for f in obj do
+            f(button, obj)
+        end
+    end
+
+    local function basicClose(button, obj)
+        local parent = button.Parent
+
+        if parent then
+            local grandParent = parent.Parent
+
+            if grandParent then
+                grandParent.RemoveChild(parent)
+            end
+        end
+    end
+
+    ---@param parent Barotrauma.GUIComponent
+    ---@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
+    ---@param anchor Barotrauma.Anchor
+    ---@return Barotrauma.GUIButton
+    function guiUtil.AddCloseButton(parent, size, anchor)
+        local button = guiUtil.AddButton(parent, size, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true)
+
+        guiUtil.AddImage(button, Vector2.One, nil, "MissionFailedIcon", true).CanBeFocused = false
+        button.toolTip = "Close menu"
+        button.OnClicked = doUserData
+        button.UserData = {[1]=basicClose}
+        return button
+    end
 end
 
 return guiUtil
