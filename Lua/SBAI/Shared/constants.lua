@@ -1,3 +1,5 @@
+LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CharacterInventory"], "ParseSlotTypes")
+
 local Constants = {
     Name="Smarter Bot AI",
     Acronym="SBAI",
@@ -5,7 +7,7 @@ local Constants = {
     Path=ToolBox.CleanUpPath(table.pack(...)[1]),
     ModConfigsDirPath=ToolBox.CleanUpPath(Game.SaveFolder.."/ModConfigs"), --[[@type string]]
 
-    CLR_TYPE_POSTFIX = CLIENT and "Barotrauma" or "DedicatedServer", -- This is super dumb
+    CLR_TYPE_POSTFIX=CLIENT and "Barotrauma" or "DedicatedServer", -- This is super dumb
 
     MAX_FLOAT=3.402823E+38,
     MAX_INT=2147483647,
@@ -16,36 +18,36 @@ local Constants = {
 
     ---@enum Constants.ID_ORDER
     ID_ORDER={
-        FABRICATEITEMS = Identifier("sbai_fabricateitems"),
-        IGNOREROOM = Identifier("sbai_ignoreroom"),
-        PERFORM = Identifier("sbai_perform"),
-        SBAICATEGORY = Identifier("sbai"),
-        UNIGNORE_ROOM = Identifier("sbai_unignoreroom")
+        FABRICATEITEMS=Identifier("sbai_fabricateitems"),
+        IGNOREROOM=Identifier("sbai_ignoreroom"),
+        PERFORM=Identifier("sbai_perform"),
+        SBAICATEGORY=Identifier("sbai"),
+        UNIGNORE_ROOM=Identifier("sbai_unignoreroom")
     },
 
     ---@enum ID_OBJECTIVE
     ID_OBJECTIVE={
-        PERFORM = Identifier("sbai_perform"),
-        PETPLAY = Identifier("sbai_petplay"),
-        REPLENISH = Identifier("sbai_replenish"),
-        REPLENISHCLEAN = Identifier("sbai_replenishclean")
+        PERFORM=Identifier("sbai_perform"),
+        PETPLAY=Identifier("sbai_petplay"),
+        REPLENISH=Identifier("sbai_replenish"),
+        REPLENISHCLEAN=Identifier("sbai_replenishclean")
     },
 
     ---@enum ID_OBJECTIVE_BASE
     ID_OBJECTIVE_BASE={
-        CLEANUPITEM = Identifier("cleanup item"),
-        CONTAINITEM = Identifier("contain item"),
-        DECONSTRUCTITEM = Identifier("deconstructitem"),
-        DECONSTRUCTITEMS = Identifier("deconstructitems"),
-        GETITEM = Identifier("get item"),
-        GOTO = Identifier("go to"),
-        IDLE = Identifier("idle"),
-        LOADITEM = Identifier("load item"),
-        LOADITEMS = Identifier("loaditems"),
-        OPERATEITEM = Identifier("operate item"),
-        OPERATEREACTOR = Identifier("operatereactor"),
-        POWERUP = Identifier("powerup"),
-        WAIT = Identifier("wait")
+        CLEANUPITEM=Identifier("cleanup item"),
+        CONTAINITEM=Identifier("contain item"),
+        DECONSTRUCTITEM=Identifier("deconstructitem"),
+        DECONSTRUCTITEMS=Identifier("deconstructitems"),
+        GETITEM=Identifier("get item"),
+        GOTO=Identifier("go to"),
+        IDLE=Identifier("idle"),
+        LOADITEM=Identifier("load item"),
+        LOADITEMS=Identifier("loaditems"),
+        OPERATEITEM=Identifier("operate item"),
+        OPERATEREACTOR=Identifier("operatereactor"),
+        POWERUP=Identifier("powerup"),
+        WAIT=Identifier("wait")
     },
     ---@enum ITEMS_PER_FRAME
     ITEMS_PER_FRAME={
@@ -55,23 +57,23 @@ local Constants = {
 
     ---@enum TYPE_OBJECTIVE_BASE
     TYPE_OBJECTIVE_BASE={
-        CLEANUPITEM = "Barotrauma.AIObjectiveCleanupItem",
-        CONTAINITEM = "Barotrauma.AIObjectiveContainItem",
-        DECONSTRUCTITEM = "Barotrauma.AIObjectiveDeconstructItem",
-        GETITEM = "Barotrauma.AIObjectiveGetItem",
-        GOTO = "Barotrauma.AIObjectiveGoTo",
-        IDLE = "Barotrauma.AIObjectiveIdle",
-        LOADITEM = "Barotrauma.AIObjectiveLoadItem",
-        LOADITEMS = "Barotrauma.AIObjectiveLoadItems",
-        BASE = "Barotrauma.AIObjective",
-        OPERATEITEM = "Barotrauma.AIObjectiveOperateItem",
-        OPERATEREACTOR = "Barotrauma.AIObjectiveOperateItem",
-        POWERUP = "Barotrauma.AIObjectiveOperateItem",
-        WAIT = "Barotrauma.AIObjectiveGoTo"
+        CLEANUPITEM="Barotrauma.AIObjectiveCleanupItem",
+        CONTAINITEM="Barotrauma.AIObjectiveContainItem",
+        DECONSTRUCTITEM="Barotrauma.AIObjectiveDeconstructItem",
+        GETITEM="Barotrauma.AIObjectiveGetItem",
+        GOTO="Barotrauma.AIObjectiveGoTo",
+        IDLE="Barotrauma.AIObjectiveIdle",
+        LOADITEM="Barotrauma.AIObjectiveLoadItem",
+        LOADITEMS="Barotrauma.AIObjectiveLoadItems",
+        BASE="Barotrauma.AIObjective",
+        OPERATEITEM="Barotrauma.AIObjectiveOperateItem",
+        OPERATEREACTOR="Barotrauma.AIObjectiveOperateItem",
+        POWERUP="Barotrauma.AIObjectiveOperateItem",
+        WAIT="Barotrauma.AIObjectiveGoTo"
     },
 
     ID_COMMON={Identifier("smallitem"), Identifier("mediumitem")},
-    ID_EMPTY = Identifier.Empty
+    ID_EMPTY=Identifier.Empty,
 }
 -- ---@enum NETWORK_MSG
 -- Constants.NETWORK_MSG = {

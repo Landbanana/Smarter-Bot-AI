@@ -37,7 +37,7 @@ local function activate(self)
 
         AddMethod("cleanupSubObj", cleanupSubObj)
         ---@class Barotrauma.AIObjective
-        ---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, ...:string?)
+        ---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, ...:string?):fun()
     end
 
     do

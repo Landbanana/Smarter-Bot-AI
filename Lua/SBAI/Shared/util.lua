@@ -32,6 +32,18 @@ do
     end
 end
 
+do
+    local select = select
+
+    ---@generic T
+    ---@param ... T
+    ---@return T[]
+    ---@return integer
+    function util.functools.GetArgs(...)
+        return {...}, select("#", ...)
+    end
+end
+
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
 ---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
@@ -753,18 +765,6 @@ do
     ---@return boolean
     function util.IsAtWaitObjective(instance)
         return  instance.Identifier == WAIT and instance.IsCloseEnough
-    end
-end
-
-do
-    local select = select
-
-    ---@generic T
-    ---@param ... T
-    ---@return T[]
-    ---@return integer
-    function util.functools.GetArgs(...)
-        return {...}, select("#", ...)
     end
 end
 
@@ -1818,6 +1818,53 @@ function util.xGetStatusEffectTargetType(seElement)
         end
     end
     return nil
+end
+
+do
+    local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
+    local Identifier = Identifier
+
+    ---@param s string
+    ---@return Iterable<table<Barotrauma.Identifier, Barotrauma.Identifier[]>>
+    function util.StringToLoadout(s)
+        local data = {}
+        local i = 0
+
+        for job, loadoutIds in s:gmatch("([^:;]+):([^:]+;)") do
+            local loadoutData = {}
+            local j = 0
+            
+            for id in loadoutIds:gmatch("([^:;]*);") do
+                j = j + 1
+                loadoutData[j] = Identifier(id)
+                if j >= D_HUMAN_INV_N_ANY + 7 then break end
+            end
+            i = i + 1
+            data[i] = {[Identifier(job)]=loadoutData}
+        end
+        return data
+    end
+end
+
+do
+    local next = next
+
+    ---@param allLoadoutData Iterable<table<Barotrauma.Identifier, Barotrauma.Identifier[]>>
+    ---@return string
+    function util.LoadoutToString(allLoadoutData)
+        local value = ""
+        
+        for jobIdAndLoadoutData in allLoadoutData do
+            local jobId, loadoutData = next(jobIdAndLoadoutData)
+
+            value = value..jobId.Value..":"
+
+            for itemId in loadoutData do
+                value = value..itemId.Value..";"
+            end
+        end
+        return value
+    end
 end
 
 return util

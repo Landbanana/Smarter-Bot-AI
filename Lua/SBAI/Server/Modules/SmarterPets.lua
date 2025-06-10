@@ -36,10 +36,12 @@ local function activateEatFoodInInventory(self, options)
     local allPetData = Types.AllTimedCharacterData.new(self, options["timeBetween"])
     local foodItemTags = Types.Set.new()
     local checkState = Types.Set.new()
+
+    local overrideProtectOwner = options["overrideProtectOwner"]
     
     checkState:Add(AIState.Idle)
     checkState:Add(AIState.Follow)
-    if options["overrideProtectOwner"] then checkState:Add(AIState.Protect) end
+    if overrideProtectOwner then checkState:Add(AIState.Protect) end
 
     do
         local CharacterPrefabs = CharacterPrefab.Prefabs

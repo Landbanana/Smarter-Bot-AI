@@ -264,9 +264,7 @@ local function activateOnlyUseShipDeconstructor(self, options)
 
     do
         local n = -1
-
         do
-            
             local Deconstructor = Components.Deconstructor
             local Submarine = Submarine
 

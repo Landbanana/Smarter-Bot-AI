@@ -22,8 +22,7 @@ do
     ---@param k T
     ---@return T
     local function _iter(t, k)
-        k = next(t, k)
-        return k
+        return (next(t, k))
     end
 
     ---@private
