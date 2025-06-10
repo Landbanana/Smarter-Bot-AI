@@ -2,6 +2,7 @@ local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
 local Types = {}
 
+---@alias Iterable<T> T[]|fun():(T?)
 
 ---@enum TYPES
 Types.TYPES = {

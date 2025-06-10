@@ -271,7 +271,7 @@ do
     end
     
     ---@generic T
-    ---@param l T[]|fun():T?
+    ---@param l Iterable<T>
     ---@param p fun(v:T):boolean
     ---@return fun():T?
     function util.itertools.FilterList(l, p)
@@ -283,7 +283,7 @@ do
 end
 
 ---@generic T
----@param t T[]|fun():T?
+---@param t Iterable<T>
 ---@param p fun(v:T):boolean
 ---@return fun():T?
 function util.itertools.GetFirst(t, p)
@@ -313,7 +313,7 @@ do
     local yield = coroutine.yield
     
     ---@generic T1,T2
-    ---@param t T1[]|fun():T1?
+    ---@param t Iterable<T>
     ---@param f fun(v:T1):T2
     ---@return fun():T2?
     function util.itertools.PostList(t, f)
@@ -396,7 +396,7 @@ do
     local yield = coroutine.yield
 
     ---@generic T
-    ---@param iter T[]|fun():T?
+    ---@param iter Iterable<T>
     ---@param n ITEMS_PER_FRAME
     ---@return boolean|fun():T?
     function util.itertools.Limiter(iter, n)
@@ -1588,7 +1588,7 @@ end
 
 ---@param rootElement Barotrauma.ContentXElement
 ---@param xPathString string
----@return Barotrauma.ContentXElement[]|fun():Barotrauma.ContentXElement
+---@return Iterable<Barotrauma.ContentXElement>
 function util.xPath(rootElement, xPathString)
     local matchingElements = {rootElement}
 
@@ -1637,7 +1637,7 @@ end
 do
     ---@param rootElement System.Xml.Linq.XElement
     ---@param xPathString string
-    ---@return System.Xml.Linq.XElement[]|fun():System.Xml.Linq.XElement
+    ---@return Iterable<System.Xml.Linq.XElement>
     function util.xPath2(rootElement, xPathString)
         local parse
         local parseTable
@@ -1716,7 +1716,7 @@ do
     local IdentifierExtensions = LuaUserData.CreateStatic("Barotrauma.IdentifierExtensions")
 
     ---@param contElement System.Xml.Linq.XElement
-    ---@return Barotrauma.Identifier[]|fun():Barotrauma.Identifier
+    ---@return Iterable<Barotrauma.Identifier>?
     ---@overload fun(riElement:System.Xml.Linq.XElement):Barotrauma.Identifier[]|fun():Barotrauma.Identifier
     function util.xGetItemTags(contElement)
         for tagAlias in {"items", "item", "identifiers", "identifier", "tags", "tag"} do
