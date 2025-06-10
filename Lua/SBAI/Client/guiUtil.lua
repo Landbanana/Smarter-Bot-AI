@@ -349,7 +349,7 @@ end
 --     return button
 -- end
 
----@param prefab Barotrauma.ItemPrefab[]
+---@param prefab Barotrauma.ItemPrefab
 ---@return Barotrauma.GUIImage
 function guiUtil.AddItemToSlot(slot, prefab)
     local oldToolTip = prefab.GetTooltip().ToString()
@@ -508,7 +508,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
     local topBarGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, 3*D_PADDING), GUI.Anchor.TopCenter, nil, true, GUI.Anchor.Center)
     local bodyGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, innerGroup.Rect.Height - topBarGroup.Rect.Height), GUI.Anchor.Center, nil, true, GUI.Anchor.TopLeft)
     
-    local orderedPrefabList = {} --[=[@type Barotrauma.ItemPrefab[]|fun():Barotrauma.ItemPrefab]=]
+    local orderedPrefabList = {} --[[@type Iterable<Barotrauma.ItemPrefab>]]
     local categoryList
     local searchBox
     local list
@@ -807,7 +807,7 @@ do
         local button = guiUtil.AddButton(parent, size, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true)
 
         guiUtil.AddImage(button, Vector2.One, nil, "MissionFailedIcon", true).CanBeFocused = false
-        button.toolTip = "Close menu"
+        button.ToolTip = TextManager.Get("GUI.tooltips.button.closemenu")
         button.OnClicked = doUserData
         button.UserData = {[1]=basicClose}
         return button

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.tooltips.button.closemenu>Close menu</GUI.tooltips.button.closemenu>
+  <GUI.tooltips.button.loadconfig>Reload the saved config to GUI</GUI.tooltips.button.loadconfig>
+  <GUI.tooltips.button.saveconfig>Save and apply config changes</GUI.tooltips.button.saveconfig>
   <GUI.tooltips.cleaningadditions>Some improvements to the "Deconstruct Items" and "Cleanup Items" orders</GUI.tooltips.cleaningadditions>
   <GUI.tooltips.cleaningadditions.purchaseditemcrates>Set an automatic order to be added to any new crates received from merchants</GUI.tooltips.cleaningadditions.purchaseditemcrates>
   <GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>Either deconstruct new crates or ignore them to prevent automatic cleanup</GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>

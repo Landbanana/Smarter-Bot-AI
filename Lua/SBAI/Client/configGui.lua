@@ -474,8 +474,8 @@ local function MakeSBAIMenu(parent)
     sectionsScissor.RectTransform.AbsoluteOffset = Point(D_PADDING, D_PADDING)
     optionsScissor.RectTransform.AbsoluteOffset = Point(D_PADDING, D_PADDING)
 
-    local sectionsTitle = AddTitleText(sectionsScissor.Content, "Section", "LargeFont")
-    local optionsTitle = AddTitleText(optionsScissor.Content, "Options", "LargeFont")
+    local sectionsTitle = AddTitleText(sectionsScissor.Content, TextManager.Get("GUI.config.sectiontitle"), "LargeFont")
+    local optionsTitle = AddTitleText(optionsScissor.Content, TextManager.Get("GUI.config.optionstitle"), "LargeFont")
     local titleYSize = optionsTitle.Rect.Height
     
     local sectionList = AddListBox(sectionsScissor.Content, Point(sectionsScissor.Content.Rect.Width, 8*clickableSize))
@@ -493,7 +493,11 @@ local function MakeSBAIMenu(parent)
     local unsavedChanges = {} --[[@type table<string,any>]]
     local loadConfigButton = AddLoadConfigButton(topMiddleCut.Content, sectionList, GUI.Anchor.CenterLeft, unsavedChanges)
     local saveButton = AddSaveButton(topMiddleCut.Content, GUI.Anchor.CenterRight, unsavedChanges)
-    local closeButton = AddCloseButton(topFrame, GUI.Anchor.CenterRight, unsavedChanges)
+    --local closeButton = AddCloseButton(topFrame, GUI.Anchor.CenterRight, unsavedChanges)
+    local closeButton = guiUtil.AddCloseButton(topFrame, clickableSizePoint, GUI.Anchor.CenterRight)
+    table.insert(closeButton.UserData, util.functools.Partial1(util.itertools.ClearTable, unsavedChanges))
+    table.insert(closeButton.UserData, CloseSBAIMenu)
+
     closeButton.RectTransform.Translate(Point(-D_PADDING, 0))
     
     LoadConfigSectionsToGUI(sectionList)
