@@ -53,7 +53,8 @@ do
     subsection:CreateOption("onlyPreviouslyCuffed", false, configTypes.OPTION_TYPE.boolean)
     subsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
 
-    section:CreateOption("PreSpinTurrets", true, configTypes.OPTION_TYPE.boolean)
+    subsection = section:CreateSection("PreSpinTurrets")
+    subsection:CreateOption("reduceNoise", true, configTypes.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("CleaningAdditions")
     subsection = section:CreateSection("PurchasedItemCrates", false)

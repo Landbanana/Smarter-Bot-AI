@@ -14,6 +14,7 @@
   <GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>Should the AI only handcuff humans that have already been cuffed before (such as prisoners)</GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>
   <GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>AI will switch back to generic offensive combat if their health goes below this percentage</GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>
   <GUI.tooltips.combattweaks.prespinturrets>Allow the AI to spin-up turrents (such as a chaingun) before combat starts, allowing them to fire much faster</GUI.tooltips.combattweaks.prespinturrets>
+  <GUI.tooltips.combattweaks.prespinturrets.reducenoise>CLIENT-SIDE: Lowers the volume of the turret spin-up until it is almost muted (only when AI is pre-spinning)</GUI.tooltips.combattweaks.prespinturrets.reducenoise>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>
   <GUI.tooltips.equipitems>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems>
