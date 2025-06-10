@@ -2,6 +2,7 @@ local Constants = require("SBAI.Shared.constants")
 
 local util = {}
 util.config = {}
+util.cotools = {}
 util.debug = {}
 util.functools = {}
 util.itertools = {}
@@ -88,6 +89,61 @@ end
 function util.functools.Partial5(func, a1, a2, a3, a4, a5)
     return function(...)
         return func(a1, a2, a3, a4, a5, ...)
+    end
+end
+
+do
+    local select = select
+    local unpack = table.unpack
+
+    function util.functools.GetSpecificArgs(lastArg, ...)
+        return {select(lastArg + 1, ...)}, select("#", ...) - lastArg, unpack({...}, 1, lastArg)
+    end
+end
+
+do
+    local create = coroutine.create
+    local error = error
+    local GetSpecificArgs = util.functools.GetSpecificArgs
+    local resume = coroutine.resume
+    local status = coroutine.status
+    local unpack = table.unpack
+
+    ---@generic T
+    ---@param func fun(...):...
+    ---@param t {[T]:fun(...):...}
+    ---@param k T
+    ---@return fun(...):...
+    ---@overload fun(func:fun(...):...):fun(...):...
+    function util.cotools.pwrap(func, t, k)
+        local isManagingData = t ~= nil and k ~= nil
+        local co = create(func)
+
+        ---@param ... any
+        ---@return any
+        local function coOut(...)
+            local success, out
+            
+            if status(co) ~= "dead" then
+                local n
+
+                out, n, success = GetSpecificArgs(1, resume(co, ...))
+
+                if success then return unpack(out, n) end
+            end
+
+            if isManagingData then
+                t[k] = nil
+            end
+
+            if success == false then error(out[1], 2) end
+        end
+
+        if isManagingData then
+            t[k] = coOut
+        end
+
+        return coOut
     end
 end
 
@@ -1717,7 +1773,7 @@ do
 
     ---@param contElement System.Xml.Linq.XElement
     ---@return Iterable<Barotrauma.Identifier>?
-    ---@overload fun(riElement:System.Xml.Linq.XElement):Barotrauma.Identifier[]|fun():Barotrauma.Identifier
+    ---@overload fun(riElement:System.Xml.Linq.XElement):Iterable<Barotrauma.Identifier>
     function util.xGetItemTags(contElement)
         for tagAlias in {"items", "item", "identifiers", "identifier", "tags", "tag"} do
             local attr = contElement.Attribute(tagAlias)
