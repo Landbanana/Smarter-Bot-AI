@@ -4,7 +4,6 @@ local Config = require("SBAI.Shared.config")
 local configTypes = require("SBAI.Shared.Types.configTypes")
 local Constants = require("SBAI.Shared.constants")
 local guiUtil = require("SBAI.Client.guiUtil")
-local crewLoadoutGui
 
 local activateCrewLoadoutGui = require("SBAI.Client.crewLoadoutGui")
 
@@ -115,7 +114,7 @@ do
                 textTag = sub(textTag, 1, #textTag - 7)
             end
 
-            if textTag ~= nil then textBlock.ToolTip = TextManager.get(textTag) end
+            if textTag ~= nil then textBlock.ToolTip = TextManager.Get(textTag) end
         end
 
         ---@param curNamespace Namespace
@@ -128,61 +127,28 @@ do
             end
         end
 
+        local StringToLoadout = util.StringToLoadout
+        local LoadoutToString = util.LoadoutToString
+
         ---@param defaults ConfigSection|ConfigOption
         ---@param option string
-        ---@param value number
+        ---@param value string
         local function processString(defaults, option, value)
             MakeNamedCut(defaults, option)
 
             local changeAdder = addToUnsavedChanges(namespace)
             
             if defaults.specialType == "loadout" then
-                local data = {}
-                local unsavedData
-                local i = 0
+                local data = StringToLoadout(unsavedChanges[namespace()] or value)
 
-                for job, loadoutIds in value:gmatch("([^:;]+):([^:]+;)") do
-                    local loadoutData = {}
-                    local j = 0
-                    
-                    for id in loadoutIds:gmatch("([^:;]*);") do
-                        j = j + 1
-                        loadoutData[j] = Identifier(id)
-                    end
-                    i = i + 1
-                    data[i] = {[Identifier(job)]=loadoutData}
-                end
-                
-                local function changeAdderWrap(_data)
-                    local _value = ""
-
-                    unsavedData = _data
-
-                    for jobIdAndLoadoutData in _data do
-                        local jobId, loadoutdata = next(jobIdAndLoadoutData) --[=[@type Barotrauma.Identifier, Barotrauma.Identifiers[]]=]
-
-                        _value = _value..jobId.Value..":"
-
-                        for itemId in loadoutdata do
-                            _value = _value..itemId.Value..";"
-                        end
-                    end
-                    return changeAdder(_value)
-                end
-                
-                if not crewLoadoutGui then crewLoadoutGui = activateCrewLoadoutGui(changeAdderWrap, data) end
-                
                 local button = guiUtil.AddButton(currentOptionCut.Content, Point(2*clickableSize, clickableSize), GUI.Anchor.CenterLeft, "EDIT", nil, false,
                 function()
-                    
-
                     -- local closeButton = guiUtil.AddButton(mainFrame.Parent, Game.GameScreen.Frame.Rect.Size, GUI.Anchor.TopLeft, nil, "null", true,
                     -- function(button, obj)
                     --     button.RectTransform.Parent = nil
                     -- end)
                     -- closeButton.Color = Color.Transparent
-                    crewLoadoutGui.UserData = unsavedData or data
-                    crewLoadoutGui.RectTransform.Parent = mainFrame.RectTransform
+                    activateCrewLoadoutGui(function() return changeAdder(LoadoutToString(data)) end, data).RectTransform.Parent = mainFrame.RectTransform
                 end)
 
                 button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
@@ -449,7 +415,7 @@ do
     end
 end
 
-local MakeCrewPolicyMenu
+local MakeCrewLoadoutMenu
 
 ---@param parent Barotrauma.GUIComponent
 local function MakeSBAIMenu(parent)
@@ -522,7 +488,7 @@ local function MakeSBAIMenu(parent)
     )
     bigBrain.ToolTip = "big brain"
 
-    bigBrain.OnSecondaryClicked = function() return MakeCrewPolicyMenu(mainFrame) end
+    bigBrain.OnSecondaryClicked = function() return MakeCrewLoadoutMenu(mainFrame) end
     
     local availableTextWidth = (bottomRightCut.Rect.Width - bigBrainSize.X - D_PADDING)/2
 
@@ -572,11 +538,11 @@ local function ShowSBAIMenu(parent)
 end
 
 ---@param parent Barotrauma.GUIComponent
-function MakeCrewPolicyMenu(parent)
+function MakeCrewLoadoutMenu(parent)
     --local mainFrame = require("SBAI.Client.itemPickerGui")
 
     --mainFrame.RectTransform.Parent = parent.RectTransform
-    require("SBAI.Client.crewPolicyGui").RectTransform.Parent = parent.RectTransform
+    require("SBAI.Client.crewLoadoutGui").RectTransform.Parent = parent.RectTransform
 end
 
 

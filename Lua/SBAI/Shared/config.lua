@@ -70,6 +70,8 @@ do
     section = defaults:CreateSection("EquipItems")
     section:CreateOption("CrewLoadout", defaultCrewLoadout, configTypes.OPTION_TYPE.string, "loadout")
     section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
+    
 
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)

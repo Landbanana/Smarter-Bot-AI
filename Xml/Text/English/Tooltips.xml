@@ -17,8 +17,11 @@
   <GUI.tooltips.combattweaks.prespinturrets.reducenoise>CLIENT-SIDE: Lowers the volume of the turret spin-up until it is almost muted (only when AI is pre-spinning)</GUI.tooltips.combattweaks.prespinturrets.reducenoise>
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>
-  <GUI.tooltips.equipitems>AI will attempt to equip armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems>
+  <GUI.tooltips.equipitems>Settings that deal with bot AI equipment</GUI.tooltips.equipitems>
+  <GUI.tooltips.equipitems.crewloadout>Set items that the AI should try to seek out; specifying by inventory slot and by job</GUI.tooltips.equipitems.crewloadout>
+  <GUI.tooltips.equipitems.crewloadout.title>Click the inventory slots below to highlight them, then click an item to assign it to that slot (NOTE: Larger items, like HMGs, may require more than 1 slot selected!). Use the arrows to cycle between jobs.</GUI.tooltips.equipitems.crewloadout.title>
   <GUI.tooltips.equipitems.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equipitems.timebetween>
+  <GUI.tooltips.equipitems.reequiparmor>AI will attempt to equip any armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems.reequiparmor>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
   <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
   <GUI.tooltips.mutesingleplayerbotconversations>CLIENT-SIDE: The same setting as "Disable bot conversations" for servers (muting random bot conversations) but works for singleplayer</GUI.tooltips.mutesingleplayerbotconversations>

@@ -2,6 +2,8 @@ local Constants = require("SBAI.Shared.constants")
 local guiUtil = require("SBAI.Client.guiUtil")
 local Types = require("SBAI.Shared.types")
 
+local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
+
 local D_PADDING = guiUtil.Constants.D_PADDING
 local D_SLOT_SIZE = guiUtil.Constants.D_SLOT_SIZE
 
@@ -20,7 +22,7 @@ local CutComponent = guiUtil.CutComponent
 
 local RectTransform = GUI.RectTransform
 
----@param changeAdder fun(value:any)
+---@param changeAdder fun(value:table)
 ---@param data table<Barotrauma.Identifier, Barotrauma.Identifier[]>[]
 ---@return Barotrauma.GUIFrame
 local function createCrewLoadoutGui(changeAdder, data)
@@ -28,7 +30,6 @@ local function createCrewLoadoutGui(changeAdder, data)
 
     local mainFrame = GUI.Frame(RectTransform(Point(screenSize.X*0.4, --[[128 + 2*D_SLOT_SIZE + 8*D_PADDING + ]]screenSize.Y*0.8), nil, GUI.Anchor.Center), "ItemUI")
     guiUtil.AssignColors(mainFrame)
-    mainFrame.UserData = data
 
     local n = #data
 
@@ -47,23 +48,26 @@ local function createCrewLoadoutGui(changeAdder, data)
         [InvSlotType.Head]=Types.Set.new(),
         [InvSlotType.Headset]=Types.Set.new(),
     }
-    local loadoutData
+
+    local curJobIdx
     local basicSlots = {}
     local limbSlots
 
     local function callback(button, itemId)
         itemId = itemId or Identifier.Empty
 
+        local _, loadoutData = next(data[curJobIdx])
+
         for i, otherButton in ipairs(basicSlots) do
             if otherButton == button then
                 loadoutData[i] = itemId
-                return changeAdder(mainFrame.UserData)
+                return changeAdder(data)
             end
         end
         for i, otherButton in ipairs(limbSlots) do
             if otherButton == button then
-                loadoutData[i + 10] = itemId
-                return changeAdder(mainFrame.UserData)
+                loadoutData[i + D_HUMAN_INV_N_ANY] = itemId
+                return changeAdder(data)
             end
         end
     end
@@ -113,6 +117,8 @@ local function createCrewLoadoutGui(changeAdder, data)
                         end
                         
                         if slotSet:IsEmpty() then
+                            local _, loadoutData = next(data[curJobIdx])
+
                             for k in matchingButtons do
                                 local otherButton = limbSlots[k]
 
@@ -170,16 +176,22 @@ local function createCrewLoadoutGui(changeAdder, data)
     
     local arrowGroup = guiUtil.AddLayoutGroup(titleGroup, Point(D_SLOT_SIZE*3, 3/4*D_SLOT_SIZE), GUI.Anchor.TopCenter, nil, true, GUI.Anchor.CenterLeft)
     
-    local leftArrowButton = guiUtil.AddButton(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height/2), nil, "<", "GUIButtonRound", true)
+    local leftArrowButton = guiUtil.AddButton(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height/2), nil, "<", "GUIButtonRound", false)
     leftArrowButton.UserData = -1
 
-    local numTextBlock = guiUtil.AddTextBlock(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height), nil, "", nil, "LargeFont", GUI.Alignment.TopCenter, false, true, false)
+    local numTextBlock = guiUtil.AddTextBlock(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height), nil, "", nil, "SubheadingFont", GUI.Alignment.Center, false, true, false)
    
-    local rightArrowButton = guiUtil.AddButton(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height/2), nil, ">", "GUIButtonRound", true)
+    local rightArrowButton = guiUtil.AddButton(arrowGroup, Point(D_SLOT_SIZE, arrowGroup.Rect.Height/2), nil, ">", "GUIButtonRound", false)
     rightArrowButton.UserData = 1
 
     --titleGroup.CanBeFocused = true
-    local jobTextBlock = guiUtil.AddTextBlock(titleGroup, Point(titleGroup.Rect.Width, 3/4*D_SLOT_SIZE), nil, nil, nil, "LargeFont", GUI.Alignment.BottomCenter, false, true, false)
+    local jobTextBlock = guiUtil.AddTextBlock(titleGroup, Point(titleGroup.Rect.Width, 3/4*D_SLOT_SIZE + D_PADDING), nil, nil, nil, "LargeFont", GUI.Alignment.BottomCenter, false, true, false)
+    
+    local separatorHorizontalLine = guiUtil.AddFrame(titleGroup, Vector2(1, 0), nil, "HorizontalLine")
+
+    local titleTextBlock = guiUtil.AddTextBlock(titleGroup, Point(titleGroup.Rect.Width, 3/4*D_SLOT_SIZE), nil, "Crew Loadout", nil, "LargeFont", GUI.Alignment.TopCenter, false, true, false)
+    titleTextBlock.ToolTip = TextManager.get("GUI.tooltips.equipitems.crewloadout.title")
+    
     --jobTextBlock.AutoScaleHorizontal = true
     
     --arrowGroup.CanBeFocused = true
@@ -207,11 +219,11 @@ local function createCrewLoadoutGui(changeAdder, data)
     limbSlotsGroup.AbsoluteSpacing = D_PADDING
 
     local function setIndex(i)
-        local jobId
+        local curJobId, loadoutData = next(data[i])
 
-        jobId, loadoutData = next(mainFrame.UserData[i])
+        curJobIdx = i
 
-        local prefab = JobPrefab.Prefabs[jobId]
+        local prefab = JobPrefab.Prefabs[curJobId]
         local uiColor = prefab.UIColor
         
         jobTextBlock.Text = prefab.Name
@@ -227,18 +239,18 @@ local function createCrewLoadoutGui(changeAdder, data)
         numTextBlock.Text = tostring(i).."/"..tostring(n)
         numTextBlock.TextColor = uiColor
 
-        for j=1,10,1 do
+        for j=1,D_HUMAN_INV_N_ANY,1 do
             local itemId = loadoutData[j]
 
             if itemId ~= Identifier.Empty then
                 guiUtil.AddItemToSlot(basicSlots[j], ItemPrefab.GetItemPrefab(itemId))
             end
         end
-        for j=11,17,1 do
+        for j=D_HUMAN_INV_N_ANY+1,D_HUMAN_INV_N_ANY+7,1 do
             local itemId = loadoutData[j]
 
             if itemId ~= Identifier.Empty then
-                guiUtil.AddItemToSlot(limbSlots[j-10], ItemPrefab.GetItemPrefab(itemId))
+                guiUtil.AddItemToSlot(limbSlots[j-D_HUMAN_INV_N_ANY], ItemPrefab.GetItemPrefab(itemId))
             end
         end
     end
@@ -253,7 +265,7 @@ local function createCrewLoadoutGui(changeAdder, data)
             while true do
                 basicSlotsGroup.ClearChildren()
                 limbSlotsGroup.ClearChildren()
-                for j=1,10,1 do
+                for j=1,D_HUMAN_INV_N_ANY,1 do
                     local slot = guiUtil.AddEmptyItemSlot(basicSlotsGroup, nil, nil, true)
 
                     slot.OnClicked = onSlotClicked
