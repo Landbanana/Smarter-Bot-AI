@@ -79,6 +79,18 @@ local Constants = {
 --     CONF_REQ=Constants.Acronym..".ConfigRequest"
 -- }
 
+do
+    local i = 0
+
+    for s in CharacterInventory.ParseSlotTypes(CharacterPrefab.HumanPrefab.ConfigElement.GetChildElement("Inventory")) do
+        if s:lower():match("[%a]+") == "any" then
+            i = i + 1
+        end
+    end
+
+    Constants.D_HUMAN_INV_N_ANY = i
+end
+
 
 Constants.ConfigPath = ToolBox.CleanUpPath(Constants.ModConfigsDirPath.."/"..Constants.Acronym..".json")
 
