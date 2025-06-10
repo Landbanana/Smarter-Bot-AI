@@ -478,17 +478,12 @@ local function MakeSBAIMenu(parent)
 
     local bottomRightCut = CutComponent(sectionsScissor.Content, Point(sectionsScissor.Rect.Width, sectionsScissor.Rect.Height - sectionList.Rect.Height - sectionsTitle.Rect.Height - D_PADDING), GUI.Anchor.BottomCenter)
 
-    local bigBrain = GUI.Image(
-        GUI.RectTransform(
-            bigBrainSize,
-            bottomRightCut.Content.RectTransform,
-            GUI.Anchor.BottomCenter
-        ),
-        "BigBrain"
-    )
+    local bigBrain = guiUtil.AddImage(bottomRightCut.Content, bigBrainSize, GUI.Anchor.BottomCenter, "BigBrain")
+
+    
     bigBrain.ToolTip = "big brain"
 
-    bigBrain.OnSecondaryClicked = function() return MakeCrewLoadoutMenu(mainFrame) end
+    --bigBrain.OnSecondaryClicked = function() return MakeCrewLoadoutMenu(mainFrame) end
     
     local availableTextWidth = (bottomRightCut.Rect.Width - bigBrainSize.X - D_PADDING)/2
 

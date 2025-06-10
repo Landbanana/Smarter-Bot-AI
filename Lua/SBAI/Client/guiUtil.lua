@@ -250,7 +250,7 @@ end
 ---@param parent Barotrauma.GUIComponent
 ---@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
 ---@param anchor? Barotrauma.Anchor
----@param sprite Barotrauma.Sprite
+---@param sprite Barotrauma.Sprite|string
 ---@param scaleToFit? boolean
 ---@return Barotrauma.GUIImage
 function guiUtil.AddImage(parent, size, anchor, sprite, scaleToFit)
