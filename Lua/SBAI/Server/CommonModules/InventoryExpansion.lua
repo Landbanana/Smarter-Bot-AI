@@ -4,7 +4,21 @@ local Types = require("SBAI.Shared.types")
 
 ---@param self Types.CommonModule
 local function activate(self)
-    local AddMethod = util.functools.Partial2(self.AddMethod, self, "Barotrauma.Inventory")
+
+    local AddMethod do
+        local _AddMethod = self.AddMethod
+        local Partial2 = util.functools.Partial2
+
+        local addInvMethod = Partial2(_AddMethod, self, "Barotrauma.Inventory")
+        local addItemInvMethod = Partial2(_AddMethod, self, "Barotrauma.ItemInventory")
+        local addCharInvMethod = Partial2(_AddMethod, self, "Barotrauma.CharacterInventory")
+
+        function AddMethod(methodName, method)
+            return addInvMethod(methodName, method) and
+                addItemInvMethod(methodName, method) and
+                addCharInvMethod(methodName, method)
+        end
+    end
 
     do
         local FilterList = util.itertools.FilterList
@@ -45,7 +59,7 @@ local function activate(self)
     do
         ---@param instance Barotrauma.Inventory
         ---@param recursive boolean?
-        ---@param p fun(v:Barotrauma.Item):boolean
+        ---@param p fun(instance: Barotrauma.Inventory, v:Barotrauma.Item):boolean
         ---@return boolean
         local function hasAnyItem(instance, recursive, p)
             local iEnumerable = instance.GetAllItems(false)
@@ -54,7 +68,7 @@ local function activate(self)
                 for item in iEnumerable do
                     local ownInventory = item.OwnInventory
 
-                    if p(item) then return true end
+                    if p(instance, item) then return true end
                     if  ownInventory and
                         ownInventory:SBAI_hasAnyItem(true, p)
                     then
@@ -66,7 +80,7 @@ local function activate(self)
                 for item in iEnumerable do
                     local ownInventory = item.OwnInventory
 
-                    if p(item) then return true end
+                    if p(instance, item) then return true end
                 end
                 return false
             end
@@ -74,7 +88,7 @@ local function activate(self)
 
         AddMethod("hasAnyItem", hasAnyItem)
         ---@class Barotrauma.Inventory
-        ---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(v:Barotrauma.Item):boolean):boolean
+        ---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(instance: Barotrauma.Inventory, v:Barotrauma.Item):boolean):boolean
     end
 end
 
