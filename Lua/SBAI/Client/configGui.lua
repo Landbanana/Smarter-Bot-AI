@@ -554,6 +554,9 @@ local function MakeSBAIMenu(parent)
 		for comp in mainFrame.GetAllChildren() do
 			comp.enabled = false
 		end
+        optionsScissor.Content.ClearChildren()
+        guiUtil.AddTextBlock(optionsScissor.Content, Vector2.One, GUI.Anchor.Center, TextManager.Get("GUI.config.badmultiplayerpermissions"), nil, "LargeFont", GUI.Alignment.TopLeft, true, false, true).TextColor = Color.Red
+        closeButton.enabled = true
 	end
 end
 

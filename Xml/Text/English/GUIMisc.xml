@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.config.badmultiplayerpermissions>Insufficient permissions to edit settings! The server must grant you the "ManageSettings" permission.</GUI.config.badmultiplayerpermissions>
   <GUI.fabricateordertitle>Fabrication Order Request</GUI.fabricateordertitle>
 </infotexts>
