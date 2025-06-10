@@ -11,6 +11,8 @@ do
 
     MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Turret"], "tryingToCharge")
     MakePropertyAccessible(Descriptors["Barotrauma.AIObjectiveCombat"], "Mode")
+
+    --MakeFieldAccessible(Descriptors["Barotrauma.Items.Components.Turret"], "chargeSoundChannel")
 end
 
 local function activatePreventAttackingHandcuffed(self, options)
@@ -102,8 +104,8 @@ local function activateArrestHumansInPlayerSub(self, options)
             if combatObj.Mode == Offensive then
                 local inventory = character.Inventory
 
-                if  inventory:SBAI_hasAnyItem(false, function(item) return item.HasTag(handlockerId) end) and
-                    inventory:SBAI_hasAnyItem(false, function(item) return item.HasTag(stunnerId) end)
+                if  inventory:SBAI_hasAnyItem(false, function(instance, item) return item.HasTag(handlockerId) end) and
+                    inventory:SBAI_hasAnyItem(false, function(instance, item) return item.HasTag(stunnerId) end)
                 then
                     local target = ptable["target"] --[[@type Barotrauma.Character]]
                     
@@ -137,16 +139,16 @@ end
 local function activatePreSpinTurrets(self, options)
     self:AddPatch("Barotrauma.Items.Components.Turret", "Update", nil,
     function(instance, ptable)
-        if instance.MaxChargeTime > 0 then
-            instance.tryingToCharge = true
+        if instance.MaxChargeTime > 0.0 then
+            local user = instance.ActiveUser
+
+            if user then
+                if user.IsBot then
+                    instance.tryingToCharge = true
+                end
+            end
         end
     end, Hook.HookMethodType.Before)
-
-    -- self:AddPatch("Barotrauma.Character", "TryPutItemInBag", nil,
-    -- function(instance, ptable)
-    --     print(ptable["item"])
-    -- end, Hook.HookMethodType.Before)
-        
 end
 
 ---@param self Types.Module
