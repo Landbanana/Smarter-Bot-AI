@@ -77,7 +77,6 @@ local function activateArrestHumansInPlayerSub(self, options)
                     character.LastAttacker.IsOnPlayerTeam and
                     character.IsHandcuffed
                 then
-                    print(character.Name)
                     cuffedPrisoners:Add(character)
                 end
             end

@@ -317,7 +317,7 @@ do
             targetTags:Add(idMapData.targetTag)
 
             for container in inventory:SBAI_findAllItems(nil, true,
-                function(container)
+                function(inventory, container)
                     return utilizerIds[container.Prefab.Identifier] ~= nil
                 end) do
                 local minCon = character.HasEquippedItem(container) and minimumEquippedCondition or minimumCondition

@@ -87,9 +87,10 @@ local function activateEatFoodInInventory(self, options)
     local findFood
 
     do
+        ---@param inventory Barotrauma.Inventory
         ---@param item Barotrauma.Item
         ---@return boolean
-        local function itemHasAITarget(item)
+        local function itemHasAITarget(inventory, item)
             return item.AiTarget ~= nil
         end
 

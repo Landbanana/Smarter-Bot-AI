@@ -58,8 +58,8 @@ do
     end
 
     local Before = Hook.HookMethodType.Before
-    local ID_OBJECTIVE = Constants.ID_OBJECTIVE
     local ID_OBJECTIVE_BASE = Constants.ID_OBJECTIVE_BASE
+    local ID_OBJECTIVE_TO_BASE = Constants.ID_OBJECTIVE_TO_BASE
     local TYPE_OBJECTIVE_BASE = Constants.TYPE_OBJECTIVE_BASE
 
     local Partial1 = util.functools.Partial1
@@ -70,21 +70,33 @@ do
     ---@param value any
     local function _makePatch(propertyName, objId, subObjId, value)
         local self = getSelf()
-        local allObjIds = {ID_OBJECTIVE, ID_OBJECTIVE_BASE}
         local tempPropertyName = "get_"..propertyName
         local baseObjPatched = false
         local typeStr
         local patch = Partial1(subObjId == ID_EMPTY and patchBase or patchMainSubBase, propertyName)
 
-        for ids in allObjIds do
-            for k, v in next, ids do
-                if v == objId then
-                    typeStr = TYPE_OBJECTIVE_BASE[k]
+        for k, v in next, ID_OBJECTIVE_BASE do
+            if v == objId then
+                typeStr = TYPE_OBJECTIVE_BASE[k]
+                break
+            end
+        end
+
+        if not typeStr then
+            for k1, v1 in next, ID_OBJECTIVE_TO_BASE do
+                if k1 == objId then
+                    for k2, v2 in next, ID_OBJECTIVE_BASE do
+                        if v1 == v2 then
+                            typeStr = TYPE_OBJECTIVE_BASE[k2]
+                            break
+                        end
+                    end
                     break
                 end
             end
-            if typeStr then break end
         end
+
+        if not typeStr then error("Cannot find objective type: "..objId.Value, 4) end
 
         self.namespace = self.namespace + propertyName
         self.namespace = self.namespace + objId.Value
@@ -113,9 +125,9 @@ do
     ---@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId?:Barotrauma.Identifier, value:any)
     makePatch = coroutine.wrap(
     function(propertyName, objId, subObjId, value)
-        local data = {}
+        local data = {{propertyName, objId, subObjId, value}}
         local i = 0
-        
+
         while not getSelf do
             i = i + 1
             data[i] = {yield()}
@@ -201,6 +213,7 @@ do
         local propertyData = allPropertyData[propertyName]
 
         subObjId = subObjId or ID_EMPTY
+        
         if not propertyData then
             propertyData = {}
             allPropertyData[propertyName] = propertyData

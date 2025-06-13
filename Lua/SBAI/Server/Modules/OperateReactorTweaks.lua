@@ -34,7 +34,7 @@ local function activate(self)
     local function getNumFuelRods(instance)
         local i = 0
 
-        for item in instance.Item.OwnInventory:SBAI_findAllItems(false, false, function(item) return item.ConditionPercentage > minimumCondition end) do
+        for item in instance.Item.OwnInventory:SBAI_findAllItems(false, false, function(inventory, item) return item.ConditionPercentage > minimumCondition end) do
             i = i + 1
         end
         return i

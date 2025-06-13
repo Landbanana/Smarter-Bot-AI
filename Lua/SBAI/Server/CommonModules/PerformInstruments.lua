@@ -52,13 +52,12 @@ do
 
     local ModObjProp
 
+    ---@param self Types.CommonModule
     function setupObjProperties(self)
-        if ModObjProp then return end
+        --if ModObjProp then return end
         ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
-
-        ModObjProp("ConcurrentObjectives", IDLE, PERFORM, true)
-        ModObjProp("ConcurrentObjectives", WAIT, PERFORM, true)
-        ModObjProp("AllowAutomaticItemUnequipping", IDLE, PERFORM, false)
+        
+        ModObjProp("AllowAutomaticItemUnequipping", PERFORM, nil, false)
         ModObjProp("AllowMultipleInstances", PERFORM, nil, false)
     end
 end
@@ -72,7 +71,7 @@ local function activate(self)
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
-    local Timer = Timer
+    local Wait = Timer.Wait
 
     local Contains = util.itertools.Contains
 
@@ -95,9 +94,9 @@ local function activate(self)
             if  item.HasTag(hornItemId) and
                 item.GetComponent(RangedWeapon).WasUsed
             then
-                Timer.Wait(function() objective.Abandon = true end, 1000)
+                Wait(function() objective.Abandon = true end, 1000)
             end
-            
+            -- ptable.PreventExecution = true
             return false
         end
     end, Hook.HookMethodType.Before)

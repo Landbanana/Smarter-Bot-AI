@@ -21,45 +21,74 @@ local function activate(self)
     end
 
     do
-        local FilterList = util.itertools.FilterList
+        local recursiveFindAllItems do
+            local yield = coroutine.yield
+
+            ---@param instance Barotrauma.Inventory
+            ---@param checkForDuplicates boolean?
+            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
+            ---@param iEnumerable fun():Barotrauma.Item
+            function recursiveFindAllItems(instance, checkForDuplicates, p, iEnumerable)
+                yield()
+                for item in iEnumerable do
+                    if p(instance, item) then yield(item) end
+
+                    local ownInventory = item.OwnInventory
+                    
+                    if ownInventory then
+                        for subItem in ownInventory:SBAI_findAllItems(checkForDuplicates, true, p) do
+                            yield(subItem)
+                        end
+                    end
+                end
+            end
+        end
+
+        local nonrecursiveFindAllItems do
+            local yield = coroutine.yield
+
+            ---@param instance Barotrauma.Inventory
+            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
+            ---@param iEnumerable fun():Barotrauma.Item
+            function nonrecursiveFindAllItems(instance, p, iEnumerable)
+                yield()
+                for item in iEnumerable do
+                    if p(instance, item) then yield(item) end
+                end
+            end
+        end
+
         local wrap = coroutine.wrap
-        local yield = coroutine.yield
 
         ---@param instance Barotrauma.Inventory
         ---@param checkForDuplicates boolean?
         ---@param recursive boolean?
-        ---@param p fun(v:Barotrauma.Item):boolean
+        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
         ---@return fun():Barotrauma.Item?
         local function findAllItems(instance, checkForDuplicates, recursive, p)
             local iEnumerable = checkForDuplicates ~= nil and instance.GetAllItems(checkForDuplicates) or instance.AllItems
+            local coFindAllItems
 
             if recursive then
-                return wrap(function()
-                    for item in iEnumerable do
-                        local ownInventory = item.OwnInventory
-
-                        if p(item) then yield(item) end
-                        if ownInventory then
-                            for subItem in ownInventory:SBAI_findAllItems(checkForDuplicates, true, p) do
-                                yield(subItem)
-                            end
-                        end
-                    end
-                end)
+                coFindAllItems = wrap(recursiveFindAllItems)
+                coFindAllItems(instance, checkForDuplicates, p, iEnumerable)
             else
-                return FilterList(iEnumerable, p)
+                coFindAllItems = wrap(nonrecursiveFindAllItems)
+                coFindAllItems(instance, p, iEnumerable)
             end
+            
+            return coFindAllItems
         end
 
         AddMethod("findAllItems", findAllItems)
         ---@class Barotrauma.Inventory
-        ---@field public SBAI_findAllItems fun(instance:Barotrauma.Inventory, checkForDuplicates:boolean?, recursive:boolean?, p:fun(v:Barotrauma.Item):boolean):fun():Barotrauma.Item?
+        ---@field public SBAI_findAllItems fun(instance:Barotrauma.Inventory, checkForDuplicates:boolean?, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean):fun():Barotrauma.Item?
     end
 
     do
         ---@param instance Barotrauma.Inventory
         ---@param recursive boolean?
-        ---@param p fun(instance: Barotrauma.Inventory, v:Barotrauma.Item):boolean
+        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
         ---@return boolean
         local function hasAnyItem(instance, recursive, p)
             local iEnumerable = instance.GetAllItems(false)
@@ -78,8 +107,6 @@ local function activate(self)
                 return false
             else
                 for item in iEnumerable do
-                    local ownInventory = item.OwnInventory
-
                     if p(instance, item) then return true end
                 end
                 return false
@@ -88,7 +115,7 @@ local function activate(self)
 
         AddMethod("hasAnyItem", hasAnyItem)
         ---@class Barotrauma.Inventory
-        ---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(instance: Barotrauma.Inventory, v:Barotrauma.Item):boolean):boolean
+        ---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean):boolean
     end
 end
 

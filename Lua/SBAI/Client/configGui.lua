@@ -534,10 +534,9 @@ end
 
 ---@param parent Barotrauma.GUIComponent
 function MakeCrewLoadoutMenu(parent)
-    --local mainFrame = require("SBAI.Client.itemPickerGui")
+    local mainFrame = require("SBAI.Client.itemPickerGui")
 
-    --mainFrame.RectTransform.Parent = parent.RectTransform
-    require("SBAI.Client.crewLoadoutGui").RectTransform.Parent = parent.RectTransform
+    mainFrame.RectTransform.Parent = parent.RectTransform
 end
 
 

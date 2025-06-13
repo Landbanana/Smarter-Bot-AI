@@ -193,7 +193,7 @@ local function activateReEquipArmor(self, options, timeBetween)
             local testSlot = Partial1(HasFlag, filteredClothesSlotTypes)
 
             for item in inventory:SBAI_findAllItems(nil, true,
-                function(item)
+                function(inventroy, item)
                     return item.GetComponent(Wearable) ~= nil and
                         not item.HasTag(lightdivingId) and
                         not item.HasTag(deepdivingId) and
