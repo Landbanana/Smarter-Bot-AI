@@ -38,6 +38,21 @@
     </OptionSprites>
   </Order>
   
+  <!-- <Order name="For all contained" identifier="sbai_forall"
+        mustsettarget="true" targetallcharacters="true"
+        targetitemtype="ItemContainer" cantypebesubclass="true"
+        options="ignorethis,unignorethis,deconstructthis,dontdeconstructthis"
+        optionnames="Ignore all, Unignore all, Deconstruct all, Don't deconstruct any"
+		color="255,105,180,255">
+    <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
+	  <OptionSprites>
+	    <Sprite name="Command_Ignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,640,128,128"/>
+	    <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="896,640,128,128"/>
+      <Sprite name="Command_DeconstructThis" texture="Content/UI/CommandUIAtlas.png" sourcerect="640,258,128,128"/>
+      <Sprite name="Command_DontDeconstruct" texture="Content/UI/CommandUIAtlas.png" sourcerect="640,258,128,128"/>
+    </OptionSprites>
+  </Order> -->
+  
   <Order name="Smarter Bot AI" identifier="sbai">
     <Sprite name="Command_Category_SBAI" texture="%ModDir%/Images/BigBrainOrderCategory.png" sourcerect="0,0,128,128"/>
   </Order>

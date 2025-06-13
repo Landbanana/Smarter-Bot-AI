@@ -56,6 +56,7 @@ local ID_ORDER = Constants.ID_ORDER
 
 local IGNORE_ROOM = ID_ORDER.IGNOREROOM
 local FABRICATE_ITEMS = ID_ORDER.FABRICATEITEMS
+local FORALL = ID_ORDER.FORALL
 local PERFORM = ID_ORDER.PERFORM
 local SBAI_CATEGORY = ID_ORDER.SBAICATEGORY
 local UNIGNORE_ROOM = ID_ORDER.UNIGNORE_ROOM
@@ -281,17 +282,23 @@ local function activateOrderGui(self)
     -- local mainFrame = GUI.Frame(GUI.RectTransform(Vector2.One))
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "OnResolutionChanged")
     -- LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.Items.Components.Fabricator"], "ReloadGuiFrame")
+
+    -- local forAllFuncMap = {
+    --     Identifier("")
+    -- }
     
     self:AddPatch("Barotrauma.CrewManager", "SetCharacterOrder", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier
 
+        
         if id:StartsWith(orderCategoryPrefix) then
+            local currentCharacter = Character.Controlled
+
             if  id == IGNORE_ROOM or
                 id == UNIGNORE_ROOM
             then
-                local currentCharacter = Character.Controlled
                 local targetHull = currentCharacter.CurrentHull
 
                 if  targetHull ~= nil and
@@ -299,6 +306,15 @@ local function activateOrderGui(self)
                 then
                     instance.AddOrder(order.Clone().WithTargetEntity(targetHull))
                 end
+            elseif id == FORALL then
+                local itemContainer = order.TargetItemComponent --[[@type Barotrauma.Items.Components.ItemContainer]]
+
+                for item in itemContainer.Inventory:SBAI_findAllItems(false, true,
+                function(inventory, item)
+                end) do
+                    
+                end
+
 
             -- elseif id == FABRICATE_ITEMS then
             --     local frame = GUI.Frame(GUI.RectTransform(Vector2(1, 1), mainFrame.RectTransform, GUI.Anchor.Center),"ItemUi")
@@ -346,7 +362,6 @@ end
 ---@param self Types.Module
 local function activatePerformOrder(self)
     local AIObjectiveOperateItem = AIObjectiveOperateItem
-    local performId = Identifier("sbai_perform")
     local RangedWeapon = Components.RangedWeapon
 
     self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
@@ -355,13 +370,13 @@ local function activatePerformOrder(self)
         local id = order.Identifier --[[@type Barotrauma.Identifier]]
 
         if id:StartsWith(orderCategoryPrefix) then
-            if id == performId then
+            if id == PERFORM then
                 ptable.PreventExecution = true
 
                 local targetItemComponent = order.TargetItemComponent or order.TargetEntity.GetComponent(RangedWeapon)
                 local newObj = AIObjectiveOperateItem(targetItemComponent, instance.character, instance, order.Option, true)
 
-                newObj.Identifier = order.Identifier
+                newObj.Identifier = PERFORM
                 
                 return newObj
             end
@@ -370,6 +385,7 @@ local function activatePerformOrder(self)
 end
 
 local function activate(self)
+    self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
     -- if Game.IsMultiplayer then
     --     local session = Game.GameSession
 

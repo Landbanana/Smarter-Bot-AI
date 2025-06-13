@@ -13,4 +13,7 @@
  
   <ordername.sbai_perform>Perform</ordername.sbai_perform>
   <orderoptions.sbai_perform>Play Instrument</orderoptions.sbai_perform>
+
+  <ordername.sbai_forall>For all</ordername.sbai_forall>
+  <orderoptions.sbai_forall>Ignore all, Unignore all, Deconstruct all, Don't deconstruct any</orderoptions.sbai_forall>
 </infotexts>
