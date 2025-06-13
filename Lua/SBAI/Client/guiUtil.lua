@@ -535,6 +535,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
         local enumerator
         
         do
+            local HasFlag = util.mathtools.HasFlag
             local yield = coroutine.yield
             
             enumerator = coroutine.wrap(
@@ -553,7 +554,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
                         end
                     else
                         for prefab in orderedPrefabList do
-                            if  prefab.Category == selectedCategory and
+                            if  HasFlag(prefab.Category, selectedCategory) and
                                 prefab.Name.Value:lower():match(searchtext) and
                                 _filter(prefab)
                             then
@@ -570,7 +571,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
                         end
                     else
                         for prefab in orderedPrefabList do
-                            if prefab.Category == selectedCategory and
+                            if  HasFlag(prefab.Category, selectedCategory) and
                                 _filter(prefab)
                             then
                                 yield(prefab)
