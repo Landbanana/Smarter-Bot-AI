@@ -21,6 +21,7 @@ local Constants = {
     ---@enum Constants.ID_ORDER
     ID_ORDER={
         FABRICATEITEMS=Identifier("sbai_fabricateitems"),
+        FORALL=Identifier("sbai_forall"),
         IGNOREROOM=Identifier("sbai_ignoreroom"),
         PERFORM=Identifier("sbai_perform"),
         SBAICATEGORY=Identifier("sbai"),
