@@ -9,7 +9,7 @@
   <Order name="Unignore Room" identifier="sbai_unignoreroom"
         mustsettarget="true" targetallcharacters="true"
 		    color="255,105,180,255">
-    <Sprite name="Command_Unignore" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128"/>
+    <Sprite name="Command_Unignore_Room" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128"/>
   </Order>
   
 <!--   <Order name="Follow Other" identifier="sbai_follow"
