@@ -752,9 +752,14 @@ do
     end
 end
 
+---@param ... any
+function util.None(...)
+end
+
+---@param ... any
 ---@return true
 ---@nodiscard
-function util.True()
+function util.True(...)
     return true
 end
 
