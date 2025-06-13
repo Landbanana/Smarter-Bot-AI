@@ -85,13 +85,13 @@ local function activate(self)
         local Contains = util.itertools.Contains
         local FilterList = util.itertools.FilterList
         local new = Types.Set.new
-        local xPath = util.xPath
+        local xPath2 = util.xPath2
 
         ---@type table<FURNITURE,fun(prefab:Barotrauma.ItemPrefab):boolean>
         local predicateMap = {
             [FURNITURE.BED]=function(prefab)
                 if prefab.Category == Decorative then
-                    return Any(xPath(prefab.ConfigElement, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]"), function(item) return item.GetAttributeBool("requireempty", false) end)
+                    return Any(xPath2(prefab.ConfigElement.Element, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]"), function(item) return item.GetAttributeBool("requireempty", false) end)
                 end
                 return false
             end,

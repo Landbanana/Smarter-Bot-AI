@@ -6,6 +6,7 @@ local Types = require("SBAI.Shared.types")
 ---@param option string
 ---@param timeBetween number
 local function activateCrewLoadout(self, option, timeBetween)
+    self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
 
     local allLoadoutData = util.StringToLoadout(option)

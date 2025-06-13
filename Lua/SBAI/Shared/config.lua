@@ -69,8 +69,8 @@ do
 
     section = defaults:CreateSection("EquipItems")
     section:CreateOption("CrewLoadout", defaultCrewLoadout, configTypes.OPTION_TYPE.string, "loadout")
-    section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
     section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
@@ -92,10 +92,11 @@ do
     subsection = section:CreateSection("Wait")
     subsection:CreateOption("onlyAtFriendlyOutposts", true, configTypes.OPTION_TYPE.boolean)
 
-    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    
     section:CreateOption("fillEmpty", true, configTypes.OPTION_TYPE.boolean)
     section:CreateOption("forceSameItemType", false, configTypes.OPTION_TYPE.boolean)
     section:CreateOption("forceQualityGEQ", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Ammunition")
     subsection:CreateOption("minimumCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
@@ -125,8 +126,8 @@ do
     section = defaults:CreateSection("SmarterPets")
 
     subsection = section:CreateSection("EatFoodInInventory")
-    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
     subsection:CreateOption("overrideProtectOwner", true, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("BotsPlayWhenIdle")
     subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)

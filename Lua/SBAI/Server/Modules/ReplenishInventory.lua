@@ -361,7 +361,7 @@ do
                 characterData.targetItem = targetItem
                 characterData.targetContainer = targetContainer
                 characterData.targetSlot = targetSlot
-                characterData.curSection = idMap[sectionName]
+                characterData.curSection = idMapData
                 return true
             end
             return false

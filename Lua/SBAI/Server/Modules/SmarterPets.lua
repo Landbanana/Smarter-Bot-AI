@@ -26,6 +26,7 @@ end
 ---@param options table
 local function activateEatFoodInInventory(self, options)
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+    self:AddCommonModule("SBAI.Server.CommonModules.XElementExpansion")
     
     local AIState = self:RegisterEnumTable("Barotrauma.AIState")
 
@@ -49,7 +50,7 @@ local function activateEatFoodInInventory(self, options)
 
         local Any = util.itertools.Any
         local Contains = util.itertools.Contains
-        local xPath = util.xPath
+        local xPath2 = util.xPath2
 
         ---@type table<Barotrauma.Identifier,boolean>
         local checkedTags = setmetatable({}, {
@@ -67,13 +68,13 @@ local function activateEatFoodInInventory(self, options)
         })
 
         for prefab in CharacterPrefabs do
-            local xElement = prefab.ConfigElement
+            local xElement = prefab.ConfigElement.Element
 
-            for petElement in FilterList(xPath(xElement, "ai/petbehavior"),
+            for petElement in FilterList(xPath2(xElement, "ai/petbehavior"),
                 function(petElement)
                     return petElement.GetAttributeFloat("hungerincreaserate", 0.25) > 0.0
                 end) do
-                for eatElement in xPath(petElement, "eat") do --[[@cast eatElement Barotrauma.ContentXElement]]
+                for eatElement in xPath2(petElement, "eat") do
                     local tag = eatElement.GetAttributeIdentifier("tag")
 
                     if checkedTags[tag] then
@@ -342,12 +343,12 @@ local function activateCleanableProduce(self, options)
     local Item = Item
 
     local GetItemPrefab = ItemPrefab.GetItemPrefab
-    local xPath = util.xPath
+    local xPath2 = util.xPath2
 
     petItemIds = Types.Set.new()
 
     for prefab in CharacterPrefab.Prefabs do
-        for xSubElement in xPath(prefab.ConfigElement, "ai/petbehavior/itemproduction/item") do --[[@cast xSubElement Barotrauma.ContentXElement]]
+        for xSubElement in xPath2(prefab.ConfigElement.Element, "ai/petbehavior/itemproduction/item") do
             if xSubElement then
                 local itemId = xSubElement.GetAttributeIdentifier("identifier")
 
@@ -364,7 +365,7 @@ local function activateCleanableProduce(self, options)
         if prefab then
             local xElement = prefab.ConfigElement
 
-            if #xPath(xElement, "PreferredContainer") > 0 then
+            if #xPath2(xElement, "PreferredContainer") > 0 then
                 petItemIds:Remove(id)
             end
         end
