@@ -141,13 +141,13 @@ do
     section:CreateOption("stayInBedIfHurt", true, configTypes.OPTION_TYPE.boolean)
 
     section = defaults:CreateSection("UseTalents")
-    section:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Assistant")
     subsubsection = subsection:CreateSection("InspiringTunes")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
     subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
     
     subsubsection = subsection:CreateSection("JengaMaster")
     subsubsection:CreateOption("timeBetween", 120, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
@@ -163,11 +163,17 @@ do
 
     subsection = section:CreateSection("Captain")
     subsubsection = subsection:CreateSection("SteadyTune")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
     subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     subsection = section:CreateSection("Engineer")
     subsubsection = subsection:CreateSection("MelodicRespite")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
     subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
     Config.defaults.CONFIG = defaults
 end

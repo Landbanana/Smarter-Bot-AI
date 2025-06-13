@@ -39,312 +39,334 @@ do
     MakeMethodAccessible(Descriptors["Barotrauma.AIObjectiveGetItem"], "Act")
 end
 
-local activateInstrumentTalent
+local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>, allTimedCharacterData:Types.AllTimedCharacterData, performAbort:fun(character:Barotrauma.Character):boolean}}]]
+local idleInstrumentPatchMade, waitInstrumentPatchMade
 
-do
-    local allCharacterInstrumentData --[[@type Types.AllTimedCharacterData]]
-    local allInstrumentTalentData --[[@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}>]]
-    local allInstrumentObjectiveData
-
-    local anyNeedBuff
-
+local activateInstrumentTalent do
     do
-        local Character = Character
-        local Distance = Vector2.Distance
+        local activateObj do
+            local patch2 do
+                local coPatch do
+                    local AIObjectiveGetItem = AIObjectiveGetItem
+                    local AIObjectiveOperateItem = AIObjectiveOperateItem
+                    local GETITEM = Constants.ID_OBJECTIVE_BASE.GETITEM
+                    local PERFORM = Constants.ID_OBJECTIVE.PERFORM
+                    local RangedWeapon = Components.RangedWeapon
 
-        ---@param afflictionId Barotrauma.Identifier
-        ---@param maxDistance number
-        ---@param allowSelf boolean
-        ---@param character Barotrauma.Character
-        function anyNeedBuff(afflictionId, maxDistance, allowSelf, character)
-            local startPos = character.WorldPosition
-            local foundUnbuffed = false
-            
-            for crewmate in Character.GetFriendlyCrew(character) do
-                if  not allowSelf and
-                    crewmate == character
-                then
-                    goto continue
-                end
+                    local Partial5 = util.functools.Partial5
+                    local wrap = coroutine.wrap
+                    local yield = coroutine.yield
 
-                if  not crewmate.CharacterHealth.GetAffliction(afflictionId, false) and
-                    Distance(startPos, crewmate.WorldPosition) <= maxDistance
-                then
-                    foundUnbuffed = true
-                    break
-                end
-                ::continue::
-            end
-            return foundUnbuffed
-        end
-    end
+                    ---@param afflictionData {afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>, allTimedCharacterData:Types.AllTimedCharacterData, performAbort:fun(character:Barotrauma.Character):boolean}
+                    ---@param getItemAbort fun(objective:Barotrauma.AIObjective):boolean
+                    ---@param character Barotrauma.Character
+                    ---@param characterData Types.TimedCharacterData
+                    ---@param curObj Barotrauma.AIObjectiveGoTo|Barotrauma.AIObjectiveIdle
+                    function coPatch(afflictionData, getItemAbort, character, characterData, curObj)
+                        yield()
 
-    local function instrumentSetup(self)
-        self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
-        self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
-        
-        local Aim = InputType.Aim
-        local Identifier = Identifier
-        local ItemPrefab = ItemPrefab
-        local MAX_FLOAT = Constants.MAX_FLOAT
-        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
-        local Shoot = InputType.Shoot
-        local TalentPrefab = TalentPrefab
-        local traitorMissionItemId = Identifier("traitormissionitem")
+                        local validInstruments = afflictionData.validInstruments
+                        local instrument = character.Inventory:SBAI_findAllItems(nil, true, function(inventory, item) return validInstruments[item.Prefab.Identifier] end)()
 
-        local Contains = util.itertools.Contains
-        local xPath = util.xPath
-
-        allCharacterInstrumentData = Types.AllTimedCharacterData.new(self)
-
-        ---@type {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}
-        allInstrumentTalentData = setmetatable({}, {
-            ---@param t {[Barotrauma.Identifier]:{afflictionId:Barotrauma.Identifier, allowSelf:boolean, maxDistance:number, validInstruments:Set<Barotrauma.Identifier>}}
-            ---@param k Barotrauma.Identifier
-            __index=function(t, k)
-                local prefab = TalentPrefab.TalentPrefabs[k]
-
-                if not prefab then error("Unable to find talentPrefab: "..tostring(k), 2) end
-                local configElement = prefab.ConfigElement --[[@type Barotrauma.ContentXElement]]
-                local abilityConditionItem = xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
-                local characterAbilityApplyStatusEffectsToAllies = xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
-                local afflictionId = xPath(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
-                if not afflictionId then error("Unable to find afflictions for talent: "..tostring(k), 2) end
-                
-                local instrumentIds = Types.Set.new()
-
-                do
-                    local ids = abilityConditionItem.GetAttributeIdentifierArray("identifiers")
-
-                    if ids then
-                        instrumentIds:Update(ids)
-                    end
-                end
-                
-                if instrumentIds:IsEmpty() then
-                    local tags = abilityConditionItem.GetAttributeIdentifierArray("tags")
-                    
-                    for prefab in ItemPrefab.Prefabs do
-                        for tag in tags do --[[@cast tag Barotrauma.Identifier]]
-                            if  Contains(prefab.Tags, tag) and
-                                not Contains(prefab.Tags, traitorMissionItemId)
-                            then
-                                instrumentIds:Add(prefab.Identifier)
-                                break
-                            end
-                        end
-                    end
-                end
-                if instrumentIds:IsEmpty() then error("Unable to find instruments for talent: "..tostring(k), 2) end
-                local maxDistance = characterAbilityApplyStatusEffectsToAllies.GetAttributeFloat("maxdistance", MAX_FLOAT)
-                local allowSelf = characterAbilityApplyStatusEffectsToAllies.GetAttributeBool("allowself", true)
-
-                local out = {afflictionId=afflictionId, allowSelf=allowSelf, maxDistance=maxDistance, validInstruments=instrumentIds}
-
-                t[Identifier(k)] = out
-                return out
-            end
-        })
-
-        allInstrumentObjectiveData = {
-            ["idle"]={
-                fullTypeName="Barotrauma.AIObjectiveIdle",
-                prePatch=util.True
-            },
-            ["wait"]={
-                fullTypeName="Barotrauma.AIObjectiveGoTo",
-                prePatch=util.IsAtWaitObjective
-            }
-        }
-
-        self:AddPatch("Barotrauma.Item", "TryInteract", nil,
-        function(instance, ptable)
-            local character = ptable["user"] --[[@type Barotrauma.Character]]
-
-            if  character.IsHuman and
-                character.IsBot
-            then
-                local curObjective = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
-                
-                if curObjective then
-                    local curSubObjective = curObjective.CurrentSubObjective
-
-                    if  curSubObjective and
-                        curSubObjective.Identifier == PERFORM
-                    then
-                        character.ClearInput(Aim)
-                        character.ClearInput(Shoot)
-                    end
-                end
-            end
-        end, Hook.HookMethodType.Before)
-    end
-
-    ---@param self Types.Module
-    ---@param options table
-    function activateInstrumentTalent(self, options)
-        if not allCharacterInstrumentData then instrumentSetup(self) end
-        
-        local AIObjectiveGetItem = AIObjectiveGetItem
-        local AIObjectiveOperateItem = AIObjectiveOperateItem
-        local GET_ITEM = Constants.ID_OBJECTIVE_BASE.GETITEM
-        local PERFORM = Constants.ID_OBJECTIVE.PERFORM
-        local RangedWeapon = Components.RangedWeapon
-        local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
-
-        local Any = util.itertools.Any
-        local Distance = Vector2.Distance
-        local GetItemPrefab = ItemPrefab.GetItemPrefab
-        local Partial3 = util.functools.Partial3
-        local Partial5 = util.functools.Partial5
-
-        local stopAfterBuffed = options["stopAfterBuffed"] --[[@type boolean]]
-        local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
-        local afflictionId --[[@type Barotrauma.Identifier]]
-        local allowSelf --[[@type boolean]]
-        local maxDistance --[[@type number]]
-        local validInstruments --[[@type Set<Barotrauma.Identifier>]]
-
-        do
-            local instrumentTalentData = allInstrumentTalentData[talentId]
-
-            afflictionId = instrumentTalentData.afflictionId
-            allowSelf = instrumentTalentData.allowSelf
-            maxDistance = instrumentTalentData.maxDistance
-            validInstruments = instrumentTalentData.validInstruments
-        end
-
-        ---@param objective Barotrauma.AIObjectiveGetItem
-        ---@return boolean
-        local function abortWaitGetItem(objective)
-            local item = objective.TargetItem
-
-            if  item and
-                Distance(item.WorldPosition, objective.character.WorldPosition) > objective.MaxReach
-            then
-                return true
-            end
-            return false
-        end
-
-        for objectiveName, objectiveData in next, allInstrumentObjectiveData do
-            local prePatch
-            local anyNeedBuffFull
-
-            if not self.options[objectiveName] then goto continue end
-
-            prePatch = objectiveData.prePatch
-            anyNeedBuffFull = Partial3(anyNeedBuff, afflictionId, maxDistance, allowSelf)
-
-            self:AddPatch(objectiveData.fullTypeName, "Act", nil,
-            ---@param instance Barotrauma.AIObjective
-            ---@param ptable Barotrauma.LuaCsHook.ParameterTable
-            function(instance, ptable)
-                local character = instance.character --[[@type Barotrauma.Character]]
-                
-                if character.HasTalent(talentId) then
-                    local characterData = allCharacterInstrumentData:Get(character)
-                    --local curSubObjective = instance.CurrentSubObjective --[[@type Barotrauma.AIObjective]]
-                    
-                    if  characterData:Update(ptable["deltaTime"]) and
-                        prePatch(instance)
-                    then
-                        local inventory = character.Inventory
-                        local instrument = characterData.instrument or
-                            inventory:SBAI_findAllItems(nil, true, function(item) return validInstruments[item.Prefab.Identifier] end)()
-                        
-                        if  not instrument and
-                            Any(validInstruments:ToList(), function(id) inventory.CanProbablyBePut(GetItemPrefab(id)) end)
-                        then
+                        if not instrument then
                             local function constructor()
-                                local objective = AIObjectiveGetItem(character, validInstruments, instance.objectiveManager, true, true)
+                                local objective = AIObjectiveGetItem(character, validInstruments:ToList(), curObj.objectiveManager, true, false)
 
                                 objective.AllowDangerousPressure = false
-                                objective.AllowToFindDivingGear = false
                                 objective.AllowStealing = false
+                                objective.AllowToFindDivingGear = false
                                 objective.AllowVariants = true
 
-                                if instance.Identifier == WAIT then
-                                    objective.AbortCondition = abortWaitGetItem
+                                if getItemAbort then
+                                    objective.AbortCondition = getItemAbort
                                 end
-
-                                local cleanup = Partial3(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveGetItem)
+                                local cleanup = Partial5(curObj.SBAI_cleanupSubObj, curObj, objective, AIObjectiveGetItem)
                                 
                                 objective.Completed.add(function()
-                                    characterData.instrument = objective.TargetItem
+                                    instrument = objective.TargetItem
                                     return cleanup()
                                 end)
-                                objective.Abandoned.add(function()
-                                    return cleanup(characterData, "instrument")
-                                end)
-                                return objective
-                            end
-                            ptable.PreventExecution = instance:SBAI_tryAddSubObjective(nil, nil, GET_ITEM, false, true, constructor)
-                        else
-                            local function constructor()
-                                local objective = AIObjectiveOperateItem(instrument.GetComponent(RangedWeapon), character, instance.objectiveManager, instrument.Prefab.Identifier, true)
-
-                                objective.Identifier = PERFORM
-
-                                local cleanup = Partial5(instance.SBAI_cleanupSubObj, instance, objective, AIObjectiveOperateItem, characterData, "performObjective")
-
-                                objective.Completed.add(cleanup)
                                 objective.Abandoned.add(cleanup)
                                 return objective
                             end
-                            
-                            ptable.PreventExecution = instance:SBAI_tryAddSubObjective(characterData, "performObjective", PERFORM, true, false, ((not stopAfterBuffed) or anyNeedBuffFull(character)) and constructor or nil)
+                            yield(curObj:SBAI_tryAddSubObjective(nil, nil, GETITEM, false, true, constructor))
+                        end
+                        
+                        if instrument then
+                            local performAbort = afflictionData.performAbort
+                            local coPerformAbort
+
+                            if performAbort then
+                                coPerformAbort = wrap(performAbort)
+
+                                if coPerformAbort(character) then coPerformAbort = nil end
+                            end
+
+                            if  not performAbort or
+                                coPerformAbort
+                            then
+                                local function constructor()
+                                    local objective = AIObjectiveOperateItem(instrument.GetComponent(RangedWeapon), character, curObj.objectiveManager, instrument.Prefab.Identifier, true)
+
+                                    objective.Identifier = PERFORM
+
+                                    objective.OverridePriority = 1.0
+
+                                    if coPerformAbort then
+                                        function objective:AbortCondition()
+                                            return coPerformAbort()
+                                        end
+                                    end
+
+                                    local cleanup = Partial5(curObj.SBAI_cleanupSubObj, curObj, objective, AIObjectiveOperateItem, characterData, "performObj")
+
+                                    objective.Completed.add(cleanup)
+                                    objective.Abandoned.add(cleanup)
+                                    return objective
+                                end
+
+                                yield(curObj:SBAI_tryAddSubObjective(characterData, "performObj", PERFORM, true, false, constructor))
+                            end
                         end
                     end
                 end
-            end, Hook.HookMethodType.Before)
-            ::continue::
+
+                local next = next
+                local pwrap = util.cotools.pwrap
+
+                ---@param getItemAbort fun(objective:Barotrauma.AIObjective):boolean
+                ---@param instance Barotrauma.AIObjectiveGoTo|Barotrauma.AIObjectiveIdle
+                ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                function patch2(getItemAbort, instance, ptable)
+                    local character = instance.character
+
+                    for talentId, afflictionData in next, allInstrumentTalentData do
+                        if character.HasTalent(talentId) then
+                            local characterData = afflictionData.allTimedCharacterData:Get(character)
+                            local coOngoing = characterData.coOngoing
+                            
+                            if characterData.coOngoing then
+                                
+                                characterData.coOngoing()
+                            elseif characterData:Update(ptable["deltaTime"]) and
+                                not characterData.performObj
+                            then
+                                instance.Deselected.add(
+                                function()
+                                    characterData.coOngoing = nil
+                                end)
+                                coOngoing = pwrap(coPatch, characterData, "coOngoing")
+                                coOngoing(afflictionData, getItemAbort, character, characterData, instance)
+                            end
+                        end
+                    end
+                end
+            end
+
+            local buffCheck do
+                local GetFriendlyCrew = Character.GetFriendlyCrew
+                local Distance = Vector2.Distance
+                local new = Types.Timer.new
+                local yield = coroutine.yield
+
+                ---@param afflictionId Barotrauma.Identifier
+                ---@param maxDistance number
+                ---@param allowSelf boolean
+                ---@param timeBetween number
+                ---@param character Barotrauma.Character
+                function buffCheck(afflictionId, maxDistance, allowSelf, timeBetween, character)
+                    local timer = new(timeBetween, 0.0)
+                    local crewCache = {}
+                    
+                    do
+                        local i = 0
+                        
+                        if allowSelf then
+                            for crewmate in GetFriendlyCrew(character) do
+                                i = i + 1
+                                crewCache[i] = crewmate
+                            end
+                        else
+                            for crewmate in GetFriendlyCrew(character) do
+                                if crewmate ~= character then
+                                    i = i + 1
+                                    crewCache[i] = crewmate
+                                end
+                            end
+                        end
+                    end
+
+                    local startPos = character.WorldPosition
+                    
+                    repeat
+                        local isAllBuffed = true
+
+                        for crewmate in crewCache do
+                            if  not crewmate.CharacterHealth.GetAffliction(afflictionId, false) and
+                                Distance(startPos, crewmate.WorldPosition) <= maxDistance and
+                                character.CanSeeTarget(crewmate, nil, true, false)
+                            then
+                                isAllBuffed = false
+                                repeat
+                                    yield(false)
+                                until timer:UpdateClock()
+                                break
+                            end
+                        end
+                    until isAllBuffed
+
+                    return true
+                end
+            end
+
+            ---@param self Types.Module
+            ---@param options table
+            ---@param objId Barotrauma.Identifier
+            ---@param timeBetween number
+            ---@param stopAfterBuffed boolean
+            function activateObj(self, options, objId, talentId, timeBetween, stopAfterBuffed)
+                if not allInstrumentTalentData[talentId] then
+                    local prefab = TalentPrefab.TalentPrefabs[talentId]
+
+                    if not prefab then error("Unable to find talentPrefab: "..tostring(talentId.Value), 2) end
+                    
+                    local configElement = prefab.ConfigElement --[[@type Barotrauma.ContentXElement]]
+                    local abilityConditionItem = util.xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
+                    local characterAbilityApplyStatusEffectsToAllies = util.xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
+                    local afflictionId = util.xPath(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
+                    
+                    if not afflictionId then error("Unable to find afflictions for talent: "..tostring(talentId.Value), 2) end
+                    
+                    local instrumentIds = Types.Set.new()
+
+                    do
+                        local ids = abilityConditionItem.GetAttributeIdentifierArray("identifiers")
+
+                        if ids then
+                            instrumentIds:Update(ids)
+                        end
+                    end
+                    
+                    if instrumentIds:IsEmpty() then
+                        local tags = abilityConditionItem.GetAttributeIdentifierArray("tags")
+                        local traitorMissionItemId = Identifier("traitormissionitem")
+                        
+                        for prefab in ItemPrefab.Prefabs do
+                            for tag in tags do --[[@cast tag Barotrauma.Identifier]]
+                                if  util.itertools.Contains(prefab.Tags, tag) and
+                                    not util.itertools.Contains(prefab.Tags, traitorMissionItemId)
+                                then
+                                    instrumentIds:Add(prefab.Identifier)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    if instrumentIds:IsEmpty() then error("Unable to find instruments for talent: "..tostring(talentId.Value), 2) end
+                    
+                    local maxDistance = characterAbilityApplyStatusEffectsToAllies.GetAttributeFloat("maxdistance", Constants.MAX_FLOAT)
+                    local allowSelf = characterAbilityApplyStatusEffectsToAllies.GetAttributeBool("allowself", true)
+                    
+                    allInstrumentTalentData[talentId] = {afflictionId=afflictionId, allowSelf=allowSelf, maxDistance=maxDistance, validInstruments=instrumentIds, allTimedCharacterData=Types.AllTimedCharacterData.new(self, timeBetween), performAbort=stopAfterBuffed and util.functools.Partial4(buffCheck, afflictionId, maxDistance, allowSelf, timeBetween) or nil}
+                end
+
+                local patch1
+
+                if  objId == Constants.ID_OBJECTIVE_BASE.IDLE and
+                    not idleInstrumentPatchMade
+                then
+                    patch1 = util.functools.Partial1(patch2, nil)
+                elseif  objId == Constants.ID_OBJECTIVE_BASE.WAIT and
+                    not waitInstrumentPatchMade
+                then
+                    local Distance = Vector2.Distance
+                    local IsAtWaitObjective = util.IsAtWaitObjective
+
+                    local wait_patch2 = util.functools.Partial1(patch2,
+                    function(objective)
+                        local item = objective.TargetItem
+
+                        if  item and
+                            Distance(item.WorldPosition, objective.character.WorldPosition) > objective.MaxReach
+                        then
+                            return true
+                        end
+                        return false
+                    end)
+
+                    ---@param instance Barotrauma.AIObjectiveGoTo
+                    ---@param ptable Barotrauma.LuaCsHook.ParameterTable
+                    function patch1(instance, ptable)
+                        if IsAtWaitObjective(instance) then
+                            return wait_patch2(instance, ptable)
+                        end
+                    end
+                end
+
+                if patch1 then
+                    local fullObjType = Constants.TYPE_OBJECTIVE_BASE[objId.Value:upper()]
+                    self:AddPatch(fullObjType, "Act", nil, patch1, Hook.HookMethodType.Before)
+                end
+            end
+        end
+
+        ---@param self Types.Module
+        ---@param options table
+        function activateInstrumentTalent(self, options)
+            if not allInstrumentTalentData then
+                local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
+                local PERFORM = Constants.ID_OBJECTIVE.PERFORM
+                local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
+
+                allInstrumentTalentData = {}
+
+                self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
+                self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+                self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
+                ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
+                ModObjProp("ConcurrentObjectives", IDLE, PERFORM, true)
+                ModObjProp("ConcurrentObjectives", WAIT, PERFORM, true)
+
+                local Aim = InputType.Aim
+                local Shoot = InputType.Shoot
+
+                self:AddPatch("Barotrauma.Item", "TryInteract", nil,
+                function(instance, ptable)
+                    local character = ptable["user"] --[[@type Barotrauma.Character]]
+
+                    if  character.IsHuman and
+                        character.IsBot
+                    then
+                        local curObjective = character.AIController.objectiveManager.CurrentObjective --[[@type Barotrauma.AIObjective]]
+                        
+                        if curObjective then
+                            local curSubObjective = curObjective.CurrentSubObjective
+
+                            if  curSubObjective and
+                                curSubObjective.Identifier == PERFORM
+                            then
+                                character.ClearInput(Aim)
+                                character.ClearInput(Shoot)
+                            end
+                        end
+                    end
+                end, Hook.HookMethodType.Before)
+            end
+            
+            local talentId = Identifier(self:GetSection())
+            local timeBetween = options["timeBetween"]
+            local stopAfterBuffed = options["stopAfterBuffed"]
+
+            for objId in {Constants.ID_OBJECTIVE_BASE.IDLE, Constants.ID_OBJECTIVE_BASE.WAIT} do
+                self:DoOption(objId.Value:lower(), activateObj, objId, talentId, timeBetween, stopAfterBuffed)
+            end
         end
     end
 end
 
-local Assistant = {}
-
-Assistant.InspiringTunes = activateInstrumentTalent
-
 ---@param self Types.Module
 ---@param options table
-function Assistant.NonThreatening(self, options)
-    local appliedStun = Constants.D_NONTHREATENING_STUN
-    local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
-
-    local minHealh = options["minHealh"] --[[@type number]]
-
-    self:AddPatch("Barotrauma.AIObjectiveCombat", "Act", nil,
-    function(instance, ptable)
-        local character = instance.character
-
-        if  character.HasTalent(talentId) and
-            not (character.Stun > 0) and
-            not character.Params.Health.StunImmunity and
-            instance.IsEnemyClose(instance.CloseDistance) and
-            character.HealthPercentage < minHealh
-        then
-            local controller = character.AIController --[[@type Barotrauma.HumanAIController]]
-            local curHull = character.CurrentHull
-            local needsDivingGear, needsSuit = controller.NeedsDivingGear(curHull, controller.objectiveManager) --[[@type boolean, boolean]]
-
-            if  (not needsDivingGear or
-                controller.HasDivingSuit(character, 0, true, true) or
-                not needsSuit and
-                controller.HasDivingGear(character, 0, true)) and
-                curHull.FireCount <= 0
-            then
-                ptable.PreventExecution = true
-                character.Stun = appliedStun
-            end
-        end
-    end, Hook.HookMethodType.Before)
-end
-
----@param self Types.Module
----@param options table
-function Assistant.JengaMaster(self, options)
+local function assistant_JengaMaster(self, options)
     local AIObjectiveGoTo = AIObjectiveGoTo
     local Character = Character
     local GOTO = Constants.ID_OBJECTIVE_BASE.GOTO
@@ -448,28 +470,55 @@ function Assistant.JengaMaster(self, options)
 end
 
 ---@param self Types.Module
-local function activateAssistant(self)
-    self:DoOption("InspiringTunes", Assistant.InspiringTunes)
-    self:DoOption("NonThreatening", Assistant.NonThreatening)
-    self:DoOption("JengaMaster", Assistant.JengaMaster)
+---@param options table
+local function assistant_NonThreatening(self, options)
+    local appliedStun = Constants.D_NONTHREATENING_STUN
+    local talentId = Identifier(self.namespace.stack[#self.namespace.stack])
+
+    local minHealh = options["minHealh"] --[[@type number]]
+
+    self:AddPatch("Barotrauma.AIObjectiveCombat", "Act", nil,
+    function(instance, ptable)
+        local character = instance.character
+
+        if  character.HasTalent(talentId) and
+            not (character.Stun > 0) and
+            not character.Params.Health.StunImmunity and
+            instance.IsEnemyClose(instance.CloseDistance) and
+            character.HealthPercentage < minHealh
+        then
+            local controller = character.AIController --[[@type Barotrauma.HumanAIController]]
+            local curHull = character.CurrentHull
+            local needsDivingGear, needsSuit = controller.NeedsDivingGear(curHull, controller.objectiveManager) --[[@type boolean, boolean]]
+
+            if  (not needsDivingGear or
+                controller.HasDivingSuit(character, 0, true, true) or
+                not needsSuit and
+                controller.HasDivingGear(character, 0, true)) and
+                curHull.FireCount <= 0
+            then
+                ptable.PreventExecution = true
+                character.Stun = appliedStun
+            end
+        end
+    end, Hook.HookMethodType.Before)
 end
 
-local Captain = {}
-
-Captain.SteadyTune = activateInstrumentTalent
+---@param self Types.Module
+local function activateAssistant(self)
+    self:DoOption("InspiringTunes", activateInstrumentTalent)
+    self:DoOption("NonThreatening", assistant_NonThreatening)
+    self:DoOption("JengaMaster", assistant_JengaMaster)
+end
 
 ---@param self Types.Module
 local function activateCaptain(self)
-    self:DoOption("SteadyTune", Captain.SteadyTune)
+    self:DoOption("SteadyTune", activateInstrumentTalent)
 end
-
-local Engineer = {}
-
-Engineer.MelodicRespite = activateInstrumentTalent
 
 ---@param self Types.Module
 local function activateEngineer(self)
-    self:DoOption("MelodicRespite", Engineer.MelodicRespite)
+    self:DoOption("MelodicRespite", activateInstrumentTalent)
 end
 
 ---@param self Types.Module
@@ -479,4 +528,11 @@ local function activate(self)
     self:DoOption("Engineer", activateEngineer)
 end
 
-return Types.Module.new(activate)
+---@param self Types.Module
+local function deactivate(self)
+    allInstrumentTalentData = nil
+    idleInstrumentPatchMade = nil
+    waitInstrumentPatchMade = nil
+end
+
+return Types.Module.new(activate, deactivate)
