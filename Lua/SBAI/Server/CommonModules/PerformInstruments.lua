@@ -8,16 +8,17 @@ do
     local InvSlotType = InvSlotType
     local ItemPrefab = ItemPrefab
 
-    local xPath = util.xPath
+    local xPath2 = util.xPath2
 
     instrumentInvSlots = setmetatable({}, {
         ---@param t {[Barotrauma.Identifier]:Barotrauma.InvSlotType[]}
         ---@param k Barotrauma.Identifier
         __index=function(t, k)
-            local slotString = xPath(ItemPrefab.Prefabs[k].ConfigElement, "Holdable[@slots]").GetAttributeString("slots")
+            
+            local slotString = xPath2(ItemPrefab.Prefabs[k].ConfigElement.Element, "Holdable[@slots]")[1].GetAttributeString("slots")
             local allowedSlots = {}
             local i = 0
-    
+            
             for slotCombination in slotString:gmatch("([^,]+),?") do
                 if slotCombination:lower() ~= "any" then
                     local slots = 0
@@ -46,9 +47,7 @@ end
 local setupObjProperties
 
 do
-    local IDLE = Constants.ID_OBJECTIVE_BASE.IDLE
     local PERFORM = Constants.ID_ORDER.PERFORM
-    local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
 
     local ModObjProp
 
@@ -56,9 +55,9 @@ do
     function setupObjProperties(self)
         --if ModObjProp then return end
         ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
-        
         ModObjProp("AllowAutomaticItemUnequipping", PERFORM, nil, false)
         ModObjProp("AllowMultipleInstances", PERFORM, nil, false)
+        self:AddCommonModule("SBAI.Server.CommonModules.XElementExpansion")
     end
 end
 

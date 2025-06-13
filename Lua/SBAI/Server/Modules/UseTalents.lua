@@ -230,10 +230,10 @@ local activateInstrumentTalent do
 
                     if not prefab then error("Unable to find talentPrefab: "..tostring(talentId.Value), 2) end
                     
-                    local configElement = prefab.ConfigElement --[[@type Barotrauma.ContentXElement]]
-                    local abilityConditionItem = util.xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
-                    local characterAbilityApplyStatusEffectsToAllies = util.xPath(configElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
-                    local afflictionId = util.xPath(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
+                    local xElement = prefab.ConfigElement.Element --[[@type Barotrauma.ContentXElement]]
+                    local abilityConditionItem = util.xPath2(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
+                    local characterAbilityApplyStatusEffectsToAllies = util.xPath2(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
+                    local afflictionId = util.xPath2(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
                     
                     if not afflictionId then error("Unable to find afflictions for talent: "..tostring(talentId.Value), 2) end
                     
@@ -322,10 +322,11 @@ local activateInstrumentTalent do
 
                 self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
                 self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
-                self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
                 ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
                 ModObjProp("ConcurrentObjectives", IDLE, PERFORM, true)
                 ModObjProp("ConcurrentObjectives", WAIT, PERFORM, true)
+                self:AddCommonModule("SBAI.Server.CommonModules.PerformInstruments")
+                self:AddCommonModule("SBAI.Server.CommonModules.XElementExpansion")
 
                 local Aim = InputType.Aim
                 local Shoot = InputType.Shoot
