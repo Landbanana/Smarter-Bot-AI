@@ -515,16 +515,10 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
     local _filter = util.True
 
     do
-        local smallItemId = Identifier("smallitem")
-        local mediumItemId = Identifier("mediumitem")
-
         local i = 0
 
         for prefab in ItemPrefab.Prefabs do
-            if  prefab.Name.Value:len() > 0 and
-                (prefab:SBAI_hasTag(smallItemId) or
-                prefab:SBAI_hasTag(mediumItemId))
-            then
+            if  prefab.Name.Value:len() > 0 then
                 i = i + 1
                 orderedPrefabList[i] = prefab
             end
@@ -689,96 +683,96 @@ function guiUtil.AddSearchBar(parent, anchor, callback)
     return textBox
 end
 
----@param parent Barotrauma.GUIComponent
----@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
----@param anchor? Barotrauma.Anchor
----@param includeRandomOption? boolean
----@param ... Barotrauma.ItemPrefab
----@return Barotrauma.GUISelectionCarousel
-function guiUtil.AddItemCarousel(parent, size, anchor, includeRandomOption, ...)
-    local ids = {} --[=[@type Barotrauma.Identifier[]]=]
-    local icons = {} --[=[@type Barotrauma.Sprite[]]=]
-    local max = 0 --[[@type integer]]
-    local i = 1
+-- ---@param parent Barotrauma.GUIComponent
+-- ---@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
+-- ---@param anchor? Barotrauma.Anchor
+-- ---@param includeRandomOption? boolean
+-- ---@param ... Barotrauma.ItemPrefab
+-- ---@return Barotrauma.GUISelectionCarousel
+-- function guiUtil.AddItemCarousel(parent, size, anchor, includeRandomOption, ...)
+--     local ids = {} --[=[@type Barotrauma.Identifier[]]=]
+--     local icons = {} --[=[@type Barotrauma.Sprite[]]=]
+--     local max = 0 --[[@type integer]]
+--     local i = 1
 
-    for prefab in {...} do --[[@cast prefab Barotrauma.ItemPrefab]]
-        max = max + 1
-        ids[max] = prefab.Identifier
-        icons[max] = prefab.InventoryIcon or prefab.Sprite
-    end
+--     for prefab in {...} do --[[@cast prefab Barotrauma.ItemPrefab]]
+--         max = max + 1
+--         ids[max] = prefab.Identifier
+--         icons[max] = prefab.InventoryIcon or prefab.Sprite
+--     end
 
-    local frame = guiUtil.AddFrame(parent, size, anchor, "InnerFrameDark", true)
-    --local slotGroup = guiUtil.AddLayoutGroup(frame, Vector2.One, GUI.Anchor.Center, nil, nil, GUI.Anchor.CenterLeft)
-    --local innerFrame = guiUtil.AddFrame(slotGroup, Point(size.X, size.X), nil, "InnerFrameDark")
+--     local frame = guiUtil.AddFrame(parent, size, anchor, "InnerFrameDark", true)
+--     --local slotGroup = guiUtil.AddLayoutGroup(frame, Vector2.One, GUI.Anchor.Center, nil, nil, GUI.Anchor.CenterLeft)
+--     --local innerFrame = guiUtil.AddFrame(slotGroup, Point(size.X, size.X), nil, "InnerFrameDark")
 
-    if max == 0 then return frame end
+--     if max == 0 then return frame end
 
-    if  (includeRandomOption == nil or
-        includeRandomOption == true) and
-        max > 1
-    then
-        max = max + 1
-        ids[max] = Identifier.Empty
-        icons[max] = RandomizeSprite
-    end
+--     if  (includeRandomOption == nil or
+--         includeRandomOption == true) and
+--         max > 1
+--     then
+--         max = max + 1
+--         ids[max] = Identifier.Empty
+--         icons[max] = RandomizeSprite
+--     end
 
-    local icon = GUI.Image(RectTransform(Vector2(0.9, 0.9), frame.RectTransform, GUI.Anchor.Center), icons[i], false)
-    local leftButton = guiUtil.AddButton(icon, Vector2(0.5, 1), GUI.Anchor.CenterLeft, "<", "null", true)
-    local rightButton = guiUtil.AddButton(icon, Vector2(0.5, 1), GUI.Anchor.CenterRight, ">", "null", true)
+--     local icon = GUI.Image(RectTransform(Vector2(0.9, 0.9), frame.RectTransform, GUI.Anchor.Center), icons[i], false)
+--     local leftButton = guiUtil.AddButton(icon, Vector2(0.5, 1), GUI.Anchor.CenterLeft, "<", "null", true)
+--     local rightButton = guiUtil.AddButton(icon, Vector2(0.5, 1), GUI.Anchor.CenterRight, ">", "null", true)
 
-    for button in {leftButton, rightButton} do --[[@cast button Barotrauma.GUIButton]]
-        button.Font = GUI.Style.Fonts[Identifier("LargeFont")]
-        button.TextBlock.TextColor = Color.Ivory
-        button.TextBlock.SelectedTextColor = Color.DarkGray
-        button.TextBlock.HoverTextColor = Color.Gray
-    end
+--     for button in {leftButton, rightButton} do --[[@cast button Barotrauma.GUIButton]]
+--         button.Font = GUI.Style.Fonts[Identifier("LargeFont")]
+--         button.TextBlock.TextColor = Color.Ivory
+--         button.TextBlock.SelectedTextColor = Color.DarkGray
+--         button.TextBlock.HoverTextColor = Color.Gray
+--     end
 
-    leftButton.TextBlock.TextAlignment = GUI.Alignment.CenterLeft
-    rightButton.TextBlock.TextAlignment = GUI.Alignment.CenterRight
+--     leftButton.TextBlock.TextAlignment = GUI.Alignment.CenterLeft
+--     rightButton.TextBlock.TextAlignment = GUI.Alignment.CenterRight
 
-    leftButton.OnClicked = function(button, obj)
-        i = (i == 1) and max or (i - 1)
-        icon.Sprite = icons[i]
-        frame.UserData = ids[i]
-        return false
-    end
+--     leftButton.OnClicked = function(button, obj)
+--         i = (i == 1) and max or (i - 1)
+--         icon.Sprite = icons[i]
+--         frame.UserData = ids[i]
+--         return false
+--     end
 
-    rightButton.OnClicked = function(button, obj)
-        i = (i == max) and 1 or (i + 1)
-        icon.Sprite = icons[i]
-        frame.UserData = ids[i]
-        return false
-    end
+--     rightButton.OnClicked = function(button, obj)
+--         i = (i == max) and 1 or (i + 1)
+--         icon.Sprite = icons[i]
+--         frame.UserData = ids[i]
+--         return false
+--     end
 
-    leftButton.RectTransform.RelativeOffset = Vector2(-0.1, 0)
-    rightButton.RectTransform.RelativeOffset = Vector2(-0.1, 0)
+--     leftButton.RectTransform.RelativeOffset = Vector2(-0.1, 0)
+--     rightButton.RectTransform.RelativeOffset = Vector2(-0.1, 0)
     
 
-    -- button.UserData = 1
-    -- button.OnClicked = function(self, selection)
-    --     selection = selection == max and 1 or (selection + 1)
-    --     icon.Sprite = icons[selection]
-    --     self.UserData = selection
-    -- end
+--     -- button.UserData = 1
+--     -- button.OnClicked = function(self, selection)
+--     --     selection = selection == max and 1 or (selection + 1)
+--     --     icon.Sprite = icons[selection]
+--     --     self.UserData = selection
+--     -- end
     
     
-    --topButton.ApplyStyle(PlusButtonStyle)
-    --bottomButton.ApplyStyle(MinusButtonStyle)
+--     --topButton.ApplyStyle(PlusButtonStyle)
+--     --bottomButton.ApplyStyle(MinusButtonStyle)
 
 
-    -- topButton.RectTransform.RelativeSize = Vector2(0.75, 0.05)
-    -- bottomButton.RectTransform.RelativeSize = Vector2(0.75, 0.05)
-    -- 
-    -- local topButton
-    -- 
-    -- local bottomButton
-
-    
-    --local icon = GUI.Image(RectTransform(Vector2.One, carousel.RectTransform, GUI.Anchor.Center), ItemPrefab.GetItemPrefab("poop").Sprite, false)
-    --icon.CanBeFocused = false
+--     -- topButton.RectTransform.RelativeSize = Vector2(0.75, 0.05)
+--     -- bottomButton.RectTransform.RelativeSize = Vector2(0.75, 0.05)
+--     -- 
+--     -- local topButton
+--     -- 
+--     -- local bottomButton
 
     
-end
+--     --local icon = GUI.Image(RectTransform(Vector2.One, carousel.RectTransform, GUI.Anchor.Center), ItemPrefab.GetItemPrefab("poop").Sprite, false)
+--     --icon.CanBeFocused = false
+
+    
+-- end
 
 do
     local function doUserData(button, obj)
