@@ -29,6 +29,8 @@ local function activateCrewLoadout(self, option, timeBetween)
             local GETITEM = Constants.ID_OBJECTIVE_BASE.GETITEM
             local None = InvSlotType.None
 
+            local Partial5 = util.functools.Partial5
+
             ---@param character Barotrauma.Character
             ---@param characterData Types.TimedCharacterData
             ---@param curObj Barotrauma.AIObjectiveIdle
@@ -48,9 +50,11 @@ local function activateCrewLoadout(self, option, timeBetween)
                         getItemObj.EquipSlotType = targetInvSlotType
                     end
 
-                    local function cleanup()
-                        return curObj:SBAI_cleanupSubObj(getItemObj, AIObjectiveGetItem, characterData, "getItemObj")
-                    end
+                    local cleanup = Partial5(curObj.SBAI_cleanupSubObj, curObj, getItemObj, AIObjectiveGetItem, characterData, "getItemObj")
+
+                    -- local function cleanup()
+                    --     return curObj:SBAI_cleanupSubObj(getItemObj, AIObjectiveGetItem, characterData, "getItemObj")
+                    -- end
                     
                     getItemObj.Abandoned.add(cleanup)
                     getItemObj.Completed.add(
@@ -87,9 +91,8 @@ local function activateCrewLoadout(self, option, timeBetween)
         ---@param loadoutData Iterable<Barotrauma.Identifier>
         ---@param character Barotrauma.Character
         ---@param characterData Types.TimedCharacterData
-        ---@param inventory Barotrauma.CharacterInventory
         ---@param curObj Barotrauma.AIObjectiveIdle
-        function checkInventory(loadoutData, character, characterData, inventory, curObj)
+        function checkInventory(loadoutData, character, characterData, curObj)
             yield()
             local itemSlots = setmetatable({}, { --[[@type table<Barotrauma.Identifier, Barotrauma.InvSlotType|integer>]]
                 __index = function(t, k)
@@ -118,7 +121,7 @@ local function activateCrewLoadout(self, option, timeBetween)
                         instance.IsInLimbSlot(item, invSlotType))
                 end
 
-                if not inventory:SBAI_hasAnyItem(unspecifiedSlotType, p) then
+                if not character.inventory:SBAI_hasAnyItem(unspecifiedSlotType, p) then
                     yield(tryCreateGetItemObj(character, characterData, curObj, itemId, invSlotType))
                 end
             end
@@ -146,8 +149,12 @@ local function activateCrewLoadout(self, option, timeBetween)
                 elseif characterData:Update(ptable["deltaTime"]) and
                     not characterData.getItemObj
                 then
+                    instance.Deselected.add(
+                    function()
+                        characterData.coOngoing = nil
+                    end)
                     coOngoing = pwrap(checkInventory, characterData, "coOngoing")
-                    coOngoing(loadoutData, character, characterData, character.Inventory, instance)
+                    coOngoing(loadoutData, character, characterData, instance)
                 end
             end
         end

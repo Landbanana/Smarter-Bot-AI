@@ -769,7 +769,8 @@ do
     ---@param instance Barotrauma.AIObjectiveGoTo
     ---@return boolean
     function util.IsAtWaitObjective(instance)
-        return  instance.Identifier == WAIT and instance.IsCloseEnough
+        return  instance.Identifier == WAIT and
+            instance.IsCloseEnough
     end
 end
 

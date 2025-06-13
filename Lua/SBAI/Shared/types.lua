@@ -254,7 +254,7 @@ do
 
     ---@public
     ---@param delay Types.Timer
-    ---@param noise number
+    ---@param noise? number
     ---@return Types.Timer
     function Types.Timer.new(delay, noise)
         local t = {
@@ -780,6 +780,7 @@ end
 do
     local GetArgs = util.functools.GetArgs
     local Get = util.config.Get
+    local type = type
     local unpack = table.unpack
 
     ---@public
@@ -810,6 +811,7 @@ do
             end
             return unpack(results, 1, n)
         end
+        return false
     end
 end
 
