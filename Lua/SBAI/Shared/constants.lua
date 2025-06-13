@@ -3,7 +3,7 @@ LuaUserData.MakeMethodAccessible(Descriptors["Barotrauma.CharacterInventory"], "
 local Constants = {
     Name="Smarter Bot AI",
     Acronym="SBAI",
-    Version="1.7.1b",
+    Version="1.7.1c",
     Path=ToolBox.CleanUpPath(table.pack(...)[1]),
     ModConfigsDirPath=ToolBox.CleanUpPath(Game.SaveFolder.."/ModConfigs"), --[[@type string]]
 
