@@ -438,20 +438,7 @@ do
                                     if  inventory == character.Inventory or
                                         inventory == nil
                                     then
-                                        
-                                        local function constructor()
-                                            local subObjective = AIObjectiveCleanupItem(targetItem, character, objective.objectiveManager)
-
-                                            local function cleanup()
-                                                return instance:SBAI_cleanupSubObj(subObjective, AIObjectiveCleanupItem, characterData, "replenishCleanObj")
-                                            end
-
-                                            subObjective.Completed.add(cleanup)
-                                            subObjective.Abandoned.add(cleanup)
-
-                                            return subObjective
-                                        end
-                                        instance:SBAI_tryAddSubObjective(characterData, "replenishCleanObj", REPLENISH_CLEAN, false, true, constructor)
+                                        targetItem:SBAI_cleanup(character, characterData, "replenishCleanObj", REPLENISH_CLEAN)
                                     end
                                 end
                                 return cleanup()
@@ -761,6 +748,7 @@ local function activate(self)
     if Any(idMap) then
         self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
         self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
+        self:AddCommonModule("SBAI.Server.CommonModules.ItemExpansion")
         --local ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
 
         --ModObjProp("ConcurrentObjectives", IDLE, REPLENISH, true)

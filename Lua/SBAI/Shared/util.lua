@@ -44,6 +44,31 @@ do
     end
 end
 
+do
+    local select = select
+
+    ---@generic T,R
+    ---@param func fun(arg:T):R
+    ---@param ... T
+    ---@return R?
+    local function TryAll(func, ...)
+        local firstArg = (...)
+        
+        if firstArg then
+            local out = func(firstArg)
+
+            if out then
+                return out
+            else
+                return TryAll(func, select(2, ...))
+            end
+        end
+        return nil
+    end
+
+    util.functools.TryAll = TryAll
+end
+
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
 ---@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
@@ -1732,57 +1757,38 @@ do
     end
 end
 
+
+
+
 do
-    LuaUserData.RegisterType("Barotrauma.IdentifierExtensions")
-    local IdentifierExtensions = LuaUserData.CreateStatic("Barotrauma.IdentifierExtensions")
+    local TryAll = util.functools.TryAll
 
     ---@param contElement System.Xml.Linq.XElement
     ---@return Iterable<Barotrauma.Identifier>?
-    ---@overload fun(riElement:System.Xml.Linq.XElement):Iterable<Barotrauma.Identifier>
+    ---@overload fun(riElement:System.Xml.Linq.XElement):(Iterable<Barotrauma.Identifier>?)
     function util.xGetItemTags(contElement)
-        for tagAlias in {"items", "item", "identifiers", "identifier", "tags", "tag"} do
-            local attr = contElement.Attribute(tagAlias)
-
-            if attr then
-                return IdentifierExtensions.ToIdentifiers(attr.Value)
-                -- for tag in attr.Value:gmatch("([%w_]+)") do
-                --     i = i + 1
-                --     tags[i] = Identifier(tag)
-                -- end
-                --break
-            end
-        end
-        return nil
-    end
-
-    function util.xGetStatusEffectTargets(seElement)
-        for targetAlias in {"targetnames", "targets", "targetidentifiers", "targettags"} do
-            local attr = seElement.Attribute(targetAlias)
-
-            if attr then
-                return IdentifierExtensions.ToIdentifiers(attr.Value)
-                -- for tag in attr.Value:gmatch("([%w_]+)") do
-                --     i = i + 1
-                --     tags[i] = Identifier(tag)
-                -- end
-                --break
-            end
-        end
-        return nil
+        return TryAll(contElement.GetAttributeIdentifierArray, "items", "item", "identifiers", "identifier", "tags", "tag")
     end
 end
 
----@param seElement System.Xml.Linq.XElement
----@return string?
-function util.xGetStatusEffectTargetType(seElement)
-    for targetTypeAlias in {"target", "targettype"} do
-        local attr = seElement.Attribute(targetTypeAlias)
+do
+    local TryAll = util.functools.TryAll
 
-        if attr then
-            return attr.Value
-        end
+    ---@param seElement System.Xml.Linq.XElement
+    ---@return Iterable<Barotrauma.Identifier>?
+    function util.xGetStatusEffectTargets(seElement)
+        return TryAll(seElement.GetAttributeIdentifierArray, "targetnames", "targets", "targetidentifiers", "targettags")
     end
-    return nil
+end
+
+do
+    local TryAll = util.functools.TryAll
+
+    ---@param seElement System.Xml.Linq.XElement
+    ---@return string?
+    function util.xGetStatusEffectTargetType(seElement)
+        return TryAll(seElement.GetAttributeString, "target", "targettype")
+    end
 end
 
 do

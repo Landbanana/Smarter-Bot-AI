@@ -360,10 +360,11 @@ local function activateCleanableProduce(self, options)
     end
 
     for id in petItemIds do
+        
         local prefab = GetItemPrefab(id)
 
         if prefab then
-            local xElement = prefab.ConfigElement
+            local xElement = prefab.ConfigElement.Element
 
             if #xPath2(xElement, "PreferredContainer") > 0 then
                 petItemIds:Remove(id)
