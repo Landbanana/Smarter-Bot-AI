@@ -2,7 +2,9 @@ local Constants = require("SBAI.Shared.constants")
 local guiUtil = require("SBAI.Client.guiUtil")
 local Types = require("SBAI.Shared.types")
 
+local D_CREW_LOADOUT_SLOTS = Constants.D_CREW_LOADOUT_SLOTS
 local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
+local D_HUMAN_INV_N = Constants.D_HUMAN_INV_N
 
 local D_PADDING = guiUtil.Constants.D_PADDING
 local D_SLOT_SIZE = guiUtil.Constants.D_SLOT_SIZE
@@ -23,7 +25,7 @@ local CutComponent = guiUtil.CutComponent
 local RectTransform = GUI.RectTransform
 
 ---@param changeAdder fun(value:table)
----@param data table<Barotrauma.Identifier, Barotrauma.Identifier[]>[]
+---@param data Iterable<table<Barotrauma.Identifier, Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>>>
 ---@return Barotrauma.GUIFrame
 local function createCrewLoadoutGui(changeAdder, data)
     local screenSize = Game.GameScreen.Frame.Rect.Size
@@ -38,35 +40,32 @@ local function createCrewLoadoutGui(changeAdder, data)
     local innerFrame = guiUtil.AddFrame(mainFrame, mainFrame.Rect.Size - Point(2*D_PADDING, 4*D_PADDING), GUI.Anchor.Center, "InnerFrameDark", true)
     innerFrame.RectTransform.AbsoluteOffset = Point(0, D_PADDING/2)
 
-    local selectedSlots = {--[[@type table<Barotrauma.InvSlotType, Set<Barotrauma.GUIButton>>]]
-        [InvSlotType.Any]=Types.Set.new(),
-        [InvSlotType.LeftHand]=Types.Set.new(),
-        [InvSlotType.RightHand]=Types.Set.new(),
-        [InvSlotType.Bag]=Types.Set.new(),
-        [InvSlotType.OuterClothes]=Types.Set.new(),
-        [InvSlotType.InnerClothes]=Types.Set.new(),
-        [InvSlotType.Head]=Types.Set.new(),
-        [InvSlotType.Headset]=Types.Set.new(),
-    }
+    local selectedSlots = {} --[[@type table<Barotrauma.InvSlotType, Set<Barotrauma.GUIButton>>]]
+
+    for i=Constants.D_HUMAN_INV_N_ANY,D_HUMAN_INV_N,1 do
+        selectedSlots[D_CREW_LOADOUT_SLOTS[i]] = Types.Set.new()
+    end
 
     local curJobIdx
-    local basicSlots = {}
-    local limbSlots
-
-    local function callback(button, itemId)
-        itemId = itemId or Identifier.Empty
+    local basicSlots = {} --[=[@type Barotrauma.GUIButton[]]=]
+    local limbSlots --[=[@type Barotrauma.GUIButton[]]=]
+    
+    ---@param button Barotrauma.GUIButton
+    ---@param itemData {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}
+    local function callback(button, itemData)
+        itemData = itemData or {}
 
         local _, loadoutData = next(data[curJobIdx])
 
         for i, otherButton in ipairs(basicSlots) do
             if otherButton == button then
-                loadoutData[i] = itemId
+                loadoutData[i] = itemData
                 return changeAdder(data)
             end
         end
         for i, otherButton in ipairs(limbSlots) do
             if otherButton == button then
-                loadoutData[i + D_HUMAN_INV_N_ANY] = itemId
+                loadoutData[i + D_HUMAN_INV_N_ANY] = itemData
                 return changeAdder(data)
             end
         end
@@ -84,50 +83,20 @@ local function createCrewLoadoutGui(changeAdder, data)
                 button.ToolTip = nil
 
                 local itemImage = button.GetChild(Int32(button.CountChildren - 1))
-                local prefab = itemImage.UserData --[[@type Barotrauma.ItemPrefab]]
-                
-                --button.RemoveChild(itemImage)
-                --selectedSlots[obj]:Remove(button)
-                --slot.Color = White
+                local itemData = itemImage.UserData --[[@type {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}]]
 
-                local reg, comp = prefab:SBAI_getInvSlots()
+                for i, otherButton in ipairs(limbSlots) do--[[@cast otherButton Barotrauma.GUIButton]]
+                    local otherItemImage = otherButton.GetChild(Int32(otherButton.CountChildren - 1))
+                    
+                    if  otherItemImage and 
+                        otherItemImage.UserData == itemData
+                    then
+                        local _, loadoutData = next(data[curJobIdx])
 
-                if not reg[obj] then
-                    for slotSet in comp do --[[@cast slotSet Set<Barotrauma.InvSlotType>]]
-                        local matchingButtons = {}
-                        local i = 0
-
-                        slotSet:Remove(obj)
-                        for slotType in slotSet do
-                            local j = i
-
-                            for k, otherButton in ipairs(limbSlots) do--[[@cast otherButton Barotrauma.GUIButton]]
-                                if otherButton.ToolTip ~= nil and
-                                    otherButton.GetChild(Int32(otherButton.CountChildren - 1)).UserData == prefab
-                                then
-                                    i = i + 1
-                                    matchingButtons[i] = k
-                                    slotSet:Remove(slotType)
-                                    break
-                                end
-                            end
-                            if j == i then
-                                break
-                            end
-                        end
-                        
-                        if slotSet:IsEmpty() then
-                            local _, loadoutData = next(data[curJobIdx])
-
-                            for k in matchingButtons do
-                                local otherButton = limbSlots[k]
-
-                                loadoutData[k + 10] = Identifier.Empty
-                                selectedSlots[obj]:Remove(button)
-                                otherButton.RemoveChild(otherButton.GetChild(Int32(otherButton.CountChildren - 1)))
-                                otherButton.ToolTip = nil
-                            end
-                        end
+                        loadoutData[i + D_HUMAN_INV_N_ANY] = {}
+                        selectedSlots[obj]:Remove(button)
+                        otherButton.RemoveChild(otherItemImage)
+                        otherButton.ToolTip = nil
                     end
                 end
                 callback(button)
@@ -240,17 +209,19 @@ local function createCrewLoadoutGui(changeAdder, data)
         numTextBlock.TextColor = uiColor
 
         for j=1,D_HUMAN_INV_N_ANY,1 do
-            local itemId = loadoutData[j]
+            local itemData = loadoutData[j]
+            local itemPrefab = itemData.prefab
 
-            if itemId ~= Identifier.Empty then
-                guiUtil.AddItemToSlot(basicSlots[j], ItemPrefab.GetItemPrefab(itemId))
+            if itemPrefab then
+                guiUtil.AddItemToSlot(basicSlots[j], {prefab=itemPrefab, quality=loadoutData.quality, amount=loadoutData.amount})
             end
         end
-        for j=D_HUMAN_INV_N_ANY+1,D_HUMAN_INV_N_ANY+7,1 do
-            local itemId = loadoutData[j]
+        for j=D_HUMAN_INV_N_ANY+1,D_HUMAN_INV_N,1 do
+            local itemData = loadoutData[j]
+            local itemPrefab = itemData.prefab
 
-            if itemId ~= Identifier.Empty then
-                guiUtil.AddItemToSlot(limbSlots[j-D_HUMAN_INV_N_ANY], ItemPrefab.GetItemPrefab(itemId))
+            if itemPrefab then
+                guiUtil.AddItemToSlot(limbSlots[j-D_HUMAN_INV_N_ANY], itemData)
             end
         end
     end
@@ -266,22 +237,17 @@ local function createCrewLoadoutGui(changeAdder, data)
                 basicSlotsGroup.ClearChildren()
                 limbSlotsGroup.ClearChildren()
                 for j=1,D_HUMAN_INV_N_ANY,1 do
-                    local slot = guiUtil.AddEmptyItemSlot(basicSlotsGroup, nil, nil, true)
+                    local button = guiUtil.AddEmptyItemSlot(basicSlotsGroup, nil, nil, true)
 
-                    slot.OnClicked = onSlotClicked
-                    basicSlots[j] = slot
-                end
-                limbSlots = {
-                    [1]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.LeftHand, true),
-                    [2]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.RightHand, true),
-                    [3]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.Bag, true),
-                    [4]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.OuterClothes, true),
-                    [5]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.InnerClothes, true),
-                    [6]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.Head, true),
-                    [7]=guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, InvSlotType.Headset, true)
-                }
-                for button in limbSlots do --[[@cast button Barotrauma.GUIButton]]
                     button.OnClicked = onSlotClicked
+                    basicSlots[j] = button
+                end
+                limbSlots = {}
+                for j=D_HUMAN_INV_N_ANY + 1,D_HUMAN_INV_N,1 do
+                    local button = guiUtil.AddEmptyItemSlot(limbSlotsGroup, nil, D_CREW_LOADOUT_SLOTS[j], true)
+
+                    button.OnClicked = onSlotClicked
+                    limbSlots[j - D_HUMAN_INV_N_ANY] = button
                 end
                 i = (i + yield(setIndex(i)) - 1) % n + 1
             end

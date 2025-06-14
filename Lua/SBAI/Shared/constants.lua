@@ -85,15 +85,35 @@ local Constants = {
 -- }
 
 do
+    local Any = InvSlotType.Any
+
+    local slotTypes = {}
     local i = 0
 
     for s in CharacterInventory.ParseSlotTypes(CharacterPrefab.HumanPrefab.ConfigElement.GetChildElement("Inventory")) do
         if s:lower():match("[%a]+") == "any" then
             i = i + 1
+            slotTypes[i] = Any
         end
     end
 
     Constants.D_HUMAN_INV_N_ANY = i
+
+    for slotType in {
+        InvSlotType.LeftHand,
+        InvSlotType.RightHand,
+        InvSlotType.Bag,
+        InvSlotType.OuterClothes,
+        InvSlotType.InnerClothes,
+        InvSlotType.Head,
+        InvSlotType.Headset
+    } do
+        i = i + 1
+        slotTypes[i] = slotType
+    end
+
+    Constants.D_CREW_LOADOUT_SLOTS = slotTypes
+    Constants.D_HUMAN_INV_N = i
 end
 
 

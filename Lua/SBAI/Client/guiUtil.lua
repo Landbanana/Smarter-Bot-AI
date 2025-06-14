@@ -349,9 +349,13 @@ end
 --     return button
 -- end
 
----@param prefab Barotrauma.ItemPrefab
+---@param slot Barotrauma.GUIButton|Barotrauma.GUIImage
+---@param itemData {prefab:Barotrauma.ItemPrefab, quality:integer?, quantity:integer?}
+---@param prefab? Barotrauma.ItemPrefab
 ---@return Barotrauma.GUIImage
-function guiUtil.AddItemToSlot(slot, prefab)
+function guiUtil.AddItemToSlot(slot, itemData, prefab)
+    prefab = prefab or itemData.prefab
+
     local oldToolTip = prefab.GetTooltip().ToString()
     local itemName, itemDescription = oldToolTip:match("^([^\n]+)(\n.+)$")
 
@@ -363,7 +367,7 @@ function guiUtil.AddItemToSlot(slot, prefab)
     
     local itemImage = guiUtil.AddImage(slot, Vector2(0.95, 0.95), GUI.Anchor.Center, prefab.InventoryIcon or prefab.Sprite, true)
 
-    itemImage.UserData = prefab
+    itemImage.UserData = itemData or prefab
     itemImage.CanBeFocused = false
     return slot
 end
@@ -500,7 +504,7 @@ end
 
 ---@param parent Barotrauma.GUIComponent
 ---@param selectedSlots table<Barotrauma.InvSlotType, Set<Barotrauma.GUIButton>>
----@param callback fun(button: Barotrauma.GUIButton, itemId?:Barotrauma.Identifier)
+---@param callback fun(button: Barotrauma.GUIButton, itemData:{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?})
 ---@return Barotrauma.GUILayoutGroup
 ---@return fun(filter:fun(prefab:Barotrauma.ItemPrefab):boolean)
 function guiUtil.AddItemPicker(parent, selectedSlots, callback)
@@ -583,7 +587,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
         end
 
         for prefab in enumerator do
-            guiUtil.AddItemToSlot(guiUtil.AddEmptyItemSlot(list.Content, GUI.Anchor.TopLeft), prefab).UserData = prefab
+            guiUtil.AddItemToSlot(guiUtil.AddEmptyItemSlot(list.Content, GUI.Anchor.TopLeft), nil, prefab).UserData = prefab
         end
     end
 
@@ -610,11 +614,11 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
     ---@param component Barotrauma.GUIComponent
     ---@param obj Barotrauma.ItemPrefab
     list.AfterSelected = function(component, obj)
-        local slots = {}
+        local slots = {} --[[@type Iterable<Set<Barotrauma.GUIButton>>]]
         local i = 0
 
         if #selectedSlots <= 0 then return end
-
+        
         for elementName in {"//Holdable", "//Wearable", "//Pickable", "//MeleeWeapon", "//Throwable"} do
             for holdable in util.xPath2(obj.ConfigElement.Element, elementName) do
                 for slotGroup in holdable.Attribute("slots").Value:gmatch("([^,]+),?") do
@@ -622,6 +626,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
 
                     for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
                         slotType = InvSlotType[addedSlot]
+
                         local matchingSlots = selectedSlots[slotType]
 
                         if  not matchingSlots or
@@ -635,14 +640,16 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
                         slots[i] = matchingSlots
                     end
                     if i > 0 then
+                        local itemData = {prefab=obj}
+
                         for set in slots do
                             local button = next(set) --[[@type Barotrauma.GUIButton]]
                             
                             selectedSlots[slotType]:Remove(button)
                             button.GetChildByUserData(D_PADDING).Color = Color.White
                             button.ToolTip = nil
-                            guiUtil.AddItemToSlot(button, obj)
-                            callback(button, obj.Identifier)
+                            guiUtil.AddItemToSlot(button, itemData)
+                            callback(button, itemData)
                         end
                         return
                     end

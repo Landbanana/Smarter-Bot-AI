@@ -17,6 +17,7 @@
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/Orders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/AIObjectiveExpansion.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/InventoryExpansion.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ItemExpansion.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ItemPrefabExpansion.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/ModifyObjectiveProperties.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/PerformInstruments.lua" />

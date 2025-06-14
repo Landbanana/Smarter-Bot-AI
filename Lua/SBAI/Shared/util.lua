@@ -1786,23 +1786,102 @@ function util.xGetStatusEffectTargetType(seElement)
 end
 
 do
+    local D_CREW_LOADOUT_SLOTS = Constants.D_CREW_LOADOUT_SLOTS
+    local D_HUMAN_INV_N = Constants.D_HUMAN_INV_N
     local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
     local Identifier = Identifier
 
+    local CopyTable = util.itertools.CopyTable
+    local rawget = rawget
+    local setmetatable = setmetatable
+    local tonumber = tonumber
+
     ---@param s string
-    ---@return Iterable<table<Barotrauma.Identifier, Barotrauma.Identifier[]>>
+    ---@return Iterable<table<Barotrauma.Identifier, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}[]>>
     function util.StringToLoadout(s)
+        local mt_itemStrMap = {
+            __index=function(self, itemStr)
+                local out = {}
+                local id, qa = itemStr:match("^([^|]*)(|?.*)$")
+                local quality = qa:match("|Q([%-%d]*)")
+                local amount = qa:match("|A([%d]*)")
+
+                out.prefab = id ~= "" and ItemPrefab.Prefabs[Identifier(id)] or nil
+                out.quality = quality ~= nil and tonumber(quality) or nil
+                out.amount = amount ~= nil and tonumber(amount) or nil
+
+                self[itemStr] = out
+                return out
+            end
+        }
         local data = {}
         local i = 0
 
-        for job, loadoutIds in s:gmatch("([^:;]+):([^:]+;)") do
-            local loadoutData = {}
+        for job, loadoutStr in s:gmatch("([^:;]+):([^:]+;)") do --[[@cast loadoutStr string?]]
+            local itemStrMap = setmetatable({}, mt_itemStrMap) --[[@type table<string, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>]]
+            local limbSlots = {} --[[@type table<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}, {single:Set<Barotrauma.InvSlotType>, multi:table<integer, Set<Barotrauma.InvSlotType>>, partial:table<integer, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>}>]]
+            local loadoutData = {} --[[@type Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>]]
             local j = 0
             
-            for id in loadoutIds:gmatch("([^:;]*);") do
+            for itemStr in loadoutStr:gmatch("([^:;]*);") do
+                local isFirst = rawget(itemStrMap, itemStr) == nil
+                local itemData = itemStrMap[itemStr]
+                local prefab = itemData.prefab
+
                 j = j + 1
-                loadoutData[j] = Identifier(id)
-                if j >= D_HUMAN_INV_N_ANY + 7 then break end
+
+                if prefab == nil then
+                    loadoutData[j] = {}
+                else
+                    if isFirst then
+                        local single, multi = itemData.prefab:SBAI_getInvSlots()
+                        local itemLimbSlots = {single=single, multi=multi}
+
+                        if j > D_HUMAN_INV_N_ANY then
+                            local curSlot = D_CREW_LOADOUT_SLOTS[j]
+                            
+                            if not single[curSlot] then
+                                local matchingCombo
+
+                                for comboSlot, slotSet in next, multi do
+                                    if slotSet[curSlot] then
+                                        matchingCombo = comboSlot
+                                        slotSet:Remove(curSlot)
+                                        break
+                                    end
+                                end
+                                itemLimbSlots.partial = {[matchingCombo]=itemData}
+                            end
+                            limbSlots[itemData] = itemLimbSlots
+                        end
+                        loadoutData[j] = itemData
+                    else
+                        if j > D_HUMAN_INV_N_ANY then
+                            local curSlot = D_CREW_LOADOUT_SLOTS[j]
+                            local itemLimbSlots = limbSlots[itemData]
+
+                            if not itemLimbSlots.single[curSlot] then
+                                local multi = itemLimbSlots.multi
+
+                                for comboSlot, slotSet in next, multi do
+                                    if slotSet[curSlot] then
+                                        slotSet:Remove(curSlot)
+                                        loadoutData[j] = itemLimbSlots.partial[comboSlot]
+                                        if slotSet:IsEmpty() then
+                                            multi[comboSlot] = nil
+                                            itemStrMap[itemStr] = nil
+                                        end
+                                        break
+                                    end
+                                end
+                                goto skip
+                            end
+                        end
+                        loadoutData[j] = CopyTable(itemData)
+                    end
+                end
+                ::skip::
+                if j >= D_HUMAN_INV_N then break end
             end
             i = i + 1
             data[i] = {[Identifier(job)]=loadoutData}
@@ -1813,8 +1892,9 @@ end
 
 do
     local next = next
+    local tostring = tostring
 
-    ---@param allLoadoutData Iterable<table<Barotrauma.Identifier, Barotrauma.Identifier[]>>
+    ---@param allLoadoutData Iterable<table<Barotrauma.Identifier, Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>>>
     ---@return string
     function util.LoadoutToString(allLoadoutData)
         local value = ""
@@ -1824,8 +1904,22 @@ do
 
             value = value..jobId.Value..":"
 
-            for itemId in loadoutData do
-                value = value..itemId.Value..";"
+            for itemData in loadoutData do
+                local prefab = itemData.prefab
+                local quality = itemData.quality
+                local amount = itemData.amount
+
+                if prefab ~= nil then
+                    value = value..prefab.Identifier.Value
+
+                    if quality ~= nil then
+                    value = value.."|Q"..tostring(quality)
+                    end
+                    if amount ~= nil then
+                        value = value.."|A"..tostring(amount)
+                    end
+                end
+                value = value..";"
             end
         end
         return value
