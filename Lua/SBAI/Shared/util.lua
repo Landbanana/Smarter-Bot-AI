@@ -1430,6 +1430,7 @@ end
 
 do
     local Get = util.config.Get
+    local type = type
 
     ---@param config table
     ---@param optionString string
