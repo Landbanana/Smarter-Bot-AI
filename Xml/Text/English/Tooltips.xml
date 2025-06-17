@@ -16,7 +16,7 @@
   <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
   <GUI.tooltips.equipitems>Settings that deal with bot AI equipment</GUI.tooltips.equipitems>
   <GUI.tooltips.equipitems.crewloadout>Set items that the AI should try to seek out; specifying by inventory slot and by job</GUI.tooltips.equipitems.crewloadout>
-  <GUI.tooltips.equipitems.crewloadouttitle>Click the inventory slots below to highlight them, then click an item to assign it to that slot (NOTE: Larger items, like HMGs, may require more than 1 slot selected!). Use the arrows to cycle between jobs.</GUI.tooltips.equipitems.crewloadouttitle>
+  <GUI.tooltips.equipitems.crewloadouttitle>Click the inventory slots below to highlight them, then click an item to assign it to that slot (NOTE: Larger items, like HMGs, may require more than 1 slot selected!). Right click to specify quality minimum and choose tags in the item picking GUI. Use the arrows to cycle between jobs.</GUI.tooltips.equipitems.crewloadouttitle>
   <GUI.tooltips.equipitems.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equipitems.timebetween>
   <GUI.tooltips.equipitems.reequiparmor>AI will attempt to equip any armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems.reequiparmor>
   <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
