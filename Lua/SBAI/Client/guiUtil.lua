@@ -93,7 +93,7 @@ function guiUtil.AddTextBlock(parent, size, anchor, text, style, font, alignment
             parent.RectTransform,
             anchor
         ),
-        text,
+        text or "",
         nil,
         font and GUI.Style.Fonts[Identifier(font)],
         alignment or GUI.Alignment.Center,
@@ -128,7 +128,7 @@ function guiUtil.AddButton(parent, size, anchor, text, style, ignoreColors, onCl
             parent ~= nil and parent.rectTransform or nil,
             anchor
         ),
-        text,
+        text or "",
         D_BUTTON_TEXT_ALIGN,
         style
     )
