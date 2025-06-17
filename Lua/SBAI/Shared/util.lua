@@ -70,62 +70,77 @@ do
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
 ---@return fun(a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
-function util.functools.Partial1(func, a1)
+function util.functools.Partial1(f, a1)
     return function(...)
-        return func(a1, ...)
+        return f(a1, ...)
     end
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
 ---@param a2 T2
 ---@return fun(a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
-function util.functools.Partial2(func, a1, a2)
+function util.functools.Partial2(f, a1, a2)
     return function(...)
-        return func(a1, a2, ...)
+        return f(a1, a2, ...)
     end
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
 ---@param a2 T2
 ---@param a3 T3
 ---@return fun(a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
-function util.functools.Partial3(func, a1, a2, a3)
+function util.functools.Partial3(f, a1, a2, a3)
     return function(...)
-        return func(a1, a2, a3, ...)
+        return f(a1, a2, a3, ...)
     end
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
 ---@param a2 T2
 ---@param a3 T3
 ---@param a4 T4
 ---@return fun(a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
-function util.functools.Partial4(func, a1, a2, a3, a4)
+function util.functools.Partial4(f, a1, a2, a3, a4)
     return function(...)
-        return func(a1, a2, a3, a4, ...)
+        return f(a1, a2, a3, a4, ...)
     end
 end
 
 ---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
----@param func fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 ---@param a1 T1
 ---@param a2 T2
 ---@param a3 T3
 ---@param a4 T4
 ---@param a5 T5
 ---@return fun(a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
-function util.functools.Partial5(func, a1, a2, a3, a4, a5)
+function util.functools.Partial5(f, a1, a2, a3, a4, a5)
     return function(...)
-        return func(a1, a2, a3, a4, a5, ...)
+        return f(a1, a2, a3, a4, a5, ...)
+    end
+end
+
+---@generic T1,T2,T3,T4,T5,T6,T7,T8,T9,R1,R2,R3,R4,R5,R6,R7,R8,R9
+---@param f fun(a1:T1,a2:T2,a3:T3,a4:T4,a5:T5,a6:T6,a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+---@param a1 T1
+---@param a2 T2
+---@param a3 T3
+---@param a4 T4
+---@param a5 T5
+---@param a6 T6
+---@return fun(a7:T7,a8:T8,a9:T9):(R1,R2,R3,R4,R5,R6,R7,R8,R9)
+function util.functools.Partial6(f, a1, a2, a3, a4, a5, a6)
+    return function(...)
+        return f(a1, a2, a3, a4, a5, a6, ...)
     end
 end
 
@@ -623,6 +638,19 @@ do
                 return unpack(t[i])
             end
         end
+    end
+end
+
+---@generic T
+---@return T[]
+---@return fun(v:T)
+function util.itertools.CreateBuilder()
+    local t = {}
+    local i = 0
+
+    return t, function(v)
+        i = i + 1
+        t[i] = v
     end
 end
 
@@ -1674,92 +1702,120 @@ do
     end
 end
 
----@param s string
----@return string
----@return string
-function util.GetFirstChar(s)
-    return s:sub(1, 1), s:sub(2)
-end
-
 do
-    ---@param rootElement System.Xml.Linq.XElement
-    ---@param xPathString string
-    ---@return Iterable<System.Xml.Linq.XElement>
-    function util.xPath2(rootElement, xPathString)
-        local parse
-        local parseTable
+    local parseT --[[@type table<string, fun(builder:fun(v:System.Xml.Linq.XElement|string), e:System.Xml.Linq.XElement|string, s:string)>]]
 
-        local out = {}
-        local i = 0
-        
-        parseTable = {
-            ["/"]=function(e, s)
-                if s:sub(1, 1) == "/" then return parseTable["//"](e, s:sub(2)) end
+    ---@param builder fun(v:System.Xml.Linq.XElement|string)
+    ---@param e System.Xml.Linq.XElement|string
+    ---@param s string
+    local function parse(builder, e, s)
+        if s == "" then
+            return builder(e)
+        elseif (select(2, s:gsub("^([%[/@])(.+)$",
+                function(_s1, _s2)
+                    return parseT[_s1](builder, e, _s2)
+                end))) <= 0
+        then
+        -- else
+            local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$") --[[@type string, string]]
 
-                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
-                
-                if s1 then
-                    for e1 in e.Elements(s1) do
-                        parse(e1, s2)
-                    end
-                end
-            end,
-            ["//"]=function (e, s)
-                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
-
-                if s1 then
-                    for e1 in e.Descendants(s1) do
-                        parse(e1, s2)
-                    end
-                end
-            end,
-            ["["]=function(e, s)
-                local s1, s2 = ("["..s):match("^(%b[])(.-)$")
-
-                if parse(e, s1:sub(2, -2)) then
-                    return parse(e, s2)
-                end
-            end,
-            ["@"]=function(e, s)
-                local s1, s2 = s:match("^([^%[%]/|=@]+)=?(.-)$")
-
-                if s2 and s2 ~= "" then
-                    local attr = e.Attribute(s1)
-
-                    return attr and tostring(e.Attribute(s1).Value) == s2
-                else
-                    return e.Attribute(s1) ~= nil
+            if s1 then
+                for e1 in e.Elements(s1) do
+                    parse(builder, e1, s2)
                 end
             end
-        }
 
-        ---@param e System.Xml.Linq.XElement
-        ---@param s string
-        function parse(e, s)
-            if s == "" then
-                i = i + 1
-                out[i] = e
+            -- if s1 then
+            --     for e1 in e.Elements(s1) do
+            --         parse(builder, e1, s2)
+            --     end
+            -- else
+            --     return parseT[s:sub(1,1)](builder, e, s:sub(2))
+            -- end
+        end
+    end
+    
+    parseT = { --[[@type table<string, fun(builder:fun(v:System.Xml.Linq.XElement|string), e:System.Xml.Linq.XElement|string, s:string)>]]
+        ["/"]=function(builder, e, s)
+            if s:sub(1, 1) == "/" then return parseT["//"](builder, e, s:sub(2)) end
+
+            local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$") --[[@type string, string]]
+            
+            if s1 then
+                for e1 in e.Elements(s1) do
+                    parse(builder, e1, s2)
+                end
+            end
+        end,
+        ["//"]=function(builder, e, s)
+            local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$") --[[@type string, string]]
+            
+            if s1 then
+                for e1 in e.Descendants(s1) do
+                    parse(builder, e1, s2)
+                end
             else
-                local s1, s2 = s:match("^([^%[%]/|=@]+)(.-)$")
-                if s1 then
-                    for e1 in e.Elements(s1) do
-                        parse(e1, s2)
-                    end
-                else
-                    return parseTable[s:sub(1,1)](e, s:sub(2))
+                for e1 in e.Descendants() do
+                    parse(builder, e1, s)
                 end
             end
-        end
+        end,
+        ["["]=function(builder, e, s)
+            local cond = false
+            local s1, s2 = ("["..s):match("^(%b[])(.-)$") --[[@type string, string]]
 
-        for s in xPathString:gmatch("([^|]+)|?") do
-            parse(rootElement, s)
+            s1:gsub("^%[([^=]+)=?(.-)%]$",
+            function(s3, s4)
+                parse(function(v) cond = cond or s4 == "" or v == s4 end, e, s3)
+            end, 1)
+
+            --parse(function() print("test") cond=true end, e, s1)
+            
+            if cond then
+                return parse(builder, e, s2)
+            end
+
+            -- local s1, s2 = ("["..s):match("^(%b[])(.-)$") --[[@type string, string]]
+            -- if parse(builder, e, s1:sub(2, -2)) then
+            --     return parse(builder, e, s2)
+            -- end
+        end,
+        ["@"]=function(builder, e, s)
+            local attr = e.GetAttributeString(s)
+
+            if attr then
+                parse(builder, attr, "")
+            end
+
+            -- local s1, s2 = s:match("^([^%[%]/|=@]+)=?(.-)$") --[[@type string, string]]
+            -- local attr = e.GetAttributeString(s1)
+
+            -- if s2 ~= nil and s2 ~= "" and s2 == attr or attr ~= nil then
+            --     return parse(builder, e, s2)
+            -- end
         end
+    }
+
+    local CreateBuilder = util.itertools.CreateBuilder
+    local error = error
+    local Partial2 = util.functools.Partial2
+
+    ---@param xElement System.Xml.Linq.XElement
+    ---@param xPathStr string
+    ---@return Iterable<System.Xml.Linq.XElement|string>
+    function util.xPath(xElement, xPathStr)
+        if xElement == nil then error("xElement cannot be nil", 2) end
+        if xPathStr == nil then error("xPathStr cannot be nil", 2) end
+
+        local out, builder = CreateBuilder()
+        
+        -- for s in xPathStr:gmatch("([^|]+)|?") do
+        --     parse(builder, xElement, s)
+        -- end
+        xPathStr:gsub("([^|]+)|?", Partial2(parse, builder, xElement))
         return out
     end
 end
-
-
-
 
 do
     local TryAll = util.functools.TryAll
@@ -1792,145 +1848,372 @@ do
     end
 end
 
-do
-    local D_CREW_LOADOUT_SLOTS = Constants.D_CREW_LOADOUT_SLOTS
-    local D_HUMAN_INV_N = Constants.D_HUMAN_INV_N
-    local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
-    local Identifier = Identifier
+---@alias QualityValue `0`|`1`|`2`|`3`
 
-    local CopyTable = util.itertools.CopyTable
-    local rawget = rawget
-    local setmetatable = setmetatable
+---@alias ItemData {itemPrefab:Barotrauma.ItemPrefab?, itemIds:table<Barotrauma.Identifier, boolean>?, minQuality:QualityValue?, minAmount:integer?}
+
+do
+    local parseItemIds do
+        local Identifier = Identifier
+
+        ---@private
+        ---@param itemIds table<Barotrauma.Identifier, boolean>
+        ---@param v `""`|`"!"`
+        ---@param itemIdStr string
+        function parseItemIds(itemIds, v, itemIdStr)
+            itemIds[Identifier(itemIdStr)] = v ~= "!"
+        end
+    end
+
+    local next = next
+    local Partial1 = util.functools.Partial1
     local tonumber = tonumber
 
-    ---@param s string
-    ---@return Iterable<table<Barotrauma.Identifier, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}[]>>
-    function util.StringToLoadout(s)
-        local mt_itemStrMap = {
-            __index=function(self, itemStr)
-                local out = {}
-                local id, qa = itemStr:match("^([^|]*)(|?.*)$")
-                local quality = qa:match("|Q([%-%d]*)")
-                local amount = qa:match("|A([%d]*)")
+    local Normal = Constants.Quality.Normal
+    local Prefabs = ItemPrefab.Prefabs
 
-                out.prefab = id ~= "" and ItemPrefab.Prefabs[Identifier(id)] or nil
-                out.quality = quality ~= nil and tonumber(quality) or nil
-                out.amount = amount ~= nil and tonumber(amount) or nil
+    ---@public
+    ---@param itemStr string
+    ---@return ItemData
+    function util.StringToItemData(itemStr)
+        local itemData = {}
+        local itemIds = {}
+        local idStrs, extra = itemStr:match("^([^|]*)(|?.*)$") --[[@type string, string]]
+        local _, i = idStrs:gsub("(!?)([^%+]+)", Partial1(parseItemIds, itemIds))
 
-                self[itemStr] = out
-                return out
+        if i <= 0 then
+            itemData.minQuality = Normal
+        else
+            local firstVal = (next(itemIds))
+
+            if  i == 1 and
+                Prefabs.ContainsKey(firstVal)
+            then
+                itemData.itemPrefab = Prefabs[firstVal]
+            else
+                itemData.itemIds = itemIds
             end
-        }
-        local data = {}
-        local i = 0
 
-        for job, loadoutStr in s:gmatch("([^:;]+):([^:]+;)") do --[[@cast loadoutStr string?]]
-            local itemStrMap = setmetatable({}, mt_itemStrMap) --[[@type table<string, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>]]
-            local limbSlots = {} --[[@type table<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}, {single:Set<Barotrauma.InvSlotType>, multi:table<integer, Set<Barotrauma.InvSlotType>>, partial:table<integer, {prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>}>]]
-            local loadoutData = {} --[[@type Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>]]
-            local j = 0
+            local minAmount = extra:match("|A([%d]*)")
+
+            itemData.minAmount = minAmount ~= nil and tonumber(minAmount) or 1
+
+            local minQuality = extra:match("|Q([0-3]*)")
             
-            for itemStr in loadoutStr:gmatch("([^:;]*);") do
-                local isFirst = rawget(itemStrMap, itemStr) == nil
-                local itemData = itemStrMap[itemStr]
-                local prefab = itemData.prefab
-
-                j = j + 1
-
-                if prefab == nil then
-                    loadoutData[j] = {}
-                else
-                    if isFirst then
-                        local single, multi = itemData.prefab:SBAI_getInvSlots()
-                        local itemLimbSlots = {single=single, multi=multi}
-
-                        if j > D_HUMAN_INV_N_ANY then
-                            local curSlot = D_CREW_LOADOUT_SLOTS[j]
-                            
-                            if not single[curSlot] then
-                                local matchingCombo
-
-                                for comboSlot, slotSet in next, multi do
-                                    if slotSet[curSlot] then
-                                        matchingCombo = comboSlot
-                                        slotSet:Remove(curSlot)
-                                        break
-                                    end
-                                end
-                                itemLimbSlots.partial = {[matchingCombo]=itemData}
-                            end
-                            limbSlots[itemData] = itemLimbSlots
-                        end
-                        loadoutData[j] = itemData
-                    else
-                        if j > D_HUMAN_INV_N_ANY then
-                            local curSlot = D_CREW_LOADOUT_SLOTS[j]
-                            local itemLimbSlots = limbSlots[itemData]
-
-                            if not itemLimbSlots.single[curSlot] then
-                                local multi = itemLimbSlots.multi
-
-                                for comboSlot, slotSet in next, multi do
-                                    if slotSet[curSlot] then
-                                        slotSet:Remove(curSlot)
-                                        loadoutData[j] = itemLimbSlots.partial[comboSlot]
-                                        if slotSet:IsEmpty() then
-                                            multi[comboSlot] = nil
-                                            itemStrMap[itemStr] = nil
-                                        end
-                                        break
-                                    end
-                                end
-                                goto skip
-                            end
-                        end
-                        loadoutData[j] = CopyTable(itemData)
-                    end
-                end
-                ::skip::
-                if j >= D_HUMAN_INV_N then break end
-            end
-            i = i + 1
-            data[i] = {[Identifier(job)]=loadoutData}
+            itemData.minQuality = minQuality ~= nil and tonumber(minQuality) or Normal
         end
-        return data
+
+        return itemData
     end
 end
 
 do
-    local next = next
-    local tostring = tostring
+    local parseItemData do
+        local StringToItemSlotData = util.StringToItemData
 
-    ---@param allLoadoutData Iterable<table<Barotrauma.Identifier, Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>>>
-    ---@return string
-    function util.LoadoutToString(allLoadoutData)
-        local value = ""
-        
-        for jobIdAndLoadoutData in allLoadoutData do
-            local jobId, loadoutData = next(jobIdAndLoadoutData)
-
-            value = value..jobId.Value..":"
-
-            for itemData in loadoutData do
-                local prefab = itemData.prefab
-                local quality = itemData.quality
-                local amount = itemData.amount
-
-                if prefab ~= nil then
-                    value = value..prefab.Identifier.Value
-
-                    if quality ~= nil then
-                    value = value.."|Q"..tostring(quality)
-                    end
-                    if amount ~= nil then
-                        value = value.."|A"..tostring(amount)
-                    end
-                end
-                value = value..";"
-            end
+        ---@param builder fun(v:ItemData)
+        ---@param itemStr string
+        function parseItemData(builder, itemStr)
+            builder(StringToItemSlotData(itemStr))
         end
-        return value
+    end
+
+    ---@param builder fun(v:ItemData)
+    ---@param cache table<string, ItemData>
+    ---@param itemStr string
+    local function parseItemData_cached(builder, cache, itemStr)
+        builder(cache[itemStr])
+    end
+
+    local CreateBuilder = util.itertools.CreateBuilder
+    local Partial1 = util.functools.Partial1
+    local Partial2 = util.functools.Partial2
+    local setmetatable = setmetatable
+    local StringToItemSlotData = util.StringToItemData
+
+    ---@param loadoutStr string
+    ---@param isCached? boolean
+    ---@return ItemData[]
+    function util.StringToLoadoutData(loadoutStr, isCached)
+        local loadoutData, builder = CreateBuilder()
+        
+        if isCached then
+            local cache = setmetatable({}, {
+                __index=function(self, s)
+                    local itemData = StringToItemSlotData(s)
+
+                    self[s] = itemData
+                    return itemData
+                end
+            })
+            loadoutStr:gsub("([^:;]*);", Partial2(parseItemData_cached, builder, cache))
+        else
+            loadoutStr:gsub("([^:;]*);", Partial1(parseItemData, builder))
+        end
+        return loadoutData
     end
 end
+
+do
+    local parseJobIdAndLoadoutData do
+        local StringToLoadoutData = util.StringToLoadoutData
+
+        local Identifier = Identifier
+
+        ---@param allLoadoutData table<Barotrauma.Identifier, Iterable<ItemData>>
+        ---@param isCached? boolean
+        ---@param jobIdStr string
+        ---@param loadoutStr string
+        function parseJobIdAndLoadoutData(allLoadoutData, isCached, jobIdStr, loadoutStr)
+            allLoadoutData[Identifier(jobIdStr)] = StringToLoadoutData(loadoutStr, isCached)
+        end
+    end
+    
+    local Partial2 = util.functools.Partial2
+
+    ---@param allLoadoutStr string
+    ---@param isCached? boolean
+    ---@return table<Barotrauma.Identifier, ItemData[]>
+    function util.StringToAllLoadout(allLoadoutStr, isCached)
+        local allLoadoutData = {}
+        local _parseJobIdAndLoadoutData = Partial2(parseJobIdAndLoadoutData, allLoadoutData, isCached)
+
+        allLoadoutStr:gsub("([^:;]+):([^:]+;)", _parseJobIdAndLoadoutData)
+        return allLoadoutData
+    end
+end
+
+do
+    local concat = table.concat
+    local CreateBuilder = util.itertools.CreateBuilder
+    local type = type
+
+    ---@param itemDataOrPrefab? ItemData|Barotrauma.ItemPrefab
+    ---@param itemIds? Iterable<Barotrauma.Identifier>
+    ---@param minAmount? integer
+    ---@param minQuality? QualityValue
+    ---@return string
+    ---@overload fun(itemPrefab?:Barotrauma.ItemPrefab, itemIds:Iterable<Barotrauma.Identifier>, minAmount:integer, minQuality:QualityValue):string
+    ---@overload fun(itemData:ItemData):string
+    function util.ItemDataToString(itemDataOrPrefab, itemIds, minAmount, minQuality)
+        local itemPrefab
+
+        if type(itemDataOrPrefab) == "table" then
+            itemPrefab = itemDataOrPrefab.itemPrefab
+            itemIds = itemDataOrPrefab.itemIds
+            minAmount = itemDataOrPrefab.minAmount
+            minQuality = itemDataOrPrefab.minQuality
+        else
+            itemPrefab = itemDataOrPrefab --[[@cast itemPrefab Barotrauma.ItemPrefab?]]
+        end
+
+        local itemDataStr do
+            if itemPrefab then
+                itemDataStr = itemPrefab.Identifier.Value
+                --itemDataStr = itemDataStr..itemPrefab.Identifier.Value
+            elseif itemIds then
+                local joinT, builder = CreateBuilder()
+
+                for itemId, v in next, itemIds do
+                    if not v then
+                        builder("!")
+                    end
+                    builder(itemId.Value)
+                end
+                itemDataStr = concat(joinT, "+")
+            end
+        end
+
+        local joinT, builder = CreateBuilder()
+
+        builder(itemDataStr)
+
+        if  minQuality ~= nil and
+            0 < minQuality
+        then
+            builder("|Q")
+            builder(minQuality)
+        end
+
+        if  minAmount ~= nil and
+            1 < minAmount
+        then
+            builder("|A")
+            builder(minAmount)
+        end
+        
+        return concat(joinT)
+    end
+end
+
+do
+    local concat = table.concat
+    local CreateBuilder = util.itertools.CreateBuilder
+    local ItemDataToString = util.ItemDataToString
+
+    ---@param loadoutData Iterable<ItemData>
+    function util.LoadoutToString(loadoutData)
+        local joinT, builder = CreateBuilder()
+
+        for itemData in loadoutData do
+            builder(ItemDataToString(itemData))
+        end
+        builder("")
+        return concat(joinT, ";")
+    end
+end
+
+do
+    local concat = table.concat
+    local CreateBuilder = util.itertools.CreateBuilder
+    local LoadoutToString = util.LoadoutToString
+    local next = next
+
+    ---@param allLoadoutData table<Barotrauma.Identifier, Iterable<ItemData>>
+    ---@return string
+    function util.AllLoadoutToString(allLoadoutData)
+        local joinT, builder = CreateBuilder()
+
+        for jobId, loadoutData in next, allLoadoutData do
+            builder(jobId.Value)
+            builder(":")
+            builder(LoadoutToString(loadoutData))
+        end
+        return concat(joinT)
+    end
+end
+
+-- do
+--     local D_CREW_LOADOUT_SLOTS = Constants.D_CREW_LOADOUT_SLOTS
+--     local D_HUMAN_INV_N = Constants.D_HUMAN_INV_N
+--     local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
+--     local Prefabs = ItemPrefab.Prefabs
+--     local Identifier = Identifier
+
+--     local CopyTable = util.itertools.CopyTable
+--     local next = next
+--     local rawget = rawget
+--     local setmetatable = setmetatable
+--     local tonumber = tonumber
+--     local type = type
+
+--     ---@param s string
+--     ---@return Iterable<table<Barotrauma.Identifier, {id:(table<Barotrauma.Identifier, boolean>|Barotrauma.Identifier)?, quality:integer?, quantity:integer?}[]>>
+--     function util.StringToLoadout(s)
+--         local mt_itemStrMap = {
+--             ---@param self table
+--             ---@param itemStr string
+--             ---@return table
+--             __index=function(self, itemStr)
+--                 local out = {}
+--                 local id = {} --[[@type table<Barotrauma.Identifier, boolean>]]
+--                 local idStrs, qa = itemStr:match("^([^|]*)(|?.*)$") --[[@type string, string]]
+--                 local quality = qa:match("|Q([%-%d]*)")
+--                 local amount = qa:match("|A([%d]*)")
+--                 local i = 0
+
+--                 for idStr in idStrs:gmatch("([^%+]+)") do
+--                     i = i + 1
+--                     id[Identifier(idStr)] = idStr:sub(1, 1) ~= "!"
+--                 end
+
+--                 if  idStrs ~= "" and
+--                     i > 0
+--                 then
+--                     local firstVal = (next(id))
+
+--                     if Prefabs.ContainsKey(firstVal) then
+--                         out.id = firstVal
+--                     else
+--                         out.id = id
+--                     end
+--                 end
+                
+--                 out.quality = quality ~= nil and tonumber(quality) or nil
+--                 out.amount = amount ~= nil and tonumber(amount) or nil
+
+--                 self[itemStr] = out
+--                 return out
+--             end
+--         }
+--         local data = {}
+--         local i = 0
+
+--         for job, loadoutStr in s:gmatch("([^:;]+):([^:]+;)") do --[[@cast loadoutStr string?]]
+--             local itemStrMap = setmetatable({}, mt_itemStrMap) --[[@type table<string, {id:(table<Barotrauma.Identifier, boolean>|Barotrauma.Identifier)?, quality:integer?, amount:integer?}>]]
+--             local limbSlots = {} --[[@type table<{id:Barotrauma.Identifier, quality:integer?, amount:integer?}, {single:Set<Barotrauma.InvSlotType>, multi:table<integer, Set<Barotrauma.InvSlotType>>, partial:table<integer, {id:(table<Barotrauma.Identifier, boolean>|Barotrauma.Identifier)?, quality:integer?, amount:integer?}>}>]]
+--             local loadoutData = {} --[[@type Iterable<{id:(table<Barotrauma.Identifier, boolean>|Barotrauma.Identifier)?, quality:integer?, amount:integer?}>]]
+--             local j = 0
+            
+--             for itemStr in loadoutStr:gmatch("([^:;]*);") do
+--                 local isFirst = rawget(itemStrMap, itemStr) == nil
+--                 local itemData = itemStrMap[itemStr]
+--                 local id = itemData.id
+                
+--                 j = j + 1
+
+--                 if type(id) == "table" then
+--                     loadoutData[j] = {id=id, quality=itemData.quality, amount=itemData.amount}
+--                 elseif id == nil then
+--                     loadoutData[j] = {}
+--                 else
+--                     local prefab = Prefabs[id]
+
+--                     if isFirst then
+--                         local single, multi = prefab:SBAI_getInvSlots()
+--                         local itemLimbSlots = {single=single, multi=multi}
+
+--                         if j > D_HUMAN_INV_N_ANY then
+--                             local curSlot = D_CREW_LOADOUT_SLOTS[j]
+                            
+--                             if not single[curSlot] then
+--                                 local matchingCombo
+
+--                                 for comboSlot, slotSet in next, multi do
+--                                     if slotSet[curSlot] then
+--                                         matchingCombo = comboSlot
+--                                         slotSet:Remove(curSlot)
+--                                         break
+--                                     end
+--                                 end
+--                                 itemLimbSlots.partial = {[matchingCombo]=itemData}
+--                             end
+--                             limbSlots[itemData] = itemLimbSlots
+--                         end
+--                         loadoutData[j] = itemData
+--                     else
+--                         if j > D_HUMAN_INV_N_ANY then
+--                             local curSlot = D_CREW_LOADOUT_SLOTS[j]
+--                             local itemLimbSlots = limbSlots[itemData]
+
+--                             if not itemLimbSlots.single[curSlot] then
+--                                 local multi = itemLimbSlots.multi
+
+--                                 for comboSlot, slotSet in next, multi do
+--                                     if slotSet[curSlot] then
+--                                         slotSet:Remove(curSlot)
+--                                         loadoutData[j] = itemLimbSlots.partial[comboSlot]
+--                                         if slotSet:IsEmpty() then
+--                                             multi[comboSlot] = nil
+--                                             itemStrMap[itemStr] = nil
+--                                         end
+--                                         break
+--                                     end
+--                                 end
+--                                 goto skip
+--                             end
+--                         end
+--                         loadoutData[j] = CopyTable(itemData)
+--                     end
+--                 end
+--                 ::skip::
+--                 if j >= D_HUMAN_INV_N then break end
+--             end
+--             i = i + 1
+--             data[i] = {[Identifier(job)]=loadoutData}
+--         end
+--         return data
+--     end
+-- end
 
 return util

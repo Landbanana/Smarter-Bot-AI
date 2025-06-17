@@ -4,13 +4,13 @@ local Types = require("SBAI.Shared.types")
 local resetTurret do
     local Vector2 = Vector2
 
-    local xPath2 = util.xPath2
+    local xPath = util.xPath
 
     ---@param instance Barotrauma.Items.Components.Turret
     function resetTurret(instance)
         local xElement = instance.Item.Prefab.ConfigElement.Element
         
-        for turretElement in xPath2(xElement, "[@identifier="..instance.Item.Prefab.Identifier.Value.."]//Turret") do
+        for turretElement in xPath(xElement, "[@identifier="..instance.Item.Prefab.Identifier.Value.."]//Turret") do
             local prefabPitchSlideAttribute = turretElement.Attribute("ChargeSoundWindupPitchSlide")
 
             if prefabPitchSlideAttribute then

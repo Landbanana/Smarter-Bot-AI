@@ -8,14 +8,14 @@ do
     local InvSlotType = InvSlotType
     local ItemPrefab = ItemPrefab
 
-    local xPath2 = util.xPath2
+    local xPath = util.xPath
 
     instrumentInvSlots = setmetatable({}, {
         ---@param t {[Barotrauma.Identifier]:Barotrauma.InvSlotType[]}
         ---@param k Barotrauma.Identifier
         __index=function(t, k)
             
-            local slotString = xPath2(ItemPrefab.Prefabs[k].ConfigElement.Element, "Holdable[@slots]")[1].GetAttributeString("slots")
+            local slotString = xPath(ItemPrefab.Prefabs[k].ConfigElement.Element, "Holdable[@slots]")[1].GetAttributeString("slots")
             local allowedSlots = {}
             local i = 0
             
@@ -55,7 +55,7 @@ do
     function setupObjProperties(self)
         --if ModObjProp then return end
         ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
-        ModObjProp("AllowAutomaticItemUnequipping", PERFORM, nil, false)
+        --ModObjProp("AllowAutomaticItemUnequipping", PERFORM, nil, false)
         ModObjProp("AllowMultipleInstances", PERFORM, nil, false)
         self:AddCommonModule("SBAI.Server.CommonModules.XElementExpansion")
     end
@@ -70,7 +70,7 @@ local function activate(self)
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
-    local Wait = Timer.Wait
+    --local Wait = Timer.Wait
 
     local Contains = util.itertools.Contains
 
@@ -93,7 +93,8 @@ local function activate(self)
             if  item.HasTag(hornItemId) and
                 item.GetComponent(RangedWeapon).WasUsed
             then
-                Wait(function() objective.Abandon = true end, 1000)
+                objective.Abandon = true
+                -- Wait(function()  end, 1000)
             end
             -- ptable.PreventExecution = true
             return false

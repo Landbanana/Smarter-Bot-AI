@@ -120,6 +120,19 @@ local activateInstrumentTalent do
 
                                     local cleanup = Partial5(curObj.SBAI_cleanupSubObj, curObj, objective, AIObjectiveOperateItem, characterData, "performObj")
 
+                                    local oldUnequipAutomatically = instrument.UnequipAutomatically
+
+                                    if oldUnequipAutomatically then
+                                        local oldCleanup = cleanup
+                                        
+                                        cleanup = function()
+                                            instrument.UnequipAutomatically = oldUnequipAutomatically
+                                            return oldCleanup()
+                                        end
+
+                                        instrument.UnequipAutomatically = false
+                                    end
+
                                     objective.Completed.add(cleanup)
                                     objective.Abandoned.add(cleanup)
                                     return objective
@@ -231,9 +244,9 @@ local activateInstrumentTalent do
                     if not prefab then error("Unable to find talentPrefab: "..tostring(talentId.Value), 2) end
                     
                     local xElement = prefab.ConfigElement.Element --[[@type Barotrauma.ContentXElement]]
-                    local abilityConditionItem = util.xPath2(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
-                    local characterAbilityApplyStatusEffectsToAllies = util.xPath2(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
-                    local afflictionId = util.xPath2(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
+                    local abilityConditionItem = util.xPath(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Conditions/AbilityConditionItem")[1]
+                    local characterAbilityApplyStatusEffectsToAllies = util.xPath(xElement, "AbilityGroupEffect[@abilityeffecttype=OnUseRangedWeapon]/Abilities/CharacterAbilityApplyStatusEffectsToAllies")[1]
+                    local afflictionId = util.xPath(characterAbilityApplyStatusEffectsToAllies, "StatusEffects/StatusEffect/Affliction[@identifier]")[1].GetAttributeIdentifier("identifier")
                     
                     if not afflictionId then error("Unable to find afflictions for talent: "..tostring(talentId.Value), 2) end
                     

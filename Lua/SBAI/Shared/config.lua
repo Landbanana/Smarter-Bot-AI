@@ -17,22 +17,25 @@ Config.defaults = {
     CONFIG = {}
 }
 
-local defaultCrewLoadout = ""
-
-do
-    local allPrefabData = {}
+local defaultCrewLoadout do
+    local allNames = {}
+    local namesToIds = {}
     local i = 0
 
     for prefab in JobPrefab.Prefabs do
         if not prefab.HiddenJob then
+            local name = prefab.Name
+            local id = prefab.Identifier
+
             i = i + 1
-            allPrefabData[i] = {prefab.Name, prefab.Identifier}
+            allNames[i] = prefab.Name.Value
+            namesToIds[name] = id.Value
         end
     end
-    table.sort(allPrefabData, function(p1, p2) return p1[1] < p2[1] end)
-    for prefabData in allPrefabData do
-        defaultCrewLoadout = defaultCrewLoadout..prefabData[2].Value..":;;;;;;;;;;;;;;;;;"
-    end
+    table.sort(allNames)
+    allNames[i + 1] = ""
+
+    defaultCrewLoadout = table.concat(allNames, ":;;;;;;;;;;;;;;;;;"):gsub("([^:;]+)", namesToIds)
 end
 
 do

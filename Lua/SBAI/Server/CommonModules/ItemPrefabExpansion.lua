@@ -36,14 +36,14 @@ local function activate(self)
     do
         local new = Types.Set.new
         local xGetItemTags = util.xGetItemTags
-        local xPath2 = util.xPath2
+        local xPath = util.xPath
 
         ---@param instance Barotrauma.ItemPrefab
         ---@return boolean
         local function getSpecifiedContainables(instance)
             local tags = new()
 
-            for contElement in xPath2(instance.ConfigElement.Element, "//ItemContainer//Containable") do
+            for contElement in xPath(instance.ConfigElement.Element, "//ItemContainer//Containable") do
                 tags:Update(xGetItemTags(contElement))
             end
             return tags
@@ -92,7 +92,7 @@ local function activate(self)
     do
         local InvSlotType = InvSlotType
         local new = Types.Set.new
-        local xPath2 = util.xPath2
+        local xPath = util.xPath
 
         ---@param instance Barotrauma.ItemPrefab
         ---@return Set<Barotrauma.InvSlotType>
@@ -101,23 +101,21 @@ local function activate(self)
             local reg = new()
             local comp = {}
 
-            for elementName in {"//Holdable", "//Wearable", "//Pickable", "//MeleeWeapon", "//Throwable"} do
-                for holdable in xPath2(instance.ConfigElement.Element, elementName) do
-                    for slotGroup in holdable.Attribute("slots").Value:gmatch("([^,]+),?") do
-                        local set = new()
-                        local slot = 0
+            for slotComp in xPath(instance.ConfigElement.Element, "//[@slots]") do
+                for slotGroup in slotComp.GetAttributeString("slots", ""):gmatch("([^,]+),?") do
+                    local set = new()
+                    local slot = 0
 
-                        for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
-                            local newSlot = InvSlotType[addedSlot]
+                    for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
+                        local newSlot = InvSlotType[addedSlot]
 
-                            slot = slot + newSlot
-                            set:Add(newSlot)
-                        end
-                        if set[slot] then
-                            reg:Add(slot)
-                        else
-                            comp[slot] = set
-                        end
+                        slot = slot + newSlot
+                        set:Add(newSlot)
+                    end
+                    if set[slot] then
+                        reg:Add(slot)
+                    else
+                        comp[slot] = set
                     end
                 end
             end
@@ -126,6 +124,20 @@ local function activate(self)
         AddMethod("getInvSlots", getInvSlots)
         ---@class Barotrauma.ItemPrefab
         ---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Set<Barotrauma.InvSlotType>, table<integer, Set<Barotrauma.InvSlotType>>)
+    end
+
+    do
+        local Any = util.itertools.Any
+        local xPath = util.xPath
+
+        ---@param instance Barotrauma.ItemPrefab
+        ---@return boolean
+        local function isHoldable(instance)
+            return Any(xPath(instance.ConfigElement.Element, "//[@slots]"))
+        end
+        AddMethod("isHoldable", isHoldable)
+        ---@class Barotrauma.ItemPrefab
+        ---@field public SBAI_isHoldable fun(instance:Barotrauma.ItemPrefab):boolean
     end
 end
 

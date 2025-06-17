@@ -41,6 +41,9 @@ local function activate(self)
         ---@class Barotrauma.Item
         ---@field public SBAI_cleanup fun(instance:Barotrauma.Item, character:Barotrauma.Character, t?:table<string, Barotrauma.AIObjective?>, k?:string, objId?:Barotrauma.Identifier):boolean
     end
+
+    ---@class Barotrauma.Item
+    ---@field public UnequipAutomatically boolean
 end
 
 return Types.CommonModule.new(activate)

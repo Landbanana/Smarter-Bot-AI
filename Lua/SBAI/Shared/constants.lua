@@ -86,6 +86,14 @@ Constants.Version = XElement.Load(ToolBox.CleanUpPath(Constants.Path.."/filelist
 --     CONF_REQ=Constants.Acronym..".ConfigRequest"
 -- }
 
+---@enum (key) Quality
+Constants.Quality = {
+    Normal=0,
+    Good=1,
+    Excellent=2,
+    Masterwork=3
+}
+
 do
     local Any = InvSlotType.Any
 
@@ -114,7 +122,7 @@ do
         slotTypes[i] = slotType
     end
 
-    Constants.D_CREW_LOADOUT_SLOTS = slotTypes
+    Constants.D_CREW_LOADOUT_SLOTS = slotTypes --[[@type Iterable<Barotrauma.InvSlotType>]]
     Constants.D_HUMAN_INV_N = i
 end
 

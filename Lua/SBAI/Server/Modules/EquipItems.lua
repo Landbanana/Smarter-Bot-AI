@@ -11,19 +11,8 @@ local function activateCrewLoadout(self, option, timeBetween)
     self:AddCommonModule("SBAI.Server.CommonModules.ItemExpansion")
     self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
-    local allLoadoutData = util.StringToLoadout(option)
+    local allLoadoutData = util.StringToAllLoadout(option, true)
     local allCharacterData = Types.AllTimedCharacterData.new(self, timeBetween)
-    
-    do
-        local newAllLoadoutData = {} --[[@type table<Barotrauma.Identifier, Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>>]]
-
-        for jobIdAndLoadoutData in allLoadoutData do
-            local jobId, loadoutData = next(jobIdAndLoadoutData)
-
-            newAllLoadoutData[jobId] = loadoutData
-        end
-        allLoadoutData = newAllLoadoutData
-    end
 
     local checkInventory do
         local tryCreateGetItemObj do
@@ -31,15 +20,16 @@ local function activateCrewLoadout(self, option, timeBetween)
             local GETITEM = Constants.ID_OBJECTIVE_BASE.GETITEM
             local None = InvSlotType.None
 
-            local Partial5 = util.functools.Partial5
+            local Partial6 = util.functools.Partial6
 
             ---@param character Barotrauma.Character
             ---@param characterData Types.TimedCharacterData
             ---@param curObj Barotrauma.AIObjectiveIdle
-            ---@param itemId Barotrauma.Identifier
-            ---@param targetInvSlotType Barotrauma.InvSlotType|integer
+            ---@param itemId Iterable<Barotrauma.Identifier>
+            ---@param slotData Set<Barotrauma.InvSlotType|integer>
+            ---@param targetQuality integer
             ---@return boolean
-            function tryCreateGetItemObj(character, characterData, curObj, itemId, targetInvSlotType)
+            function tryCreateGetItemObj(character, characterData, curObj, itemId, slotData, targetQuality)
                 local function constructor()
                     local getItemObj = AIObjectiveGetItem(character, itemId, curObj.objectiveManager, true, true)
 
@@ -47,11 +37,13 @@ local function activateCrewLoadout(self, option, timeBetween)
                     getItemObj.AllowDangerousPressure = false
                     getItemObj.AllowToFindDivingGear = false
 
-                    if targetInvSlotType ~= None then
-                        getItemObj.EquipSlotType = targetInvSlotType
-                    end
+                    -- if targetInvSlotType ~= None then
+                    --     getItemObj.EquipSlotType = targetInvSlotType
+                    -- end
 
-                    local cleanup = Partial5(curObj.SBAI_cleanupSubObj, curObj, getItemObj, AIObjectiveGetItem, characterData, "getItemObj")
+                    characterData.targetQuality = targetQuality
+
+                    local cleanup = Partial6(curObj.SBAI_cleanupSubObj, curObj, getItemObj, AIObjectiveGetItem, characterData, "getItemObj", "targetQuality")
 
                     -- local function cleanup()
                     --     return curObj:SBAI_cleanupSubObj(getItemObj, AIObjectiveGetItem, characterData, "getItemObj")
@@ -59,38 +51,50 @@ local function activateCrewLoadout(self, option, timeBetween)
                     
                     getItemObj.Abandoned.add(cleanup)
                     getItemObj.Completed.add(
-                        function()
-                            if  targetInvSlotType ~= None then
-                                local presentItem = character.GetEquippedItem(nil, targetInvSlotType)
-                                local newItem = getItemObj.TargetItem
+                    function()
+                        local newItem = getItemObj.TargetItem
+                        local inventory = character.Inventory
+
+                        if not inventory.TryPutItem(newItem, character, slotData:ToList(), true, true) then
+                            for slotType in slotData do
+                                local presentItem = character.GetEquippedItem(nil, slotType)
                                 
                                 if  presentItem and
                                     presentItem ~= newItem
                                 then
                                     character.Unequip(presentItem)
-                                    if character.GetEquippedItem(nil, targetInvSlotType) ~= newItem then
+                                    if character.GetEquippedItem(nil, slotType) ~= newItem then
                                         presentItem.Drop(character, true)
                                         presentItem:SBAI_cleanup(character)
                                     end
                                 end
-                                character.Inventory.TryPutItem(newItem, character, {targetInvSlotType}, true, true)
+                                if inventory.TryPutItem(newItem, character, {slotType}, true, true) then
+                                    break
+                                end
                             end
-                            return cleanup()
                         end
-                    )
+                        return cleanup()
+                    end)
                     return getItemObj
                 end
                 return curObj:SBAI_tryAddSubObjective(characterData, "getItemObj", GETITEM, false, true, constructor)
             end
         end
-            
+        
+        local CreateBuilder = util.itertools.CreateBuilder
         local ipairs = ipairs
+        local new = Types.Set.new
+        local next = next
+        local setmetatable = setmetatable
+        local type = type
         local yield = coroutine.yield
 
+        local Any = InvSlotType.Any
         local D_CREW_LOADOUT_SLOTS = Constants.D_CREW_LOADOUT_SLOTS
         local D_HUMAN_INV_N_ANY = Constants.D_HUMAN_INV_N_ANY
         local D_HUMAN_INV_N = Constants.D_HUMAN_INV_N
         local None = InvSlotType.None
+        local Normal = Constants.Quality.Normal
 
         local limbSlots = {}
 
@@ -98,45 +102,120 @@ local function activateCrewLoadout(self, option, timeBetween)
             limbSlots[i] = D_CREW_LOADOUT_SLOTS[i + D_HUMAN_INV_N_ANY]
         end
 
-        ---@param loadoutData Iterable<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}>
+        local itemSlot_mt = {
+            __index=function(t, k)
+                local set = new()
+
+                t[k] = set
+                return set
+            end
+        }
+
+        ---@param loadoutData Iterable<ItemData>
         ---@param character Barotrauma.Character
         ---@param characterData Types.TimedCharacterData
         ---@param curObj Barotrauma.AIObjectiveIdle
         function checkInventory(loadoutData, character, characterData, curObj)
             yield()
-            local itemSlots = setmetatable({}, { --[[@type table<{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?}, Barotrauma.InvSlotType|integer>]]
-                __index = function(t, k)
-                    local v = None
+            -- local itemSlots = setmetatable({}, { --[[@type table<ItemData, Barotrauma.InvSlotType|integer>]]
+            --     __index = function(t, k)
+            --         local v = None
 
-                    t[k] = v
-                    return v
-                end
-            })
+            --         t[k] = v
+            --         return v
+            --     end
+            -- })
             
+            -- for i, itemData in ipairs(loadoutData) do
+            --     itemSlots[itemData] = itemSlots[itemData] + (limbSlots[i - D_HUMAN_INV_N_ANY] or None)
+            -- end
+
+            local itemSlots = setmetatable({}, itemSlot_mt) --[[@type table<ItemData, Set<Barotrauma.InvSlotType|integer>>]]
+
             for i, itemData in ipairs(loadoutData) do
-                itemSlots[itemData] = itemSlots[itemData] + (limbSlots[i - D_HUMAN_INV_N_ANY] or None)
+                if  itemData.itemPrefab or
+                    itemData.itemIds
+                then
+                    itemSlots[itemData]:Add(D_CREW_LOADOUT_SLOTS[i])
+                end
+            end
+
+            yield()
+            do
+                local checkedPrefabs = new()
+
+                for itemData in loadoutData do
+                    local itemPrefab = itemData.itemPrefab
+
+                    if itemPrefab and
+                        not checkedPrefabs[itemPrefab]
+                    then
+                        local slotData = itemSlots[itemData]
+                        local reg, comp = itemPrefab:SBAI_getInvSlots()
+                        local slotDataCombos = new()
+                        local comboMatches
+
+                        checkedPrefabs:Add(itemPrefab)
+
+                        for comboType, slotTypes in next, comp do
+                            comboMatches = true
+
+                            for slotType in slotTypes do
+                                if not slotData[slotType] then
+                                    comboMatches = false
+                                    break
+                                end
+                            end
+                            if comboMatches then
+                                slotDataCombos:Add(comboMatches)
+                            end
+                        end
+                        slotData:Update(slotDataCombos)
+                    end
+                end
             end
             
             yield()
             for itemData in loadoutData do
-                local prefab = itemData.prefab
+                local idOrTags do
+                    local itemPrefab = itemData.itemPrefab
+                    local itemIds = itemData.itemIds
 
-                if prefab then
-                    local invSlotType = itemSlots[itemData]
-                    local unspecifiedSlotType = invSlotType == None
-                
+                    if itemPrefab then
+                        idOrTags = {itemPrefab.Identifier}
+                    elseif itemIds then
+                        local builder
+
+                        idOrTags, builder = CreateBuilder()
+
+                        for id, v in next, itemIds do
+                            if v then builder(id) end
+                        end
+                    end
+                end
+
+                if idOrTags then
+                    local slotData = itemSlots[itemData]
+                    local quality = itemData.minQuality or Normal
 
                     ---@param inventory Barotrauma.CharacterInventory
                     ---@param item Barotrauma.Item
                     ---@return boolean
                     local function p(inventory, item)
-                        return item.Prefab == prefab and
-                            (unspecifiedSlotType or
-                            inventory.IsInLimbSlot(item, invSlotType))
+                        if  item.HasIdentifierOrTags(idOrTags) and
+                            quality <= item.Quality
+                        then
+                            for slotType in slotData do
+                                if inventory.IsInLimbSlot(item, slotType) then
+                                    return true
+                                end
+                            end
+                        end
+                        return false
                     end
 
-                    if not character.Inventory:SBAI_hasAnyItem(unspecifiedSlotType, p) then
-                        yield(tryCreateGetItemObj(character, characterData, curObj, prefab.Identifier, invSlotType))
+                    if not character.Inventory:SBAI_hasAnyItem(slotData[Any], p) then
+                        yield(tryCreateGetItemObj(character, characterData, curObj, idOrTags, slotData, quality))
                     end
                 end
             end
@@ -174,6 +253,19 @@ local function activateCrewLoadout(self, option, timeBetween)
             end
         end
     end, Hook.HookMethodType.Before)
+
+    self:AddPatch("Barotrauma.AIObjectiveGetItem", "CheckItem", nil,
+    function(instance, ptable)
+        if ptable.ReturnValue == true then
+            local characterData = allCharacterData[instance.character]
+            
+            if characterData then
+                local targetQuality = characterData.targetQuality
+
+                ptable.ReturnValue = targetQuality == nil or targetQuality <= ptable["item"].Quality
+            end
+        end
+    end, Hook.HookMethodType.After)
 end
 
 ---@param self Types.Module

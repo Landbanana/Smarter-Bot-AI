@@ -48,7 +48,7 @@ do
     local xGetItemTags = util.xGetItemTags
     local xGetStatusEffectTargetType = util.xGetStatusEffectTargetType
     local xGetStatusEffectTargets = util.xGetStatusEffectTargets
-    local xPath2 = util.xPath2
+    local xPath = util.xPath
 
     local targetActionTypes = new()
     
@@ -69,7 +69,7 @@ do
 
         if prefab:SBAI_hasCategory("Wrecked") then return false end
         
-        for contElement in xPath2(xElement, "//ItemContainer//Containable") do
+        for contElement in xPath(xElement, "//ItemContainer//Containable") do
             local attr = contElement.Attribute("blameequipperfordeath")
 
             if attr then
@@ -85,7 +85,7 @@ do
                         specificTargetTags[tag]
                     then
                         containedTags:Add(tag)
-                        for seElement in xPath2(contElement, "//StatusEffect") do
+                        for seElement in xPath(contElement, "//StatusEffect") do
                             seSpecial:Add(seElement)
                         end
                     end
@@ -94,7 +94,7 @@ do
         end
         if containedTags:IsEmpty() then return false end
 
-        for seElement in xPath2(xElement, "//StatusEffect") do
+        for seElement in xPath(xElement, "//StatusEffect") do
             if xGetStatusEffectTargetType(seElement) == "Contained" then
                 local utilizedTags = new()
                 local seUtilizedTags = xGetStatusEffectTargets(seElement)
@@ -111,7 +111,7 @@ do
                         end
                     end
                 else
-                    for riElement in xPath2(seElement, "//RequiredItem|//RequiredItems") do
+                    for riElement in xPath(seElement, "//RequiredItem|//RequiredItems") do
                         for tag in xGetItemTags(riElement) do
                             if containedTags[tag] then
                                 utilizedTags:Add(tag)
@@ -120,7 +120,7 @@ do
                     end
                 end
                 if not utilizedTags:IsEmpty() then
-                    for exElement in xPath2(seElement, "//Explosion") do
+                    for exElement in xPath(seElement, "//Explosion") do
                         return false
                     end
 
@@ -148,7 +148,7 @@ do
                     local xElement = prefab.ConfigElement.Element
                     local containedTags = new()
 
-                    for contElement in xPath2(xElement, "//ItemContainer//Containable") do
+                    for contElement in xPath(xElement, "//ItemContainer//Containable") do
                         for tag in xGetItemTags(contElement) do
                             if specificTargetTags[tag] then
                                 containedTags:Add(tag)
@@ -159,8 +159,8 @@ do
                     
                     local utilizedTags = new()
                     
-                    for rwElement in xPath2(xElement, "//RangedWeapon") do
-                        for riElement in xPath2(rwElement, "//RequiredItem|//RequiredItems") do
+                    for rwElement in xPath(xElement, "//RangedWeapon") do
+                        for riElement in xPath(rwElement, "//RequiredItem|//RequiredItems") do
                             for tag in xGetItemTags(riElement) do
                                 if containedTags[tag] then
                                     utilizedTags:Add(tag)
@@ -175,7 +175,7 @@ do
                 ::continue::
             end
 
-            -- for id, utilizedTags in utilizerIds do
+            -- for id, utilizedTags in next, utilizerIds do
             --     print("--"..id.Value.."--")
             --     for utilizedId in utilizedTags do
             --         print(utilizedId)
@@ -393,7 +393,6 @@ do
                     local targetTags = curSection.utilizerIds[targetContainer.Item.Prefab.Identifier]
 
                     targetTags = next(targetTags == true and curSection.specificTargetTags or targetTags)
-                    
                     local function constructor()
                         local objective = AIObjectiveContainItem(character, targetTags, targetContainer, instance.objectiveManager)
 
