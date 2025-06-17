@@ -1,4 +1,6 @@
+local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
+local Types = require("SBAI.Shared.types")
 local guiUtil = {}
 guiUtil.Constants = {}
 
@@ -250,7 +252,7 @@ end
 ---@param parent Barotrauma.GUIComponent
 ---@param size Microsoft.Xna.Framework.Vector2|Microsoft.Xna.Framework.Point
 ---@param anchor? Barotrauma.Anchor
----@param sprite Barotrauma.Sprite|string
+---@param sprite? Barotrauma.Sprite|string
 ---@param scaleToFit? boolean
 ---@return Barotrauma.GUIImage
 function guiUtil.AddImage(parent, size, anchor, sprite, scaleToFit)
@@ -266,7 +268,7 @@ function guiUtil.AddImage(parent, size, anchor, sprite, scaleToFit)
 end
 
 do
-    local betterSlotSprite = Sprite("Content/UI/InventoryUIAtlas.png", Rectangle(13, 10, 114, 114), nil, 0)
+    --local betterSlotSprite = Sprite("Content/UI/InventoryUIAtlas.png", Rectangle(13, 10, 114, 114), nil, 0)
 
     ---@param parent Barotrauma.GUIComponent
     ---@param anchor? Barotrauma.Anchor
@@ -279,6 +281,7 @@ do
 
         if makeButton then
             buttonOrParent = guiUtil.AddButton(parent, size, anchor, nil, "null")
+            
             size = Vector2.One
             anchor = GUI.Anchor.Center
             
@@ -286,13 +289,18 @@ do
             buttonOrParent = parent
         end
 
-        local slotImage = guiUtil.AddImage(buttonOrParent, size, anchor, betterSlotSprite, true)
+        local slotImage = guiUtil.AddImage(buttonOrParent, size, anchor, --[[ betterSlotSprite ]] nil, true)
         local invSlotGetter
 
         if makeButton then
             invSlotGetter = buttonOrParent
             slotImage.CanBeFocused = false
             slotImage.UserData = D_PADDING
+
+            local qualityImage = guiUtil.AddImage(slotImage, Vector2.One, GUI.Anchor.Center, "InnerGlow", true)
+            qualityImage.CanBeFocused = false
+            qualityImage.UserData = "quality"
+            qualityImage.Color = Color.Transparent
         else
             invSlotGetter = slotImage
         end
@@ -350,12 +358,10 @@ end
 -- end
 
 ---@param slot Barotrauma.GUIButton|Barotrauma.GUIImage
----@param itemData {prefab:Barotrauma.ItemPrefab, quality:integer?, quantity:integer?}
----@param prefab? Barotrauma.ItemPrefab
----@return Barotrauma.GUIImage
+---@param itemData? {id:Barotrauma.Identifier, quality:integer?, amount:integer?}
+---@param prefab Barotrauma.ItemPrefab
+---@return Barotrauma.GUIImage, Barotrauma.GUIImage
 function guiUtil.AddItemToSlot(slot, itemData, prefab)
-    prefab = prefab or itemData.prefab
-
     local oldToolTip = prefab.GetTooltip().ToString()
     local itemName, itemDescription = oldToolTip:match("^([^\n]+)(\n.+)$")
 
@@ -366,12 +372,68 @@ function guiUtil.AddItemToSlot(slot, itemData, prefab)
     end
     
     local itemImage = guiUtil.AddImage(slot, Vector2(0.95, 0.95), GUI.Anchor.Center, prefab.InventoryIcon or prefab.Sprite, true)
-
     itemImage.UserData = itemData or prefab
     itemImage.CanBeFocused = false
+    return slot, itemImage
+end
+
+---@param slot Barotrauma.GUIButton
+---@param itemData {id:table<Barotrauma.Identifier, boolean>, quality:integer?, amount:integer?}
+---@return Barotrauma.GUIImage
+function guiUtil.AddTagsToSlot(slot, itemData)
+    local tagStr
+    local excludedIdStr = "Excluding: "
+    local firstTagStr
+
+    for id, v in next, itemData.id do
+        local idStr = id.Value
+
+        if v then
+            tagStr = TextManager.Get("sp.item.tags.name").Value..": "..idStr
+            firstTagStr = firstTagStr or idStr
+        else
+            excludedIdStr = excludedIdStr..idStr..","
+        end
+    end
+    slot.ToolTip = tagStr..((excludedIdStr:sub(-1) == ",") and ("\n"..excludedIdStr:sub(1, -2)) or "")
+
+    local itemPrefab
+
+    if firstTagStr then
+        for prefab in ItemPrefab.Prefabs do
+            if prefab:SBAI_hasTag(firstTagStr) then
+                if prefab.ContentPackage.NameMatches("Vanilla") then
+                    itemPrefab = prefab
+                    break
+                elseif not itemPrefab then
+                    itemPrefab = prefab
+                end
+            end
+        end
+    end
+
+    local itemImage
+
+    if itemPrefab then
+        itemImage = guiUtil.AddImage(slot, Vector2(0.95, 0.95), GUI.Anchor.Center, itemPrefab.InventoryIcon or itemPrefab.Sprite, true)
+        itemImage.UserData = itemData
+        itemImage.CanBeFocused = false
+    end
+
+    local tagColor = Color.PaleGoldenrod*0.75
+    local tagImage = guiUtil.AddImage(itemImage or slot, Vector2(0.5, 0.5), GUI.Anchor.TopLeft, "StoreDealIcon", true)
+
+    tagImage.Color = tagColor
+    tagImage.HoverColor = tagColor
+    tagImage.SelectedColor = tagColor
+    tagImage.PressedColor = tagColor
+    tagImage.CanBeFocused = false
+    if not itemImage then tagImage.UserData = itemData end
     return slot
 end
 
+function guiUtil.AddQualityToSlot()
+end
 
 do
     local n = -1
@@ -383,7 +445,7 @@ do
     ---@param parent Barotrauma.GUIComponent
     ---@param anchor? Barotrauma.Anchor
     ---@param callback? fun()
-    ---@return Barotrauma.GUIListBox
+    ---@return Barotrauma.GUIListBox, fun(categoryFlags:integer)
     function guiUtil.AddItemCategoryList(parent, anchor, callback)
         local sizeRatio = math.min((parent.Rect.Height - D_CATEGORY_SIZE)/(n*D_CATEGORY_SIZE), 1)
         local categoryButtonSize = Point(sizeRatio*D_CATEGORY_SIZE, sizeRatio*D_CATEGORY_SIZE)
@@ -402,14 +464,36 @@ do
         --list.RectTransform.AbsoluteOffset = Point(D_PADDING, D_PADDING)
         list.Content.UserData = MapEntityCategory.None
 
-        for category, value in next, MapEntityCategory, "None" do
+        for category, value in next, MapEntityCategory do
+            category = category ~= "None" and category or "All"
+
             local button = guiUtil.AddButton(list.Content, categoryButtonSize, nil, nil, "CategoryButton."..category, true)
 
             button.ToolTip = TextManager.Get("MapEntityCategory."..category)
             button.UserData = value
+            button.Selected = category == "All"
         end
-        guiUtil.MakeButtonsExclusive(list.Content, MapEntityCategory.None, callback)
-        return list
+        
+        
+        local setFilter do
+            local HasFlag = util.mathtools.HasFlag
+
+            local Content = list.Content
+
+            ---@param categoryFlags integer
+            function setFilter(categoryFlags)
+                for value in MapEntityCategory do
+                    local button = Content.GetChildByUserData(value)
+                    local enabled = HasFlag(categoryFlags, value)
+
+                    button.Enabled = enabled
+                    button.CanBeFocused = enabled
+                end
+            end
+        end
+        
+        guiUtil.MakeButtonsExclusive(list.Content, nil, callback)
+        return list, setFilter
     end
 end
 
@@ -422,7 +506,9 @@ do
     local function exclusiveCheck(allButtons, default, button, obj)
         local parent = button.Parent
 
-        if obj == parent.UserData then
+        if  default and
+            obj == parent.UserData
+        then
             parent.UserData = default
             button.Selected = false
             return false
@@ -436,7 +522,7 @@ do
     end
 
     ---@param parent Barotrauma.GUIComponent
-    ---@param default any
+    ---@param default? any
     ---@param onClicked? fun(button:Barotrauma.GUIButton, obj:any):boolean
     function guiUtil.MakeButtonsExclusive(parent, default, onClicked)
         local allButtons = {}
@@ -504,34 +590,43 @@ end
 
 ---@param parent Barotrauma.GUIComponent
 ---@param selectedSlots table<Barotrauma.InvSlotType, Set<Barotrauma.GUIButton>>
----@param callback fun(button: Barotrauma.GUIButton, itemData:{prefab:Barotrauma.ItemPrefab?, quality:integer?, quantity:integer?})
+---@param allowSelectingTags boolean
+---@param callback fun(button: Barotrauma.GUIButton, itemData:{id:(table<Barotrauma.Identifier, boolean>|Barotrauma.Identifier)?, quality:integer?, amount:integer?})
 ---@return Barotrauma.GUILayoutGroup
 ---@return fun(filter:fun(prefab:Barotrauma.ItemPrefab):boolean)
-function guiUtil.AddItemPicker(parent, selectedSlots, callback)
+function guiUtil.AddItemPicker(parent, selectedSlots, allowSelectingTags, callback)
     local innerGroup = guiUtil.AddLayoutGroup(parent, parent.Rect.Size - Point(2*D_PADDING, 2*D_PADDING), GUI.Anchor.TopLeft, nil, false, GUI.Anchor.TopCenter)
     local topBarGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, 3*D_PADDING), GUI.Anchor.TopCenter, nil, true, GUI.Anchor.Center)
     local bodyGroup = guiUtil.AddLayoutGroup(innerGroup, Point(innerGroup.Rect.Width, innerGroup.Rect.Height - topBarGroup.Rect.Height), GUI.Anchor.Center, nil, true, GUI.Anchor.TopLeft)
-    
-    local orderedPrefabList = {} --[[@type Iterable<Barotrauma.ItemPrefab>]]
+
+    local orderedPrefabList --[[@type Iterable<Barotrauma.ItemPrefab>]]
     local categoryList
     local searchBox
     local list
-    local _filter = util.True
+    
+    ---@param tag Barotrauma.Identifier
+    ---@param invSlots Set<Barotrauma.InvSlotType>
+    local function optionTagCallback(tag, invSlots)
+        if #selectedSlots <= 0 then return end
 
-    do
-        local i = 0
+        for slotType in invSlots do
+            local buttonSet = selectedSlots[slotType]
 
-        for prefab in ItemPrefab.Prefabs do
-            if  prefab.Name.Value:len() > 0 then
-                i = i + 1
-                orderedPrefabList[i] = prefab
+            if buttonSet then
+                local button = next(buttonSet)
+                
+                if button then
+                    local itemData = {id={[tag]=true}}
+                    
+                    buttonSet:Remove(button)
+                    button.GetChildByUserData(D_PADDING).Color = Color.White
+                    button.ToolTip = nil
+                    guiUtil.AddTagsToSlot(button, itemData)
+                    return callback(button, itemData)
+                end
             end
         end
-
-        table.sort(orderedPrefabList, function(p1, p2) return p1.Name < p2.Name end)
     end
-
-    
     
     local function reload()
         list.ClearChildren()
@@ -550,17 +645,14 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
                 if searchtext:len() > 0 then
                     if selectedCategory == MapEntityCategory.None then
                         for prefab in orderedPrefabList do
-                            if  prefab.Name.Value:lower():match(searchtext) and
-                                _filter(prefab)
-                            then
+                            if prefab.Name.Value:lower():match(searchtext) then
                                 yield(prefab)
                             end
                         end
                     else
                         for prefab in orderedPrefabList do
                             if  HasFlag(prefab.Category, selectedCategory) and
-                                prefab.Name.Value:lower():match(searchtext) and
-                                _filter(prefab)
+                                prefab.Name.Value:lower():match(searchtext)
                             then
                                 yield(prefab)
                             end
@@ -569,15 +661,11 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
                 else
                     if selectedCategory == MapEntityCategory.None then
                         for prefab in orderedPrefabList do
-                            if _filter(prefab) then
-                                yield(prefab)
-                            end
+                            yield(prefab)
                         end
                     else
                         for prefab in orderedPrefabList do
-                            if  HasFlag(prefab.Category, selectedCategory) and
-                                _filter(prefab)
-                            then
+                            if HasFlag(prefab.Category, selectedCategory) then
                                 yield(prefab)
                             end
                         end
@@ -586,18 +674,61 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
             end)
         end
 
-        for prefab in enumerator do
-            guiUtil.AddItemToSlot(guiUtil.AddEmptyItemSlot(list.Content, GUI.Anchor.TopLeft), nil, prefab).UserData = prefab
+        do
+            local Content = list.Content
+            local TopLeft = GUI.Anchor.TopLeft
+
+            local AddEmptyItemSlot = guiUtil.AddEmptyItemSlot
+            local AddItemToSlot = guiUtil.AddItemToSlot
+
+            if allowSelectingTags then
+                local AddItemPickerContextMenu = guiUtil.AddItemPickerContextMenu
+
+                for prefab in enumerator do
+                    local itemSlot = (guiUtil.AddItemToSlot(AddEmptyItemSlot(Content, TopLeft), nil, prefab))
+
+                    itemSlot.UserData = prefab
+                    AddItemPickerContextMenu(itemSlot, optionTagCallback)
+                end
+            else
+                for prefab in enumerator do
+                    AddItemToSlot(AddEmptyItemSlot(Content, TopLeft), nil, prefab).UserData = prefab
+                end
+            end
         end
     end
 
-    ---@param filter fun(prefab:Barotrauma.ItemPrefab):boolean
-    local function setFilter(filter)
-        _filter = filter or util.True
-        reload()
-    end
+    local setCategoryFilter
+    
+    local setFilter do
+        local bor = bit32.bor
+        
+        ---@param filter fun(prefab:Barotrauma.ItemPrefab):boolean
+        function setFilter(filter)
+            local categoryFlags = 0
+            local i = 0
 
-    categoryList = guiUtil.AddItemCategoryList(bodyGroup, GUI.Anchor.TopLeft, reload)
+            orderedPrefabList = {}
+
+            for prefab in ItemPrefab.Prefabs do
+                if  prefab.Name.Value:len() > 0 and
+                    (filter == nil or
+                    filter(prefab))
+                then
+                    i = i + 1
+                    orderedPrefabList[i] = prefab
+                    categoryFlags = bor(categoryFlags, prefab.Category)
+                end
+            end
+
+            table.sort(orderedPrefabList, function(p1, p2) return p1.Name < p2.Name end)
+            setCategoryFilter(categoryFlags)
+            reload()
+        end
+    end
+    
+
+    categoryList, setCategoryFilter = guiUtil.AddItemCategoryList(bodyGroup, GUI.Anchor.TopLeft, reload)
 
     bodyGroup.RectTransform.Resize(Point(bodyGroup.Rect.Width, categoryList.Rect.Height), false)
     innerGroup.RectTransform.Resize(Point(innerGroup.Rect.Width, categoryList.Rect.Height + topBarGroup.Rect.Height), false)
@@ -614,45 +745,43 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
     ---@param component Barotrauma.GUIComponent
     ---@param obj Barotrauma.ItemPrefab
     list.AfterSelected = function(component, obj)
+        if #selectedSlots <= 0 then return end
+
         local slots = {} --[[@type Iterable<Set<Barotrauma.GUIButton>>]]
         local i = 0
-
-        if #selectedSlots <= 0 then return end
         
-        for elementName in {"//Holdable", "//Wearable", "//Pickable", "//MeleeWeapon", "//Throwable"} do
-            for holdable in util.xPath2(obj.ConfigElement.Element, elementName) do
-                for slotGroup in holdable.Attribute("slots").Value:gmatch("([^,]+),?") do
-                    local slotType
+        for slotComp in util.xPath(obj.ConfigElement.Element, "//[@slots]") do
+            for slotGroup in slotComp.GetAttributeString("slots"):gmatch("([^,]+),?") do
+                local slotType
 
-                    for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
-                        slotType = InvSlotType[addedSlot]
+                for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
+                    slotType = InvSlotType[addedSlot]
 
-                        local matchingSlots = selectedSlots[slotType]
+                    local matchingSlots = selectedSlots[slotType]
 
-                        if  not matchingSlots or
-                            matchingSlots:IsEmpty()
-                        then
-                            slots = {}
-                            i = 0
-                            break
-                        end
-                        i = i + 1
-                        slots[i] = matchingSlots
+                    if  not matchingSlots or
+                        matchingSlots:IsEmpty()
+                    then
+                        slots = {}
+                        i = 0
+                        break
                     end
-                    if i > 0 then
-                        local itemData = {prefab=obj}
+                    i = i + 1
+                    slots[i] = matchingSlots
+                end
+                if i > 0 then
+                    local itemData = {id=obj.Identifier}
 
-                        for set in slots do
-                            local button = next(set) --[[@type Barotrauma.GUIButton]]
-                            
-                            selectedSlots[slotType]:Remove(button)
-                            button.GetChildByUserData(D_PADDING).Color = Color.White
-                            button.ToolTip = nil
-                            guiUtil.AddItemToSlot(button, itemData)
-                            callback(button, itemData)
-                        end
-                        return
+                    for set in slots do
+                        local button = next(set) --[[@type Barotrauma.GUIButton]]
+                        
+                        selectedSlots[slotType]:Remove(button)
+                        button.GetChildByUserData(D_PADDING).Color = Color.White
+                        button.ToolTip = nil
+                        guiUtil.AddItemToSlot(button, itemData, obj)
+                        callback(button, itemData)
                     end
+                    return
                 end
             end
         end
@@ -662,7 +791,7 @@ function guiUtil.AddItemPicker(parent, selectedSlots, callback)
 
     searchBox = guiUtil.AddSearchBar(topBarGroup, GUI.Anchor.Center, reload)
 
-    reload()
+    setFilter()
     return innerGroup, setFilter
 end
 
@@ -689,6 +818,38 @@ function guiUtil.AddSearchBar(parent, anchor, callback)
 
     if callback then textBox.OnTextChangedDelegate = callback end
     return textBox
+end
+
+do
+    local ID_COMMON = Constants.ID_COMMON
+
+    local Contains = util.itertools.Contains
+
+    ---@param itemSlot Barotrauma.GUIImage
+    ---@param callback fun(tag:Barotrauma.Identifier)
+    function guiUtil.AddItemPickerContextMenu(itemSlot, callback)
+        local optionTags = GUI.ContextMenuOption("workshopitemtags", true)
+        local subOptionTags = {}
+        local i = 0
+        local prefab = itemSlot.UserData --[[@type Barotrauma.ItemPrefab]]
+        
+        for tag in prefab.Tags do --[[@cast tag Barotrauma.Identifier]]
+            if not Contains(ID_COMMON, tag) then
+                local tagOption = GUI.ContextMenuOption("", true, function() callback(tag, (prefab:SBAI_getInvSlots())) end)
+
+                tagOption.Label = tag.Value
+            
+                i = i + 1
+                subOptionTags[i] = tagOption
+            end
+        end
+        table.sort(subOptionTags, function(o1, o2) return o1.Label.Value < o2.Label.Value end)
+        optionTags.SubOptions = subOptionTags
+
+        itemSlot.OnSecondaryClicked = function(component, userData)
+            GUI.ContextMenu.CreateContextMenu(optionTags)
+        end
+    end
 end
 
 -- ---@param parent Barotrauma.GUIComponent
@@ -809,7 +970,7 @@ do
         local button = guiUtil.AddButton(parent, size, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true)
 
         guiUtil.AddImage(button, Vector2.One, nil, "MissionFailedIcon", true).CanBeFocused = false
-        button.ToolTip = TextManager.Get("GUI.tooltips.button.closemenu")
+        button.ToolTip = TextManager.Get("close")
         button.OnClicked = doUserData
         button.UserData = {[1]=basicClose}
         return button

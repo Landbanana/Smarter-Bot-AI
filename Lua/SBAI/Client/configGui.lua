@@ -123,38 +123,46 @@ do
             local strPath = curNamespace()
 
             return function(value)
+                --print(value)
                 unsavedChanges[strPath] = value
             end
         end
+        
+        local processString do
+            local StringToAllLoadout = util.StringToAllLoadout
+            local AllLoadoutToString = util.AllLoadoutToString
+            local Get = util.config.Get
 
-        local StringToLoadout = util.StringToLoadout
-        local LoadoutToString = util.LoadoutToString
+            ---@param defaults ConfigSection|ConfigOption
+            ---@param option string
+            ---@param value string
+            function processString(defaults, option, value)
+                MakeNamedCut(defaults, option)
 
-        ---@param defaults ConfigSection|ConfigOption
-        ---@param option string
-        ---@param value string
-        local function processString(defaults, option, value)
-            MakeNamedCut(defaults, option)
+                local changeAdder = addToUnsavedChanges(namespace)
+                
+                if defaults.specialType == "loadout" then
+                    local strPath = namespace()
+                    local button = guiUtil.AddButton(currentOptionCut.Content, Point(3*clickableSize, clickableSize), GUI.Anchor.CenterLeft, TextManager.Get("charactereditor.modespanel"), nil, false,
+                    function()
+                        --print(strPath)
+                        --print(strKey)
+                        --print(util.config.Get(Config.data, strPath)[strKey])
+                        --print(unsavedChanges[namespace()] or value)
+                        -- local closeButton = guiUtil.AddButton(mainFrame.Parent, Game.GameScreen.Frame.Rect.Size, GUI.Anchor.TopLeft, nil, "null", true,
+                        -- function(button, obj)
+                        --     button.RectTransform.Parent = nil
+                        -- end)
+                        -- closeButton.Color = Color.Transparent
+                        activateCrewLoadoutGui(function(data) return changeAdder(AllLoadoutToString(data)) end, StringToAllLoadout(unsavedChanges[strPath] or Get(Config.data, strPath))).RectTransform.Parent = mainFrame.RectTransform
+                    end)
+                    button.TextColor = Color.Black
+                    button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
+                    button.ForceUpperCase = ForceUpperCase.Yes
+                end
 
-            local changeAdder = addToUnsavedChanges(namespace)
-            
-            if defaults.specialType == "loadout" then
-                local data = StringToLoadout(unsavedChanges[namespace()] or value)
-
-                local button = guiUtil.AddButton(currentOptionCut.Content, Point(2*clickableSize, clickableSize), GUI.Anchor.CenterLeft, "EDIT", nil, false,
-                function()
-                    -- local closeButton = guiUtil.AddButton(mainFrame.Parent, Game.GameScreen.Frame.Rect.Size, GUI.Anchor.TopLeft, nil, "null", true,
-                    -- function(button, obj)
-                    --     button.RectTransform.Parent = nil
-                    -- end)
-                    -- closeButton.Color = Color.Transparent
-                    activateCrewLoadoutGui(function() return changeAdder(LoadoutToString(data)) end, data).RectTransform.Parent = mainFrame.RectTransform
-                end)
-
-                button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
+                --TODO
             end
-
-            --TODO
         end
 
         ---@param defaults ConfigSection|ConfigOption
@@ -355,7 +363,7 @@ do
             LoadConfigSectionsToGUI(sectionList)
             ClearTable(unsavedChanges)
         end)
-        button.ToolTip = "Reload the saved config to GUI"
+        button.ToolTip = TextManager.Get("load")
         return button
     end
 end
@@ -381,36 +389,7 @@ do
             ClearTable(unsavedChanges)
         end)
         
-        button.ToolTip = "Save and apply config changes"
-        return button
-    end
-end
-
-local AddCloseButton
-
-do
-    local ClearTable = util.itertools.ClearTable
-
-    ---@param parent Barotrauma.GUIComponent
-    ---@param anchor Barotrauma.Anchor
-    ---@param unsavedChanges table<string,any>
-    ---@return Barotrauma.GUIButton
-    function AddCloseButton(parent, anchor, unsavedChanges)
-        local button = AddButton(parent, clickableSizePoint, anchor or GUI.Anchor.TopRight, nil, "AlienButtonRed", true,
-        function()
-            ClearTable(unsavedChanges)
-            return CloseSBAIMenu()
-        end)
-
-        GUI.Image(
-            GUI.RectTransform(
-                button.Rect.Size,
-                button.RectTransform
-            ),
-            "MissionFailedIcon",
-            true
-        ).CanBeFocused = false
-        button.toolTip = "Close menu"
+        button.ToolTip = TextManager.Get("editor.saveall")
         return button
     end
 end
@@ -455,11 +434,11 @@ local function MakeSBAIMenu(parent)
 
     sectionList.RectTransform.IsFixedSize = true
     optionList.RectTransform.IsFixedSize = true
-
+    
     local unsavedChanges = {} --[[@type table<string,any>]]
     local loadConfigButton = AddLoadConfigButton(topMiddleCut.Content, sectionList, GUI.Anchor.CenterLeft, unsavedChanges)
     local saveButton = AddSaveButton(topMiddleCut.Content, GUI.Anchor.CenterRight, unsavedChanges)
-    --local closeButton = AddCloseButton(topFrame, GUI.Anchor.CenterRight, unsavedChanges)
+    
     local closeButton = guiUtil.AddCloseButton(topFrame, clickableSizePoint, GUI.Anchor.CenterRight)
     table.insert(closeButton.UserData, util.functools.Partial1(util.itertools.ClearTable, unsavedChanges))
     table.insert(closeButton.UserData, CloseSBAIMenu)
@@ -483,34 +462,12 @@ local function MakeSBAIMenu(parent)
     
     bigBrain.ToolTip = "big brain"
 
-    --bigBrain.OnSecondaryClicked = function() return MakeCrewLoadoutMenu(mainFrame) end
+    bigBrain.OnSecondaryClicked = function() return MakeCrewLoadoutMenu(mainFrame) end
     
     local availableTextWidth = (bottomRightCut.Rect.Width - bigBrainSize.X - D_PADDING)/2
 
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterLeft, Constants.Name, nil, "MonospacedFont", GUI.Alignment.CenterX, true, true)
     AddTextBlock(bottomRightCut.Content, Point(availableTextWidth, 0), GUI.Anchor.CenterRight, Constants.Version, nil, "MonospacedFont", GUI.Alignment.CenterX, false, true)
-
-    --combinedSettingsGroupH.AbsoluteSpacing = D_PADDING
-
-    -- local sectionOptionDrag = GUI.DragHandle(
-    --     GUI.RectTransform(
-    --         Vector2(0.05, 1),
-    --         combinedSettingsGroupH.RectTransform
-    --     ),
-    --     sectionFrame.RectTransform
-    -- )
-
-    -- print(sprite)    
-
-    -- GUI.Image(
-    --     GUI.RectTransform(
-    --         Vector2(0.25, 0.25),
-    --         mainGUIFrame.rectTransform,
-    --         GUI.Anchor.Center
-    --     ), sprite,
-    --     rectangle,
-    --     true
-    -- )
 
     if  Game.IsMultiplayer and
         not Game.Client.HasPermission(ClientPermissions.ManageSettings)
@@ -520,7 +477,7 @@ local function MakeSBAIMenu(parent)
 			comp.enabled = false
 		end
         optionsScissor.Content.ClearChildren()
-        guiUtil.AddTextBlock(optionsScissor.Content, Vector2.One, GUI.Anchor.Center, TextManager.Get("GUI.config.badmultiplayerpermissions"), nil, "LargeFont", GUI.Alignment.TopLeft, true, false, true).TextColor = Color.Red
+        guiUtil.AddTextBlock(optionsScissor.Content, Vector2.One, GUI.Anchor.Center, TextManager.GetWithVariable("GUI.config.badmultiplayerpermissions", "[setting]", TextManager.Get("clientpermission.managesettings").Value), nil, "LargeFont", GUI.Alignment.TopLeft, true, false, true).TextColor = Color.Red
         closeButton.enabled = true
 	end
 end
@@ -539,29 +496,30 @@ function MakeCrewLoadoutMenu(parent)
     mainFrame.RectTransform.Parent = parent.RectTransform
 end
 
+do
+    local _GUI = GUI.GUI
 
----@param namespace Namespace
-return function(namespace)
-    Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {}, function(instance, ptable)
-        if GUI.GUI.PauseMenuOpen then
-            local pauseFrame = GUI.GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
-            local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
+    ---@param namespace Namespace
+    return function(namespace)
+        Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {},
+        function(instance, ptable)
 
-            AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, Constants.Name, "GUIButtonSmall", false,
-            function()
-                return ShowSBAIMenu(GUI.GUI.PauseMenu)
-            end)
+            if _GUI.PauseMenuOpen then
+                local pauseFrame = _GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
+                local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
 
-            local ySize = 0
-            for component in layoutGroup.Children do
-                ySize = ySize + component.Rect.Height + layoutGroup.AbsoluteSpacing
+                local SBAIButton = AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, Constants.Name, "GUIButtonSmall", false, util.functools.Partial1(ShowSBAIMenu, _GUI.PauseMenu))
+
+                local ySize = 0
+                for component in layoutGroup.Children do
+                    ySize = ySize + component.Rect.Height + layoutGroup.AbsoluteSpacing
+                end
+
+                ySize = ySize/layoutGroup.RectTransform.RelativeSize.Y + layoutGroup.AbsoluteSpacing
+                pauseFrame.RectTransform.MinSize = Point(pauseFrame.RectTransform.MinSize.X, math.max(ySize, pauseFrame.RectTransform.MinSize.Y))
+            else
+                CloseSBAIMenu()
             end
-
-            ySize = ySize/layoutGroup.RectTransform.RelativeSize.Y + layoutGroup.AbsoluteSpacing
-            pauseFrame.RectTransform.MinSize = Point(pauseFrame.RectTransform.MinSize.X, math.max(ySize, pauseFrame.RectTransform.MinSize.Y))
-        else
-            CloseSBAIMenu()
-        end
-    end, Hook.HookMethodType.After)
+        end, Hook.HookMethodType.After)
+    end
 end
-
