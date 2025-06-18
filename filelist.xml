@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Smarter Bot AI" modversion="1.7.2" corepackage="False" steamworkshopid="3343911734" gameversion="1.9.7.0">
+<contentpackage name="Smarter Bot AI" modversion="1.7.2a" corepackage="False" steamworkshopid="3343911734" gameversion="1.9.7.0">
   <Other file="%ModDir%/Images/BigBrain.png" />
   <Other file="%ModDir%/Images/BigBrainOrderCategory.png" />
   <Other file="%ModDir%/Images/IgnoreRoomOrder.png" />
