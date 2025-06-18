@@ -1,3 +1,7 @@
+local Constants = require("SBAI.Shared.constants")
+local util = require("SBAI.Shared.util")
+local Types = require("SBAI.Shared.types")
+
 local configTypes = {}
 
 ---@enum OPTION_TYPE
@@ -21,7 +25,60 @@ ConfigOption.__index = ConfigOption
 configTypes.ConfigOption = ConfigOption
 
 do
-    setmetatable = setmetatable
+    local specialDataLoadout do
+        
+        local concat = table.concat
+        local CreateBuilder = util.itertools.CreateBuilder
+        local new = Types.Set.new
+
+        ---@param allLoadoutStr string
+        ---@return string
+        function specialDataLoadout(allLoadoutStr)
+            local jobIdStrs = new()
+
+            for prefab in JobPrefab.Prefabs do
+                if not prefab.HiddenJob then
+                    jobIdStrs:Add(prefab.Identifier.Value)
+                end
+            end
+            
+            local allLoadoutStrs, builder = CreateBuilder()
+            local n = Constants.D_HUMAN_INV_N
+
+            allLoadoutStr:gsub("([%w%s]+):([%w%s|;]+;)",
+            ---@param jobIdStr string
+            ---@param loadoutStr string
+            ---@return string|nil
+            function(jobIdStr, loadoutStr)
+                builder(jobIdStr)
+                builder(":")
+                jobIdStrs:Remove(jobIdStr)
+                local i = 0
+
+                for itemIdx=1,n,1 do
+                    local _, j = loadoutStr:find("[%w%s|]*;", i + 1)
+                    --print(jobIdStr)
+                    if j == nil then
+                        builder(loadoutStr:sub(1, i))
+                        builder((";"):rep(n - itemIdx + 1))
+                        return false
+                    end
+                    i = j
+                end
+                builder(loadoutStr)
+                return false
+            end)
+
+            for jobIdStr in jobIdStrs do
+                builder(jobIdStr)
+                builder(":")
+                builder((";"):rep(n))
+            end
+            return concat(allLoadoutStrs)
+        end
+    end
+
+    local setmetatable = setmetatable
 
     ---@param default boolean|string|number
     ---@param optionType OPTION_TYPE
@@ -35,9 +92,9 @@ do
     ---@overload fun(default:boolean, optionType:OPTION_TYPE.boolean, specialType:nil):ConfigOption
     function ConfigOption.new(default, optionType, specialType, min, max)
         local t = setmetatable({}, ConfigOption) ---@type ConfigOption
-
-        if optionType == OPTION_TYPE.int then --[[@cast default string]]
-            if specialType == "radio" then
+        
+        if specialType then
+            if specialType == "radio" then --[[@cast default string]]
                 local newDefault = 1
                 local specialData = {}
                 
@@ -55,6 +112,9 @@ do
                 t.specialData = specialData
                 default = newDefault
                 min = 1
+            elseif specialType == "loadout" then
+               t.specialData = specialDataLoadout
+               default = specialDataLoadout("")
             end
         end
 

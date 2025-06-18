@@ -17,27 +17,6 @@ Config.defaults = {
     CONFIG = {}
 }
 
-local defaultCrewLoadout do
-    local allNames = {}
-    local namesToIds = {}
-    local i = 0
-
-    for prefab in JobPrefab.Prefabs do
-        if not prefab.HiddenJob then
-            local name = prefab.Name
-            local id = prefab.Identifier
-
-            i = i + 1
-            allNames[i] = prefab.Name.Value
-            namesToIds[name] = id.Value
-        end
-    end
-    table.sort(allNames)
-    allNames[i + 1] = ""
-
-    defaultCrewLoadout = table.concat(allNames, ":;;;;;;;;;;;;;;;;;"):gsub("([^:;]+)", namesToIds)
-end
-
 do
     local defaults = configTypes.ConfigSection.new()
     local section
@@ -94,7 +73,6 @@ do
 
     subsection = section:CreateSection("Wait")
     subsection:CreateOption("onlyAtFriendlyOutposts", true, configTypes.OPTION_TYPE.boolean)
-
     
     section:CreateOption("fillEmpty", true, configTypes.OPTION_TYPE.boolean)
     section:CreateOption("forceSameItemType", false, configTypes.OPTION_TYPE.boolean)
@@ -204,6 +182,10 @@ then
             if defaultValue ~= nil then --[[@cast default -ConfigSection]]
                 if type(rawValue) ~= defaultType then
                     return defaultValue
+                elseif defaultType == "string" then --[[@cast rawValue string]]
+                    if default.specialType == "loadout" then
+                        return default.specialData(rawValue)
+                    end
                 elseif defaultType == "number" then
                     return math.clamp(rawValue, default.min, default.max)
                 else

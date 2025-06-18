@@ -41,6 +41,7 @@ local function activateAutoUseWhenIdle(self, options, ids)
 
     self:AddInit(
     function()
+        _chairItems.Clear()
         for item in Item.ItemList do
             if idleFurnitureIds[item.Prefab.Identifier] then
                 _chairItems.Add(item)
@@ -74,65 +75,58 @@ end
 
 ---@param self Types.Module
 local function activate(self)
-    local ids = {}
+    self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
-    do
-        local chairId = Identifier("chair")
-        local Decorative = self:RegisterEnumTable("Barotrauma.MapEntityCategory").Decorative
-        local Prefabs = ItemPrefab.Prefabs
+    local chairId = Identifier("chair")
+    local Decorative = self:RegisterEnumTable("Barotrauma.MapEntityCategory").Decorative
 
-        local Any = util.itertools.Any
-        local Contains = util.itertools.Contains
-        local FilterList = util.itertools.FilterList
-        local new = Types.Set.new
-        local xPath = util.xPath
+    local Any = util.itertools.Any
+    local new = Types.Set.new
+    local setmetatable = setmetatable
+    local xPath = util.xPath
 
-        ---@type table<FURNITURE,fun(prefab:Barotrauma.ItemPrefab):boolean>
-        local predicateMap = {
-            [FURNITURE.BED]=function(prefab)
-                if prefab.Category == Decorative then
-                    return Any(xPath(prefab.ConfigElement.Element, "Controller[@canbeselected=true]/RequiredItem[@items=deepdivinglarge]"), function(item) return item.GetAttributeBool("requireempty", false) end)
+    ---@type table<FURNITURE, fun(itemPrefab:Barotrauma.ItemPrefab):boolean>
+    local predicateMap = {
+        [FURNITURE.BED]=function(itemPrefab)
+            if itemPrefab.Category == Decorative then
+                return Any(
+                    xPath(itemPrefab.ConfigElement.Element,
+                        "Controller[@canbeselected=true][@drawuserbehind=true]/RequiredItem[@items=deepdivinglarge][@requireempty=true]"))
+            end
+            return false
+        end,
+        [FURNITURE.CHAIR]=function(itemPrefab)
+            return itemPrefab:SBAI_hasTag(chairId)
+        end
+    }
+
+    local ids = setmetatable({}, { --[[@type table<FURNITURE, Set<Barotrauma.Identifier>>]]
+        __index=function(t, k)
+            local p = predicateMap[k]
+            local out = new()
+            t[k] = out
+            
+            for itemPrefab in ItemPrefab.Prefabs do
+                if p(itemPrefab) then
+                    out:Add(itemPrefab.Identifier)
                 end
-                return false
-            end,
-            [FURNITURE.CHAIR]=function(prefab)
-                return Contains(prefab.Tags, chairId)
             end
-        }
-
-        ---@type table<FURNITURE,Set>
-        setmetatable(ids, {
-            ---@param t table<FURNITURE,table<Barotrauma.Identifier,true>>
-            ---@param k FURNITURE
-            ---@return table<Barotrauma.Identifier,true>
-            __index=function(t, k)
-                local predicate = predicateMap[k]
-
-                if not predicate then error("Value not recognized as FURNITURE", 2) end
-
-                local idSet = new()
-
-                idSet:Update(FilterList(Prefabs, predicate))
-                -- for prefab in FilterList(Prefabs, predicate) do
-                --     idSet:Add(prefab.Identifier)
-                -- end
-                t[k] = idSet
-                return t[k]
-            end
-        })
-    end
+            return out
+        end
+    })
     
     self:DoOption("AutoUseWhenIdle", activateAutoUseWhenIdle, ids)
     self:DoOption("stayInBedIfHurt", activateStayInBedIfHurt, ids)
 
     setmetatable(ids, nil)
 end
+    
 
 ---@param self Types.Module
 local function deactivate(self)
     if _chairItems then
         local chairId = Identifier("chair")
-
+        
         _chairItems.Clear()
         for item in Item.ItemList do
             if item.Prefab.Identifier == chairId then

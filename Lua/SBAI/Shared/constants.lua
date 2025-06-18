@@ -86,6 +86,7 @@ Constants.Version = XElement.Load(ToolBox.CleanUpPath(Constants.Path.."/filelist
 --     CONF_REQ=Constants.Acronym..".ConfigRequest"
 -- }
 
+
 ---@enum (key) Quality
 Constants.Quality = {
     Normal=0,

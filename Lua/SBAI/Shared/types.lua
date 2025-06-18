@@ -710,10 +710,10 @@ do
 
     ---@public
     ---@param func fun()
-    ---|`fun() end`
-    function Types.Module:AddInit(func)
+    ---|`function() end`
+    function Types.Module:AddInit(f)
         if not self.initializers then self.initializers = {} end
-        insert(self.initializers, func)
+        insert(self.initializers, f)
     end
 end
 
