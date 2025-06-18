@@ -43,6 +43,7 @@ local function activate(self)
     end
 
     ---@class Barotrauma.Item
+    ---@field public ChairItems System.Collections.Generic.IReadOnlyCollection*1Barotrauma*Item|Iterable<Barotrauma.Item>
     ---@field public UnequipAutomatically boolean
 end
 

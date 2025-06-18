@@ -16,7 +16,7 @@ local _chairItems
 
 ---@param self Types.Module
 ---@param options table
----@param ids table<FURNITURE,Set>
+---@param ids table<FURNITURE,Set<Barotrauma.Identifier>>
 local function activateAutoUseWhenIdle(self, options, ids)
     local Item = Item
 
@@ -51,7 +51,7 @@ end
 
 ---@param self Types.Module
 ---@param options boolean
----@param ids table<FURNITURE,Set>
+---@param ids table<FURNITURE, Set<Barotrauma.Identifier>>
 local function activateStayInBedIfHurt(self, options, ids)
     local HumanInSafeHull = util.HumanInSafeHull
     local bedIds = ids[FURNITURE.BED]

@@ -280,10 +280,10 @@ end
 
 ---@generic K,V
 ---@param t table<K,V>
----@param predicate fun(k:K, v:V):boolean
-function util.itertools.RemoveSpecifiedItem(t, predicate)
+---@param p fun(k:K, v:V):boolean
+function util.itertools.RemoveSpecifiedItem(t, p)
     for k, v in next, t do
-        if predicate(k, v) then
+        if p(k, v) then
             t[k] = nil
             break
         end
@@ -292,23 +292,23 @@ end
 
 ---@generic K,V
 ---@param t table<K,V>
----@param predicate fun(k:K, v:V):boolean
-function util.itertools.RemoveSpecifiedItems(t, predicate)
+---@param p fun(k:K, v:V):boolean
+function util.itertools.RemoveSpecifiedItems(t, p)
     for k, v in next, t do
-        if predicate(k, v) then
+        if p(k, v) then
             t[k] = nil
         end
     end
 end
 
----@generic V
----@param t V[]
----@param predicate? fun(v:V):boolean
+---@generic T
+---@param t Iterable<T>
+---@param p? fun(v:T):boolean
 ---@return boolean
-function util.itertools.Any(t, predicate)
-    if predicate then
+function util.itertools.Any(t, p)
+    if p then
         for v in t do
-            if predicate(v) then return true end
+            if p(v) then return true end
         end
     else
         for v in t do
@@ -318,14 +318,14 @@ function util.itertools.Any(t, predicate)
     return false
 end
 
----@generic V
----@param t V[]
----@param predicate? fun(v:V):boolean
+---@generic T
+---@param t Iterable<T>
+---@param p? fun(v:T):boolean
 ---@return boolean
-function util.itertools.All(t, predicate)
-    if predicate then
+function util.itertools.All(t, p)
+    if p then
         for v in t do
-            if not predicate(v) then return false end
+            if not p(v) then return false end
         end
     else
         for v in t do
@@ -335,14 +335,14 @@ function util.itertools.All(t, predicate)
     return true
 end
 
----@generic V
----@param t V[]
----@param predicate? fun(v:V):boolean
+---@generic T
+---@param t Iterable<T>
+---@param p? fun(v:T):boolean
 ---@return boolean
-function util.itertools.None(t, predicate)
-    if predicate then
+function util.itertools.None(t, p)
+    if p then
         for v in t do
-            if predicate(v) then return false end
+            if p(v) then return false end
         end
     else
         for v in t do
@@ -352,9 +352,9 @@ function util.itertools.None(t, predicate)
     return true
 end
 
----@generic V
----@param t V[]
----@param v V
+---@generic T
+---@param t Iterable<T>
+---@param v T
 ---@return boolean
 function util.itertools.Contains(t, v)
     for _v in t do
