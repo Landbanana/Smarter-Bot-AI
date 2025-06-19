@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+    <GUI.config.minhealth>Minimum Health</GUI.config.minhealth>
+
+  <GUI.config.combattweaks>Combat Tweaks</GUI.config.combattweaks>
+  <GUI.config.combattweaks.preventattackinghandcuffed>Prevent Attacking Handcuffed</GUI.config.combattweaks.preventattackinghandcuffed>
+  <GUI.config.combattweaks.arresthumansinplayersub>Arrest Humans In PlayerSub</GUI.config.combattweaks.arresthumansinplayersub>
+  <GUI.config.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>Only Previously Cuffed</GUI.config.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>
+  <GUI.config.combattweaks.prespinturrets>Pre-Spin Turrets</GUI.config.combattweaks.prespinturrets>
+  <GUI.config.combattweaks.prespinturrets.reducenoise>Reduce Noise</GUI.config.combattweaks.prespinturrets.reducenoise>
+
+  <GUI.config.cleaningadditions>Cleaning Additions</GUI.config.cleaningadditions>
+  <GUI.config.cleaningadditions.purchaseditemcrates>Purchased Item Crates</GUI.config.cleaningadditions.purchaseditemcrates>
+  <GUI.config.cleaningadditions.purchaseditemcrates.autoorder>Automatic Order</GUI.config.cleaningadditions.purchaseditemcrates.autoorder>
+    section:CreateOption("PreventAttackingHandcuffed", true, configTypes.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("ArrestHumansInPlayerSub")
+    subsection:CreateOption("onlyPreviouslyCuffed", false, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
+
+    subsection = section:CreateSection("PreSpinTurrets")
+    subsection:CreateOption("reduceNoise", true, configTypes.OPTION_TYPE.boolean)
+
+    section = defaults:CreateSection("CleaningAdditions")
+    subsection = section:CreateSection("PurchasedItemCrates", false)
+    subsection:CreateOption("autoOrder", "*deconstruct;ignore", configTypes.OPTION_TYPE.int, "radio")
+
+    subsection = section:CreateSection("DeconstructInBulk")
+    subsection:CreateOption("maxCheck", 32, configTypes.OPTION_TYPE.int, nil, 2, 128)
+
+    section:CreateOption("OnlyUseShipDeconstructor", true, configTypes.OPTION_TYPE.boolean)
+
+    defaults:CreateSection("CrewStaysInSub")
+
+    section = defaults:CreateSection("EquipItems")
+    section:CreateOption("CrewLoadout", "", configTypes.OPTION_TYPE.string, "loadout")
+    section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    section = defaults:CreateSection("LadderFix")
+    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    section = defaults:CreateSection("MuteSingleplayerBotConversations", false)
+    section:CreateOption("BlockAllBotChat", false, configTypes.OPTION_TYPE.boolean)
+
+    section = defaults:CreateSection("OperateReactorTweaks")
+    section:CreateOption("behavior", "mostlyVanilla;*fuelOnlyWhenController;fuelOnly", configTypes.OPTION_TYPE.int, "radio")
+    section:CreateOption("numFuelRods", 1, configTypes.OPTION_TYPE.int, nil, 1, 4)
+    section:CreateOption("minimumCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    section = defaults:CreateSection("Orders", false)
+
+    section = defaults:CreateSection("ReplenishInventory")
+    subsection = section:CreateSection("Idle")
+    subsection:CreateOption("onlyAtFriendlyOutposts", false, configTypes.OPTION_TYPE.boolean)
+
+    subsection = section:CreateSection("Wait")
+    subsection:CreateOption("onlyAtFriendlyOutposts", true, configTypes.OPTION_TYPE.boolean)
+    
+    section:CreateOption("fillEmpty", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("forceSameItemType", false, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("forceQualityGEQ", true, configTypes.OPTION_TYPE.boolean)
+    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    subsection = section:CreateSection("Ammunition")
+    subsection:CreateOption("minimumCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("BatteryCells")
+    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("OxygenTanks")
+    subsection:CreateOption("minimumCondition", 95, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("WeldingFuel")
+    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
+
+    section = defaults:CreateSection("SmarterLoadItems")
+
+    subsection = section:CreateSection("BatteryCells")
+    
+    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    subsection = section:CreateSection("OxygenTanks")
+    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
+
+    section = defaults:CreateSection("SmarterPets")
+
+    subsection = section:CreateSection("EatFoodInInventory")
+    subsection:CreateOption("overrideProtectOwner", true, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    subsection = section:CreateSection("BotsPlayWhenIdle")
+    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    section:CreateSection("CleanableProduce")
+
+    section = defaults:CreateSection("UseFurniture")
+    subsection = section:CreateSection("AutoUseWhenIdle")
+    subsection:CreateOption("beds", true, configTypes.OPTION_TYPE.boolean)
+    subsection:CreateOption("chairs", true, configTypes.OPTION_TYPE.boolean)
+
+    section:CreateOption("stayInBedIfHurt", true, configTypes.OPTION_TYPE.boolean)
+
+    section = defaults:CreateSection("UseTalents")
+
+    subsection = section:CreateSection("Assistant")
+    subsubsection = subsection:CreateSection("InspiringTunes")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    
+    subsubsection = subsection:CreateSection("JengaMaster")
+    subsubsection:CreateOption("timeBetween", 120, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    subsubsection = subsection:CreateSection("NonThreatening")
+    subsubsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
+
+    subsection = section:CreateSection("Captain")
+    subsubsection = subsection:CreateSection("SteadyTune")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+
+    subsection = section:CreateSection("Engineer")
+    subsubsection = subsection:CreateSection("MelodicRespite")
+    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
+    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+</infotexts>
