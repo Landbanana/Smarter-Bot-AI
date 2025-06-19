@@ -145,23 +145,13 @@ do
                     local strPath = namespace()
                     local button = guiUtil.AddButton(currentOptionCut.Content, Point(3*clickableSize, clickableSize), GUI.Anchor.CenterLeft, TextManager.Get("charactereditor.modespanel"), nil, false,
                     function()
-                        --print(strPath)
-                        --print(strKey)
-                        --print(util.config.Get(Config.data, strPath)[strKey])
-                        --print(unsavedChanges[namespace()] or value)
-                        -- local closeButton = guiUtil.AddButton(mainFrame.Parent, Game.GameScreen.Frame.Rect.Size, GUI.Anchor.TopLeft, nil, "null", true,
-                        -- function(button, obj)
-                        --     button.RectTransform.Parent = nil
-                        -- end)
-                        -- closeButton.Color = Color.Transparent
+                        
                         activateCrewLoadoutGui(function(data) return changeAdder(AllLoadoutToString(data)) end, StringToAllLoadout(unsavedChanges[strPath] or Get(Config.data, strPath))).RectTransform.Parent = mainFrame.RectTransform
                     end)
                     button.TextColor = Color.Black
                     button.RectTransform.Translate(Point(currentOptionCut.Content.GetChild(Int32(0)).Rect.Width, 0))
                     button.ForceUpperCase = ForceUpperCase.Yes
                 end
-
-                --TODO
             end
         end
 
@@ -451,6 +441,10 @@ local function MakeSBAIMenu(parent)
     ---@param _ System.Object
     ---@return boolean
     sectionList.OnSelected = function(component, _)
+        for k, v in next, unsavedChanges do
+            print(k)
+        end
+
         LoadSectionOptionsToGUI(optionList.Content, component.Text.SanitizedValue, unsavedChanges)
         return true
     end

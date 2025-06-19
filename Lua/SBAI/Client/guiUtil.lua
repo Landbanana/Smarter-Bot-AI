@@ -11,9 +11,9 @@ local MinusButtonStyle
 local RectTransform = GUI.RectTransform
 local RandomizeSprite = Sprite("Content/UI/UIAtlasGeneral.png", Rectangle(436,772,46,46), Vector2(0.5, 0.5))
 
-local ForceUpperCase = LuaUserData.CreateEnumTable("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
-local MapEntityCategory = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory") --[[@type Barotrauma.MapEntityCategory]]
-local DragMode = LuaUserData.CreateEnumTable("Barotrauma.GUIListBox+DragMode") --[[@type Barotrauma.GUIListBox.DragMode]]
+local ForceUpperCase = util.registration.GetEnum("Barotrauma.ForceUpperCase") --[[@type Barotrauma.ForceUpperCase]]
+local MapEntityCategory = util.registration.GetEnum("Barotrauma.MapEntityCategory") --[[@type Barotrauma.MapEntityCategory]]
+local DragMode = util.registration.GetEnum("Barotrauma.GUIListBox+DragMode") --[[@type Barotrauma.GUIListBox.DragMode]]
 
 local D_BUTTON_TEXT_ALIGN = GUI.Alignment.Center
 local D_BUTTON_STYLE = "GUIButton"

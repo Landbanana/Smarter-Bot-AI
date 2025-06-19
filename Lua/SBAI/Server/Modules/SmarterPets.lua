@@ -28,7 +28,7 @@ local function activateEatFoodInInventory(self, options)
     self:AddCommonModule("SBAI.Server.CommonModules.InventoryExpansion")
     self:AddCommonModule("SBAI.Server.CommonModules.XElementExpansion")
     
-    local AIState = self:RegisterEnumTable("Barotrauma.AIState")
+    local AIState = LuaUserData.CreateEnumTable("Barotrauma.AIState")
 
     local Eat = AIState.Eat
     

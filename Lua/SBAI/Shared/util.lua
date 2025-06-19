@@ -1,4 +1,5 @@
 local Constants = require("SBAI.Shared.constants")
+local Registry = require("SBAI.Shared.Types.Registry")
 
 local util = {}
 util.config = {}
@@ -6,6 +7,7 @@ util.cotools = {}
 util.debug = {}
 util.functools = {}
 util.itertools = {}
+util.registration = {}
 util.mathtools = {}
 
 local LuaUserData = LuaUserData
@@ -200,23 +202,30 @@ do
 end
 
 do
-    ---@param success boolean
-    ---@param err any
-    ---@param ... any
-    ---@return ...
-    local function addLevel(success, err, ...)
-        if success then return err, ... end
-        if type(err) == "string" then err = err:sub(8) end
-        error(err, 4)
+    local addLevel do
+        local error = error
+        local type = type
+
+        ---@param success boolean
+        ---@param err any
+        ---@param ... any
+        ---@return ...
+        function addLevel(success, err, ...)
+            if success then return err, ... end
+            if type(err) == "string" then err = err:sub(8) end
+            error(err, 4)
+        end
     end
+    
+    local pcall = pcall
 
     ---@generic T:any...
     ---@generic R:any...
-    ---@param func fun(args:T):R
+    ---@param f fun(args:T):R
     ---@param ... T
     ---@return R
-    function util.debug.upcall(func, ...)
-        return addLevel(pcall(func, ...))
+    function util.debug.upcall(f, ...)
+        return addLevel(pcall(f, ...))
     end
 end
 local upcall = util.debug.upcall
@@ -654,6 +663,51 @@ function util.itertools.CreateBuilder()
     end
 end
 
+do
+    local AutoRegisterType = util.AutoRegisterType
+    local CreateStatic = LuaUserData.CreateStatic
+    local upcall = util.debug.upcall
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T
+    local function constructor(typeName)
+        upcall(AutoRegisterType, typeName)
+        return upcall(CreateStatic, typeName)
+    end
+
+    local StaticRegistry = Registry.new(constructor) --[[@type Registry]]
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T
+    function util.registration.GetStatic(typeName)
+        return StaticRegistry:Get(typeName)
+    end
+end
+
+do
+    local CreateEnumTable = LuaUserData.CreateEnumTable
+    local upcall = util.debug.upcall
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T
+    local function constructor(typeName)
+        return upcall(CreateEnumTable, typeName)
+    end
+
+    local EnumRegistry = Registry.new(constructor) --[[@type Registry]]
+
+    ---@generic T
+    ---@param typeName `T`
+    ---@return T|{[string]:T}
+    function util.registration.GetEnum(typeName)
+        return EnumRegistry:Get(typeName)
+    end
+end
+
+
 ---@enum (key) util.CLEAR_REG
 util.CLEAR_REG = {
     ROUND_END=2,
@@ -856,7 +910,7 @@ function util.GetSpecificSlot(itemContainer, itemTag)
 end
 
 do
-    local Contained = LuaUserData.CreateEnumTable("Barotrauma.RelatedItem+RelationType")["Contained"]
+    local Contained = util.registration.GetEnum("Barotrauma.RelatedItem+RelationType")["Contained"]
     local ItemContainer = Components.ItemContainer
     
     ---@param container Barotrauma.Item

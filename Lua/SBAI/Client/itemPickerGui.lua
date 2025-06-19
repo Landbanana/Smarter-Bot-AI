@@ -16,7 +16,7 @@ local D_ICON_VH = guiUtil.Constants.D_ICON_VH
 
 local RectTransform = GUI.RectTransform
 
-local MapEntityCategory = LuaUserData.CreateEnumTable("Barotrauma.MapEntityCategory") --[[@type Barotrauma.MapEntityCategory]]
+local MapEntityCategory = util.registration.GetEnum("Barotrauma.MapEntityCategory") --[[@type Barotrauma.MapEntityCategory]]
 
 ---@param parent Barotrauma.GUIComponent
 ---@param callback fun(itemPrefab?:Barotrauma.ItemPrefab, tag?:Barotrauma.Identifier)

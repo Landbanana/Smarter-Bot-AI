@@ -78,7 +78,7 @@ local function activate(self)
     self:AddCommonModule("SBAI.Server.CommonModules.ItemPrefabExpansion")
 
     local chairId = Identifier("chair")
-    local Decorative = self:RegisterEnumTable("Barotrauma.MapEntityCategory").Decorative
+    local MapEntityCategory = util.registration.GetEnum("Barotrauma.MapEntityCategory")
 
     local Any = util.itertools.Any
     local new = Types.Set.new
@@ -88,7 +88,7 @@ local function activate(self)
     ---@type table<FURNITURE, fun(itemPrefab:Barotrauma.ItemPrefab):boolean>
     local predicateMap = {
         [FURNITURE.BED]=function(itemPrefab)
-            if itemPrefab.Category == Decorative then
+            if itemPrefab.Category == MapEntityCategory.Decorative then
                 return Any(
                     xPath(itemPrefab.ConfigElement.Element,
                         "Controller[@canbeselected=true][@drawuserbehind=true]/RequiredItem[@items=deepdivinglarge][@requireempty=true]"))

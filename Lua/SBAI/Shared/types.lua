@@ -313,12 +313,12 @@ end
 ---@class Types.Module
 ---@field private commonModules table<string,Types.CommonModule>
 ---@field private hooks {identifier:string, name:string}[]
----@field private initializers fun()[]
+---@field private initializers Iterable<fun()>
 ---@field private methodRegistry Set<string>
 ---@field private patches {identifier:string, className:string, methodName:string, parameterTypes:string[]?, hookType:Barotrauma.LuaCsHook.HookMethodType}[]
 ---@field private tables {t:table, flags:number}[]
----@field private activate fun(self:Types.Module)
----@field private deactivate fun(self:Types.Module)?
+---@field protected activate fun(self:Types.Module)
+---@field protected deactivate fun(self:Types.Module)?
 ---@field public options table?
 ---@field public namespace Namespace?
 Types.Module = {}
@@ -333,13 +333,14 @@ do
     ---@protected
     ---@generic T,R
     ---@param name? string
-    ---@param func fun(...:T):R
+    ---@param f? fun(...:T):R
     ---@param ... T
     ---@return boolean, R
-    function Types.Module:pcall(name, func, ...)
-        local results, n = GetArgs(pcall(func, self, ...))
+    ---@overload fun(self:Types.Module, name:string, f:nil, ...:any):(boolean, any)
+    function Types.Module:pcall(name, f, ...)
+        local results, n = GetArgs(pcall(f or self[name], self, ...))
         local success = remove(results, 1)
-
+        
         n = n - 1
 
         name = name == nil and "" or "."..name
@@ -359,23 +360,29 @@ do
     ---@protected
     function Types.Module:init()
         if not Game.GameSession or not self.initializers then return end
-        for func in self.initializers do --[[@cast func fun()]]
-            func()
+        for f in self.initializers do
+            f()
         end
     end
 end
 
----@public
----@param activate fun(self: Types.Module)
----@param deactivate? fun(self: Types.Module)
----@return Types.Module
-function Types.Module.new(activate, deactivate)
-    local t = {}
+do
+    local Module = Types.Module
 
-    t.activate = activate
-    t.deactivate = deactivate
+    local setmetatable = setmetatable
 
-    return setmetatable(t, Types.Module)
+    ---@public
+    ---@param activate fun(self: Types.Module)
+    ---@param deactivate? fun(self: Types.Module)
+    ---@return Types.Module
+    function Types.Module.new(activate, deactivate)
+        local t = {}
+
+        t.activate = activate
+        t.deactivate = deactivate
+
+        return setmetatable(t, Module)
+    end
 end
 
 ---@public
@@ -410,31 +417,6 @@ do
     ---@return function|T
     function Types.Module:RegisterStatic(typeName)
         return Statics[typeName]
-    end
-end
-
-do
-    --local AutoRegisterType = util.AutoRegisterType
-    local CreateEnumTable = LuaUserData.CreateEnumTable
-    local upcall = util.debug.upcall
-
-    local Enums = setmetatable({}, {
-        ---@param self table<string,System.Object>
-        ---@param typeName string
-        ---@return System.Object
-        __index=function(self, typeName)
-            local enum = upcall(CreateEnumTable, typeName)
-
-            self[typeName] = enum
-            return enum
-        end
-    })
-
-    ---@generic T
-    ---@param typeName `T`
-    ---@return function|T
-    function Types.Module:RegisterEnumTable(typeName)
-        return Enums[typeName]
     end
 end
 
@@ -515,6 +497,32 @@ do
         --     end
         -- end
         -- self:AddInit(doCallBack)
+    end
+end
+
+do
+    local CLEAR_REG = util.CLEAR_REG
+
+    local RegisterTable = util.RegisterTable
+    local insert = table.insert
+
+    ---@public
+    ---@param init? table
+    ---@param ... util.CLEAR_REG
+    ---@return table
+    function Types.Module:RegisterTable(init, ...)
+        if not self.tables then self.tables = {} end
+        local flags = 0
+
+        for flag in {...} do --[[@cast flag util.CLEAR_REG]]
+            flags = flags + CLEAR_REG[flag]
+        end
+
+        local t = {}
+
+        RegisterTable(t, init, flags)
+        insert(self.tables, {t=t, flags=flags})
+        return t
     end
 end
 
@@ -649,67 +657,33 @@ do
 end
 
 do
-    local CLEAR_REG = util.CLEAR_REG
-
-    local RegisterTable = util.RegisterTable
-    local insert = table.insert
+    local Partial1 = util.functools.Partial1
 
     ---@public
-    ---@param init? table
-    ---@param ... util.CLEAR_REG
-    ---@return table
-    function Types.Module:RegisterTable(init, ...)
-        if not self.tables then self.tables = {} end
-        local flags = 0
+    ---@param namespace Namespace
+    ---@param options table
+    function Types.Module:Activate(namespace, options)
+        self:Deactivate(options)
+        if not options.enable then return end
+        
+        self.namespace = namespace
+        self.options = options
 
-        for flag in {...} do --[[@cast flag util.CLEAR_REG]]
-            flags = flags + CLEAR_REG[flag]
+        if  self:pcall("activate") and
+            self:pcall("init")
+        then
+            self:AddHook("roundStart", Partial1(self.init, self))
+        else
+            return self:Deactivate(options)
         end
-
-        local t = {}
-
-        RegisterTable(t, init, flags)
-        insert(self.tables, {t=t, flags=flags})
-        return t
     end
-end
-
----@public
----@param namespace Namespace
----@param options table
-function Types.Module:Activate(namespace, options)
-    self:Deactivate(options)
-    if not options.enable then return end
-    
-    self.namespace = namespace
-    self.options = options
-
-    for name, func in next, {activate=self.activate, init=self.init} do
-        if not self:pcall(name, func) then return self:Deactivate(options) end
-    end
-
-    -- if self.commonModules then
-    --     for requirePath, commonModule in next, self.commonModules do --[[@cast commonModule Types.CommonModule]]
-    --         local newNamespace = -namespace
-            
-    --         newNamespace.i = 0
-    --         newNamespace.stack = {}
-
-    --         for stackAdd in requirePath:sub(Constants.Acronym:len() + 2):gmatch("([^%.]+)%.?") do
-    --             newNamespace = newNamespace + stackAdd
-    --         end
-    --         commonModule:Activate(self, newNamespace)
-    --     end
-    -- end
-    
-    self:AddHook("roundStart", function() return self:init() end)
 end
 
 do
     local insert = table.insert
 
     ---@public
-    ---@param func fun()
+    ---@param f fun()
     ---|`function() end`
     function Types.Module:AddInit(f)
         if not self.initializers then self.initializers = {} end
@@ -824,9 +798,7 @@ Types.CommonModule.__index = Types.CommonModule
 ---@param deactivate? fun(self: Types.Module)
 ---@return Types.CommonModule
 function Types.CommonModule.new(activate, deactivate)
-    local t = Types.Module.new(activate, deactivate)
-
-    return setmetatable(t, Types.CommonModule)
+    return setmetatable(Types.Module.new(activate, deactivate), Types.CommonModule)
 end
 
 do
@@ -1071,6 +1043,9 @@ do
 end
 
 return Types
+
+---@alias funT<T1,T2,T3,T4,T5,T6,T7,T8,T9> fun(a1:T1, a2:T2, a3:T3, a4:T4, a5:T5, a6:T6, a7:T7, a8:T8, a9:T9)
+---@alias funR<R1,R2,R3,R4,R5,R6,R7,R8,R9> fun():(R1,R2,R3,R4,R5,R6,R7,R8,R9)
 
 ---@class Barotrauma.Item
 ---@field public GetComponent fun(componentType:Barotrauma.Item.T):Barotrauma.Item.T

@@ -55,7 +55,7 @@ local function activate(self)
     end
 
     do
-        local mapEntityCategories = self:RegisterEnumTable("Barotrauma.MapEntityCategory")
+        local MapEntityCategory = util.registration.GetEnum("Barotrauma.MapEntityCategory")
 
         ---@alias MapEntityCategory
         ---|`"None"`
@@ -81,7 +81,7 @@ local function activate(self)
         ---@param categoryStr MapEntityCategory
         ---@return boolean
         local function hasCategory(instance, categoryStr)
-            return HasFlag(instance.Category, mapEntityCategories[categoryStr])
+            return HasFlag(instance.Category, MapEntityCategory[categoryStr])
         end
 
         AddMethod("hasCategory", hasCategory)

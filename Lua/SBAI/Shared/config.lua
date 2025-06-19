@@ -50,7 +50,7 @@ do
     defaults:CreateSection("CrewStaysInSub")
 
     section = defaults:CreateSection("EquipItems")
-    section:CreateOption("CrewLoadout", defaultCrewLoadout, configTypes.OPTION_TYPE.string, "loadout")
+    section:CreateOption("CrewLoadout", "", configTypes.OPTION_TYPE.string, "loadout")
     section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
     section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
@@ -174,7 +174,7 @@ then
             local defaultValue = default.value
             local defaultType = type(defaultValue)
             local rawValue
-            
+           
             if raw then
                 rawValue = raw[name]
             end
