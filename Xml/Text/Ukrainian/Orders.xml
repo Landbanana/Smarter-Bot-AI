@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="Ukrainian" nowhitespace="false" translatedname="українська">
+  <orderdialog.sbai_ignoreroom>Don't wander in [roomname]!</orderdialog.sbai_ignoreroom>
+  <ordername.sbai_ignoreroom>Avoid Wandering in Room</ordername.sbai_ignoreroom>
+  <orderdialog.sbai_unignoreroom>You can wander in [roomname] again.</orderdialog.sbai_unignoreroom>
+  <ordername.sbai_unignoreroom>Allow Wandering in Room</ordername.sbai_unignoreroom>
 
+  <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
+
+  <orderdialogself.operatereactor.powerup.sbai>Reactor automation is working well! I'll stick to fuel and repairs.</orderdialogself.operatereactor.powerup.sbai>
+ 
+  <ordername.sbai_perform>Perform</ordername.sbai_perform>
+  <orderoptions.sbai_perform>Play Instrument</orderoptions.sbai_perform>
+
+  <ordername.sbai_forall>For all</ordername.sbai_forall>
+  <orderoptions.sbai_forall>Ignore all, Unignore all, Deconstruct all, Don't deconstruct any</orderoptions.sbai_forall>
 </infotexts>
