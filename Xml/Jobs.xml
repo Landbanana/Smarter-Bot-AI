@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Jobs>
+  <Job identifier="sbai_auto" hiddenjob="true">
+    <AutonomousObjectives>
+      <Order identifier="steer" option="maintainposition" prioritymodifier="1"/>
+    </AutonomousObjectives>
+  </Job>
+</Jobs>
