@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.config.sbai.name>Smarter Bot AI</GUI.config.sbai.name>
+  <GUI.config.sbai.cmdhelp>Open the "Smarter Bot AI" configuration menu</GUI.config.sbai.cmdhelp>
   <GUI.config.crewloadouttitle>Crew Loadout</GUI.config.crewloadouttitle>
   <GUI.config.badmultiplayerpermissions>Insufficient permissions to edit settings! The server must grant you the "[setting]" permission.</GUI.config.badmultiplayerpermissions>
   <GUI.config.sectiontitle>Section</GUI.config.sectiontitle>

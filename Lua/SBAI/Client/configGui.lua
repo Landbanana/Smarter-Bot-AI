@@ -491,29 +491,70 @@ function MakeCrewLoadoutMenu(parent)
 end
 
 do
-    local _GUI = GUI.GUI
+    local Acronym = Constants.Acronym
+    local GUIGUI = GUI.GUI
+    local Point = Point
+    local Vector2 = Vector2
+
+    local AddCommand = Game.AddCommand
+    local fwrap =  util.cotools.fwrap
+    local Get = TextManager.Get
+    local max = math.max
+    local wrap = coroutine.wrap
+    local yield = coroutine.yield
 
     ---@param namespace Namespace
     return function(namespace)
-        Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {},
-        function(instance, ptable)
+        local function _ShowSBAIMenu() return ShowSBAIMenu(GUIGUI.PauseMenu) end
 
-            if _GUI.PauseMenuOpen then
-                local pauseFrame = _GUI.PauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
-                local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
+        local SBAIPauseButton = AddButton(nil, Vector2(1, 0.05), GUI.Anchor.BottomCenter, Get("GUI.config.sbai.name"), "GUIButtonSmall", false, _ShowSBAIMenu)
+        local SBAIPauseButtonRectTransform = SBAIPauseButton.RectTransform
 
-                local SBAIButton = AddButton(layoutGroup, Vector2(1, 0.05), GUI.Anchor.BottomCenter, Constants.Name, "GUIButtonSmall", false, util.functools.Partial1(ShowSBAIMenu, _GUI.PauseMenu))
+        local co = fwrap(
+            function()
+                while not GUIGUI.PauseMenuOpen do yield() end
+                do
+                    local pauseMenu = GUIGUI.PauseMenu
+                    local pauseFrame = pauseMenu.GetChild(Int32(1)) --[[@type Barotrauma.GUIFrame]]
+                    local layoutGroup = pauseFrame.GetChild(Int32(0)) --[[@type Barotrauma.GUILayoutGroup]]
 
-                local ySize = 0
-                for component in layoutGroup.Children do
-                    ySize = ySize + component.Rect.Height + layoutGroup.AbsoluteSpacing
+                    SBAIPauseButtonRectTransform.Parent = layoutGroup.RectTransform
+
+                    local ySize = 0
+
+                    for component in layoutGroup.Children do
+                        ySize = ySize + component.Rect.Height + layoutGroup.AbsoluteSpacing
+                    end
+                    
+                    local pauseFrameRectTransform = pauseFrame.RectTransform
+                    local pauseFrameMinSize = pauseFrameRectTransform.MinSize
+
+                    ySize = ySize/layoutGroup.RectTransform.RelativeSize.Y + layoutGroup.AbsoluteSpacing
+                    pauseFrameRectTransform.MinSize = Point(pauseFrameMinSize.X, max(ySize, pauseFrameMinSize.Y))
+                    SBAIPauseButtonRectTransform.Resize(Vector2(1, 0.05))
                 end
+                yield()
+                while true do
+                    if GUIGUI.PauseMenuOpen then
+                        SBAIPauseButtonRectTransform.Parent = GUIGUI.PauseMenu.GetChild(Int32(1)).GetChild(Int32(0)).RectTransform
+                    else
+                        local parent = SBAIPauseButton.Parent
 
-                ySize = ySize/layoutGroup.RectTransform.RelativeSize.Y + layoutGroup.AbsoluteSpacing
-                pauseFrame.RectTransform.MinSize = Point(pauseFrame.RectTransform.MinSize.X, math.max(ySize, pauseFrame.RectTransform.MinSize.Y))
-            else
-                CloseSBAIMenu()
+                        if parent then parent.RemoveChild(SBAIPauseButton) end
+                        CloseSBAIMenu()
+                    end
+                    yield()
+                end
+            end)
+        Hook.Patch((namespace + "PauseMenuButton")(), "Barotrauma.GUI", "TogglePauseMenu", {}, co, Hook.HookMethodType.After)
+        return AddCommand(Acronym:lower(), Get("GUI.config.sbai.cmdhelp").Value,
+        function()
+            if not GUIGUI.PauseMenuOpen then
+                GUIGUI.TogglePauseMenu()
             end
-        end, Hook.HookMethodType.After)
+            if GUIGUI.PauseMenuOpen then
+                return _ShowSBAIMenu()
+            end
+        end, nil, false)
     end
 end

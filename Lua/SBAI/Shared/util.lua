@@ -202,6 +202,20 @@ do
 end
 
 do
+    local wrap = coroutine.wrap
+
+    ---@param f fun()
+    ---@return fun()
+    function util.cotools.fwrap(f)
+        local co = wrap(f)
+
+        return function()
+            return co()
+        end
+    end
+end
+
+do
     local addLevel do
         local error = error
         local type = type
