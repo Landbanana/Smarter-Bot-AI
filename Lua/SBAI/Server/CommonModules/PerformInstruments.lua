@@ -1,6 +1,5 @@
 local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
 
 local instrumentInvSlots
 
@@ -51,7 +50,7 @@ do
 
     local ModObjProp
 
-    ---@param self Types.CommonModule
+    ---@param self CommonModule
     function setupObjProperties(self)
         --if ModObjProp then return end
         ModObjProp = self:AddCommonModule("SBAI.Server.CommonModules.ModifyObjectiveProperties") --[[@type fun(propertyName:string, objId:Barotrauma.Identifier, subObjId:Barotrauma.Identifier, value:any)]]
@@ -61,7 +60,7 @@ do
     end
 end
 
----@param self Types.CommonModule
+---@param self CommonModule
 local function activate(self)
     setupObjProperties(self)
 
@@ -70,11 +69,11 @@ local function activate(self)
     local PERFORM = Constants.ID_ORDER.PERFORM
     local RangedWeapon = Components.RangedWeapon
     local Shoot = InputType.Shoot
-    --local Wait = Timer.Wait
+    --local Wait = Timer2.Wait
 
     local Contains = util.itertools.Contains
 
-    self:AddPatch("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
+    self:PatchHook("Barotrauma.Items.Components.ItemComponent", "CrewAIOperate", nil,
     function(instance, ptable)
         local objective = ptable["objective"] --[[@type Barotrauma.AIObjective]]
 
@@ -99,11 +98,11 @@ local function activate(self)
             -- ptable.PreventExecution = true
             return false
         end
-    end, Hook.HookMethodType.Before)
+    end, true)
 
     --local concurrentIds = {Identifier("idle"), Identifier("wait")}
 
-    -- self:AddPatch("Barotrauma.AIObjective", "get_ConcurrentObjectives", nil,
+    -- self:PatchHook("Barotrauma.AIObjective", "get_ConcurrentObjectives", nil,
     -- function(instance, ptable)
     --     if Contains(concurrentIds, instance.Identifier) then
     --         local curSubObjective = instance.CurrentSubObjective
@@ -115,36 +114,36 @@ local function activate(self)
     --             return true
     --         end
     --     end
-    -- end, Hook.HookMethodType.Before)
+    -- end, true)
 
     
 
       --ModObjProp(PERFORM, "OperateItem", "AllowAutomaticItemUnequipping", false)
     
 
-    -- self:AddPatch("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
+    -- self:PatchHook("Barotrauma.AIObjectiveIdle", "get_AllowAutomaticItemUnequipping", nil,
     -- function(instance, ptable)
     --     if instance.Identifier == PERFORM then
     --         ptable.PreventExecution = true
     --         return false
     --     end
-    -- end, Hook.HookMethodType.Before)
+    -- end, true)
 
-    -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
+    -- self:PatchHook("Barotrauma.AIObjectiveOperateItem", "get_AllowAutomaticItemUnequipping", nil,
     -- function(instance, ptable)
     --     if instance.Identifier == PERFORM then
     --         ptable.PreventExecution = true
     --         return false
     --     end
-    -- end, Hook.HookMethodType.Before)
+    -- end, true)
 
-    -- self:AddPatch("Barotrauma.AIObjectiveOperateItem", "get_AllowMultipleInstances", nil,
+    -- self:PatchHook("Barotrauma.AIObjectiveOperateItem", "get_AllowMultipleInstances", nil,
     -- function(instance, ptable)
     --     if instance.Identifier == PERFORM then
     --         ptable.PreventExecution = true
     --         return false
     --     end
-    -- end, Hook.HookMethodType.Before)
+    -- end, true)
 end
 
-return Types.CommonModule.new(activate)
+return GetType("CommonModule").new(activate)

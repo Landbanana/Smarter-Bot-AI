@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="Russian" nowhitespace="false" translatedname="Русский">
-  <orderdialog.sbai_ignoreroom>Don't wander in [roomname]!</orderdialog.sbai_ignoreroom>
-  <ordername.sbai_ignoreroom>Avoid Wandering in Room</ordername.sbai_ignoreroom>
-  <orderdialog.sbai_unignoreroom>You can wander in [roomname] again.</orderdialog.sbai_unignoreroom>
-  <ordername.sbai_unignoreroom>Allow Wandering in Room</ordername.sbai_unignoreroom>
+  <orderdialog.sbai_ignoreroom>Не бродите по [roomname]!</orderdialog.sbai_ignoreroom>
+  <ordername.sbai_ignoreroom>Не бродить по комнате</ordername.sbai_ignoreroom>
+  <orderdialog.sbai_unignoreroom>Теперь можно снова бродить по [roomname].</orderdialog.sbai_unignoreroom>
+  <ordername.sbai_unignoreroom>Разрешить бродить по комнате</ordername.sbai_unignoreroom>
 
-  <ordercategorytitle.sbai>Smarter Bot AI</ordercategorytitle.sbai>
+  <ordercategorytitle.sbai>Улучшенный ИИ ботов</ordercategorytitle.sbai>
 
-  <orderdialogself.operatereactor.powerup.sbai>Reactor automation is working well! I'll stick to fuel and repairs.</orderdialogself.operatereactor.powerup.sbai>
+  <orderdialogself.operatereactor.powerup.sbai>Автоматизация реактора работает отлично! Я займусь топливом и ремонтом.</orderdialogself.operatereactor.powerup.sbai>
  
-  <ordername.sbai_perform>Perform</ordername.sbai_perform>
-  <orderoptions.sbai_perform>Play Instrument</orderoptions.sbai_perform>
+  <ordername.sbai_perform>Выполнить</ordername.sbai_perform>
+  <orderoptions.sbai_perform>Играть на инструменте</orderoptions.sbai_perform>
 
-  <ordername.sbai_forall>For all</ordername.sbai_forall>
-  <orderoptions.sbai_forall>Ignore all, Unignore all, Deconstruct all, Don't deconstruct any</orderoptions.sbai_forall>
+  <ordername.sbai_forall>Для всех</ordername.sbai_forall>
+  <orderoptions.sbai_forall>Игнорировать всё, Снять игнорирование со всех, Разобрать всё, Ничего не разбирать</orderoptions.sbai_forall>
 </infotexts>

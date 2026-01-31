@@ -1,273 +1,251 @@
-local Constants = require("SBAI.Shared.constants")
-local configTypes = require("SBAI.Shared.Types.configTypes")
-
-local networking = require("SBAI.Shared.networking")
-local member = networking.member
-local MSG = networking.MSG
-
-local Config = {data={}}
-
-Config.defaults = {
-    MAX_CONDITION_PERCENTAGE = 95,
-    MIN_CONDITION_PERCENTAGE = 0,
-    MIN_TIME_BETWEEN = 5,
-    MAX_TIME_BETWEEN = 1000,
-    MIN_MIN_HEALTH_PERCENTAGE = 10.0,
-    MAX_MIN_HEALTH_PERCENTAGE = 90.0,
-    CONFIG = {}
+---@class (partial) Config
+---@field public data Config.Section
+---@field public onChange Event<fun(config:Config.SectionMajor)>
+---@field private _parse fun(configFlat:{[string]:Json})
+local Config = {
+    onChange=Types.Event(true, true)
 }
 
 do
-    local defaults = configTypes.ConfigSection.new()
-    local section
-    local subsection
-    local subsubsection
-    
-    ---section = defaults:CreateSection("CleaningAdditions")
-    ---subsection = section:CreateSection("CleanWalls")
-    ---subsection:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
+    local Bool = Types.Config.OptionBool
+    local Float = Types.Config.OptionFloat
+    local Int = Types.Config.OptionInt
+    local Loadout = Types.Config.OptionLoadout
+    local Radio = Types.Config.OptionRadio
+    local Section = Types.Config.Section
+    local SectionMajor = Types.Config.SectionMajor
+    local SectionToggle = Types.Config.SectionToggle
 
-    section = defaults:CreateSection("CombatTweaks")
+    local minCondition = Int("minCondition", 10, 0, 95)
+    local minHealth = Int("minHealth", 75, 10, 90)
+    local checkDelay = Int("checkDelay", 10, 5, 1000)
 
-    section:CreateOption("PreventAttackingHandcuffed", true, configTypes.OPTION_TYPE.boolean)
-
-    subsection = section:CreateSection("ArrestHumansInPlayerSub")
-    subsection:CreateOption("onlyPreviouslyCuffed", false, configTypes.OPTION_TYPE.boolean)
-    subsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
-
-    subsection = section:CreateSection("PreSpinTurrets")
-    subsection:CreateOption("reduceNoise", true, configTypes.OPTION_TYPE.boolean)
-
-    section = defaults:CreateSection("CleaningAdditions")
-    subsection = section:CreateSection("PurchasedItemCrates", false)
-    subsection:CreateOption("autoOrder", "*deconstruct;ignore", configTypes.OPTION_TYPE.int, "radio")
-
-    subsection = section:CreateSection("DeconstructInBulk")
-    subsection:CreateOption("maxCheck", 32, configTypes.OPTION_TYPE.int, nil, 2, 128)
-
-    section:CreateOption("OnlyUseShipDeconstructor", true, configTypes.OPTION_TYPE.boolean)
-
-    defaults:CreateSection("CrewStaysInSub")
-
-    section = defaults:CreateSection("EquipItems")
-    section:CreateOption("CrewLoadout", "", configTypes.OPTION_TYPE.string, "loadout")
-    section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    section = defaults:CreateSection("LadderFix")
-    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    section = defaults:CreateSection("MuteSingleplayerBotConversations", false)
-    section:CreateOption("BlockAllBotChat", false, configTypes.OPTION_TYPE.boolean)
-
-    section = defaults:CreateSection("OperateReactorTweaks")
-    section:CreateOption("behavior", "mostlyVanilla;*fuelOnlyWhenController;fuelOnly", configTypes.OPTION_TYPE.int, "radio")
-    section:CreateOption("numFuelRods", 1, configTypes.OPTION_TYPE.int, nil, 1, 4)
-    section:CreateOption("minimumCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    section = defaults:CreateSection("Orders", false)
-
-    section = defaults:CreateSection("ReplenishInventory")
-    subsection = section:CreateSection("Idle")
-    subsection:CreateOption("onlyAtFriendlyOutposts", false, configTypes.OPTION_TYPE.boolean)
-
-    subsection = section:CreateSection("Wait")
-    subsection:CreateOption("onlyAtFriendlyOutposts", true, configTypes.OPTION_TYPE.boolean)
-    
-    section:CreateOption("fillEmpty", true, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("forceSameItemType", false, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("forceQualityGEQ", true, configTypes.OPTION_TYPE.boolean)
-    section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    subsection = section:CreateSection("Ammunition")
-    subsection:CreateOption("minimumCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 80, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("BatteryCells")
-    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 95, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("WeldingFuel")
-    subsection:CreateOption("minimumCondition", 75, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-    subsection:CreateOption("minimumEquippedCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)    
-
-    section = defaults:CreateSection("SmarterLoadItems")
-
-    subsection = section:CreateSection("BatteryCells")
-    
-    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    subsection = section:CreateSection("OxygenTanks")
-    subsection:CreateOption("minimumCondition", 90, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
-
-    section = defaults:CreateSection("SmarterPets")
-
-    subsection = section:CreateSection("EatFoodInInventory")
-    subsection:CreateOption("overrideProtectOwner", true, configTypes.OPTION_TYPE.boolean)
-    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    subsection = section:CreateSection("BotsPlayWhenIdle")
-    subsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    section:CreateSection("CleanableProduce")
-
-    section = defaults:CreateSection("UseFurniture")
-    subsection = section:CreateSection("AutoUseWhenIdle")
-    subsection:CreateOption("beds", true, configTypes.OPTION_TYPE.boolean)
-    subsection:CreateOption("chairs", true, configTypes.OPTION_TYPE.boolean)
-
-    section:CreateOption("stayInBedIfHurt", true, configTypes.OPTION_TYPE.boolean)
-
-    section = defaults:CreateSection("UseTalents")
-
-    subsection = section:CreateSection("Assistant")
-    subsubsection = subsection:CreateSection("InspiringTunes")
-    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-    
-    subsubsection = subsection:CreateSection("JengaMaster")
-    subsubsection:CreateOption("timeBetween", 120, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    subsubsection = subsection:CreateSection("NonThreatening")
-    subsubsection:CreateOption("minHealth", 75.0, configTypes.OPTION_TYPE.float, nil, Config.defaults.MIN_MIN_HEALTH_PERCENTAGE, Config.defaults.MAX_MIN_HEALTH_PERCENTAGE)
-    -- subsubsection:CreateOption("Accordion", true, configTypes.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Bikehorn", true, configTypes.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Guitar", true, configTypes.OPTION_TYPE.boolean)
-    -- subsubsection:CreateOption("Harmonica", true, configTypes.OPTION_TYPE.boolean)
-    
-    -- subsection:CreateOption("ChonkyHonks", true, configTypes.OPTION_TYPE.boolean)
-
-    subsection = section:CreateSection("Captain")
-    subsubsection = subsection:CreateSection("SteadyTune")
-    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    subsection = section:CreateSection("Engineer")
-    subsubsection = subsection:CreateSection("MelodicRespite")
-    subsubsection:CreateOption("idle", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("wait", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("stopAfterBuffed", true, configTypes.OPTION_TYPE.boolean)
-    subsubsection:CreateOption("timeBetween", 15, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
-
-    Config.defaults.CONFIG = defaults
+    local data = Section("Options")/{
+        SectionMajor("General")/{
+            Bool("ModEnabled"),
+            Section("GamePerformance")/{
+                Int("updateRate", 5, 1, 60),
+                Bool("onlyAffectPlayerCrew", false),
+                Bool("pauseWhenSafelyDocked", false)
+            }
+        },
+        Section("Modules")/{
+            SectionMajor("CombatTweaks")/{
+                Bool("PreventAttackingHandcuffed"),
+                SectionToggle("ArrestHumansInPlayerSub")/{
+                    Bool("onlyPreviouslyCuffed", false),
+                    minHealth:copyWith {default=75}
+                },
+                SectionToggle("PreSpinTurrets")/{
+                    Bool("reduceNoise")
+                }
+            },
+            SectionMajor("CleaningAdditions")/{
+                SectionToggle("PurchasedItemCrates",  false)/{
+                    Radio("autoOrder", 1, {
+                        "deconstruct",
+                        "ignore"
+                    })
+                },
+                SectionToggle("DeconstructInBulk")/{
+                    Int("maxCheck", 32, 2, 128)
+                },
+                Bool("OnlyUseShipDeconstructor")
+            },
+            SectionMajor("CrewStaysInSub")/{},
+            SectionMajor("EquipItems")/{
+                --Loadout("CrewLoadout"), TODO
+                Bool("reEquipArmor"),
+                checkDelay:copyWith {default=60}
+            },
+            SectionMajor("LadderFix")/{
+                checkDelay:copyWith {default=30}
+            },
+            SectionMajor("MuteSingleplayerBotConversations", false)/{
+                Bool("BlockAllBotChat", false)
+            },
+            SectionMajor("OperateReactorTweaks")/{
+                Radio("behavior", 2, {
+                    "mostlyVanilla",
+                    "fuelOnlyWhenController",
+                    "fuelOnly"
+                }),
+                Int("numFuelRods", 1, 1, 4),
+                minCondition:copyWith {default=10}
+            },
+            SectionMajor("Orders", false),
+            SectionMajor("ReplenishInventory")/{
+                Section("OrderOptions")/{
+                    SectionToggle("Idle")/{
+                        Bool("onlyAtFriendlyOutposts", false)
+                    },
+                    SectionToggle("Wait")/{
+                        Bool("onlyAtFriendlyOutposts")
+                    }
+                },
+                Bool("fillEmpty"),
+                Bool("forceSameItemType"),
+                Bool("forceQualityGEQ"),
+                checkDelay:copyWith {default=30},
+                Section("ItemOptions")/{
+                    SectionToggle("Ammunition")/{
+                        minCondition:copyWith {default=80},
+                        minCondition:copyWith {name="minEquippedCondition", default=80}
+                    },
+                    SectionToggle("BatteryCells")/{
+                        minCondition:copyWith {default=75},
+                        minCondition:copyWith {name="minEquippedCondition", default=10}
+                    },
+                    SectionToggle("OxygenTanks")/{
+                        minCondition:copyWith {default=95},
+                        minCondition:copyWith {name="minEquippedCondition", default=10}
+                    },
+                    SectionToggle("WeldingFuel")/{
+                        minCondition:copyWith {default=75},
+                        minCondition:copyWith {name="minEquippedCondition", default=10}
+                    }
+                }
+            },
+            SectionMajor("SmarterLoadItems")/{
+                SectionToggle("BatteryCells")/{
+                    minCondition:copyWith {default=90},
+                },
+                SectionToggle("OxygenTanks")/{
+                    minCondition:copyWith {default=90},
+                }
+            },
+            SectionMajor("SmarterPets")/{
+                SectionToggle("EatFoodInInventory")/{
+                    Bool("overrideProtectOwner"),
+                    checkDelay:copyWith {default=15}
+                },
+                SectionToggle("BotsPlayWhenIdle")/{
+                    checkDelay:copyWith {default=15}
+                },
+                Bool("CleanableProduce")
+            },
+            SectionMajor("UseFurniture")/{
+                SectionToggle("AutoUseWhenIdle")/{
+                    Bool("beds"),
+                    Bool("chairs")
+                },
+                Bool("stayInBedIfHurt")
+            },
+            SectionMajor("UseTalents")/{
+                SectionToggle("Assistant")/{
+                    SectionToggle("InspiringTunes")/{
+                        Bool("idle"),
+                        Bool("wait"),
+                        Bool("stopAfterBuffed"),
+                        checkDelay:copyWith {default=15}
+                    },
+                    SectionToggle("JengaMaster")/{
+                        checkDelay:copyWith {default=120}
+                    },
+                    SectionToggle("NonThreatening")/{
+                        minHealth:copyWith {default=75}
+                    }
+                },
+                SectionToggle("Captain")/{
+                    SectionToggle("SteadyTune")/{
+                        Bool("idle"),
+                        Bool("wait"),
+                        Bool("stopAfterBuffed"),
+                        checkDelay:copyWith {default=15}
+                    }
+                },
+                SectionToggle("Engineer")/{
+                    SectionToggle("MelodicRespite")/{
+                        Bool("idle"),
+                        Bool("wait"),
+                        Bool("stopAfterBuffed"),
+                        checkDelay:copyWith {default=15}
+                    }
+                }
+            }
+        }
+    }
+    Config.data = data
 end
 
-if  SERVER or
-    Game.IsSingleplayer
-then
-    function Config.Load()
-        local rawConfig = File.Exists(Constants.ConfigPath) and json.parse(File.Read(Constants.ConfigPath)) or nil
-        local config = Config.data
-        
-        ---@param name string
-        ---@param raw table
-        ---@param default ConfigOption|ConfigSection
-        local function LoadRecurse(name, raw, default)
-            local defaultValue = default.value
-            local defaultType = type(defaultValue)
-            local rawValue
-           
-            if raw then
-                rawValue = raw[name]
+do
+    local logError = Errortools.logError
+    local pcall = pcall
+
+    ---@param k string
+    ---@param t table
+    ---@param n Deque<string>
+    local function onEnter(k, t, n)
+        return n:push(k)
+    end
+
+    ---@param k string
+    ---@param t table
+    ---@param n Deque<string>
+    local function onExit(k, t, n)
+        return n:pop()
+    end
+
+    local onValue --[=[@[lsp_optimization("delayed_definition")]]=] do
+        local concat = concat
+
+        ---@param k string
+        ---@param v Json
+        ---@param n Deque<string>
+        onValue = function(k, v, n)
+            n:push(k)
+
+            local success, msg = pcall(Config.data.set, Config.data, v, concat(n, ".", n.i, n.j))
+
+            if not success then
+                logError("Shared.Config._parse", msg)
             end
 
-            if defaultValue ~= nil then --[[@cast default -ConfigSection]]
-                if type(rawValue) ~= defaultType then
-                    return defaultValue
-                elseif defaultType == "string" then --[[@cast rawValue string]]
-                    if default.specialType == "loadout" then
-                        return default.specialData(rawValue)
-                    end
-                elseif defaultType == "number" then
-                    return math.clamp(rawValue, default.min, default.max)
-                else
-                    return rawValue
-                end
-            else --[[@cast default -ConfigOption]]
-                if rawValue == nil then
-                    return default:Flatten()
-                else
-                    local out = {}
-                    local i = 0
-
-                    for k, v in next, default do
-                        i = i + 1
-                        out[k] = LoadRecurse(k, rawValue, v)
-                    end
-                    return out
-                end
-            end
-        end
-
-        for k, v in next, Config.defaults.CONFIG do
-            local success, result = pcall(LoadRecurse, k, rawConfig, v) --[[@type boolean, any]]
-            
-            if success == false then
-                Logger.LogError("Config.Load."..k..": "..result)
-                config[k] = v:Flatten()
-            else
-                config[k] = result
-            end
+            n:pop()
         end
     end
 
-    do
-        local ModConfigsDirPath = Constants.ModConfigsDirPath
-        local ConfigPath = Constants.ConfigPath
+    local Deque = Types.Deque
 
-        local CreateDirectory = File.CreateDirectory
-        local serialize = json.serialize
-        local Write = File.Write
+    local traverse = Tabletools.traverse
 
-        function Config.Save()
-            CreateDirectory(ModConfigsDirPath)
-            Write(ConfigPath, serialize(Config.data))
-        end
-    end
+    function Config._parse(configFlat)
+        local namespace = Deque() ---@type Deque<string>
 
-    if not File.Exists(Constants.ConfigPath) then Config.Save() end
-
-    if Game.IsMultiplayer then
-        member:AddHandler(MSG.CONF_REQUEST,
-        function(data, client)
-            if not client then return end
-            Config.Load()
-            return member:Send(MSG.CONF_UPDATE, client, nil, Config.data)
-        end)
-    
-        do
-            local ManageSettings = ClientPermissions.ManageSettings
-    
-            member:AddHandler(MSG.CONF_UPDATE,
-            function(data, client)
-                if not client.HasPermission(ManageSettings) then return end
-    
-                Config.data = data
-                member:Send(MSG.CONF_UPDATE, nil, nil, Config.data)
-                return Config.Save()
-            end)
-        end
+        traverse(onEnter, onExit, onValue, configFlat, namespace)
     end
 end
 
-if  Game.IsMultiplayer and
-    CLIENT
-then
-    function Config.Load()
-        return member:Send(MSG.CONF_REQUEST)
+
+
+
+do
+    local _print --[=[@[lsp_optimization("delayed_definition")]]=] do
+        local next = next
+        local print = print
+        local tostring = tostring
+        local type = type
+
+        _print = function(s, i)
+            local indent = ("    "):rep(i)
+
+            for k, v in next, s do
+                if type(v) == "table" then
+                    print(("%s%s {"):format(indent, k))
+                    _print(v, i + 1)
+                    print(("%s}"):format(indent))
+                else
+                    print(("%s%s: %s"):format(indent, k, tostring(v)))
+                end
+            end
+        end
     end
-    
-    function Config.Save()
-        if not Config.data then return end
-        return member:Send(MSG.CONF_UPDATE, nil, nil, Config.data)
+
+    local data = Config.data
+
+    ---@public
+    function Config.print()
+        return _print(data:flatten(), 0)
     end
 end
 

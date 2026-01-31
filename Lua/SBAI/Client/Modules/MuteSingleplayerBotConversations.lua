@@ -1,36 +1,34 @@
-local Types = require("SBAI.Shared.types")
-
----@param self Types.Module
+---@param self Module
 local function activateBlockAllBotChat(self)
-    self:AddHook("chatMessage",
+    self:addHook("chatMessage",
     ---@param text string
     ---@param sender Barotrauma.Networking.Client
     ---@param type Barotrauma.Networking.ChatMessageType
     ---@param message Barotrauma.Networking.ChatMessage
     function(text, sender, type, message)
-        if message.Sender.IsBot then
+        if message.SenderCharacter.IsBot --[=[@as boolean]=] then
             return true
         end
     end)
 
-    self:AddPatch("Barotrauma.Character", "ShowSpeechBubble", nil,
+    self:addPatch("Barotrauma.Character", "ShowSpeechBubble", nil, "Before",
     function(instance, ptable)
-        if instance.IsBot then
+        if instance.IsBot --[=[@as boolean]=] then
             ptable.PreventExecution = true
         end
-    end, Hook.HookMethodType.Before)
+    end)
 end
 
----@param self Types.Module
+---@param self Module
 local function activate(self)
     if Game.IsSingleplayer then
-        self:AddPatch("Barotrauma.CrewManager", "UpdateConversations", nil,
+        self:addPatch("Barotrauma.CrewManager", "UpdateConversations", nil, "Before",
         function(instance, ptable)
             ptable.PreventExecution = true
-        end, Hook.HookMethodType.Before)
+        end)
 
-        self:DoOption("BlockAllBotChat", activateBlockAllBotChat)
+        return self:activateOption("BlockAllBotChat", activateBlockAllBotChat)
     end
 end
 
-return Types.Module.new(activate)
+return Types.Module(activate)

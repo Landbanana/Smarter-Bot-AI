@@ -1,8 +1,10 @@
-local Constants = require("SBAI.Shared.constants")
-local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
+---@class (constructor) Barotrauma.AIObjective
+---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, ...:string?):fun()
+---@field public SBAI_isAtWaitObjective fun(instance:Barotrauma.AIObjectiveGoTo):boolean
+---@field public SBAI_originalId fun(instance:Barotrauma.AIObjective):Barotrauma.Identifier
+---@field public SBAI_tryAddSubObjective fun(instance:Barotrauma.AIObjective, t:table<string,Barotrauma.AIObjective?>?, k:string?, objId:Barotrauma.Identifier?, stopIdDuplicate:boolean?, stopBaseIdDuplicate:boolean?, constructor:fun():(Barotrauma.AIObjective)):boolean
 
----@param self Types.CommonModule
+---@param self CommonModule
 local function activate(self)
     local AddMethod = util.functools.Partial2(self.AddMethod, self, "Barotrauma.AIObjective")
 
@@ -16,8 +18,7 @@ local function activate(self)
         end
 
         AddMethod("originalId", originalId)
-        ---@class Barotrauma.AIObjective
-        ---@field public SBAI_originalId fun(instance:Barotrauma.AIObjective):Barotrauma.Identifier
+
     end
 
     do
@@ -36,8 +37,7 @@ local function activate(self)
         end
 
         AddMethod("cleanupSubObj", cleanupSubObj)
-        ---@class Barotrauma.AIObjective
-        ---@field public SBAI_cleanupSubObj fun(instance:Barotrauma.AIObjective, subObj:Barotrauma.AIObjective, subObjType:Barotrauma.AIObjective, t:table?, ...:string?):fun()
+
     end
 
     do
@@ -101,29 +101,21 @@ local function activate(self)
                     end
                 end
             end
-            
+
             if t then t[k] = objective end
             return success
         end
 
         AddMethod("tryAddSubObjective", tryAddSubObjective)
-        ---@class Barotrauma.AIObjective
-        ---@field public SBAI_tryAddSubObjective fun(instance:Barotrauma.AIObjective, t:table<string,Barotrauma.AIObjective?>?, k:string?, objId:Barotrauma.Identifier?, stopIdDuplicate:boolean?, stopBaseIdDuplicate:boolean?, constructor:fun():(Barotrauma.AIObjective)):boolean
     end
 
     do
-        local WAIT = Constants.ID_OBJECTIVE_BASE.WAIT
 
+        self:AddMethod("Barotrauma.AIObjectiveGoTo", "isAtWaitObjective",
         ---@param instance Barotrauma.AIObjectiveGoTo
         ---@return boolean
-        local function isAtWaitObjective(instance)
-            return instance.Identifier == WAIT and
-                instance.IsCloseEnough
-        end
-        self:AddMethod("Barotrauma.AIObjectiveGoTo", "isAtWaitObjective", isAtWaitObjective)
-        ---@class Barotrauma.AIObjectiveGoTo
-        ---@field public SBAI_isAtWaitObjective fun(instance:Barotrauma.AIObjectiveGoTo):boolean
+        function(instance)
+            return instance.IsWaitOrder and instance.IsCloseEnough ---@as boolean
+        end)
     end
 end
-
-return Types.CommonModule.new(activate)

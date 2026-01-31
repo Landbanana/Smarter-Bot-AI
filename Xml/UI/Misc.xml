@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style>
+  <SBAI_ColorBase color="235,225,193,255" />
+  <SBAI_DragHandleBase color="255,255,255,255">
+    <Sprite name="SBAI_DragHandleBase" texture="Content/UI/UIAtlasFrames.png" size="0.0, 0.0"
+      sourcerect="1,369,374,28" origin="0.5,0.5" compress="false"
+      tile="false" MaintainAspectRatio="false" />
+  </SBAI_DragHandleBase>
+  <SBAI_CloseButton color="255,255,255,255">
+    <GUIFrame color="255,255,255,255" hovercolor="255,255,255,255" selectedcolor="255,255,255,255" textcolor="228,217,167,255">
+      <Sprite texture="Content/UI/UIAtlasFrames.png" size="0.0, 0.0" sourcerect="751,1,187,189" slice="759,10,927,178" origin="0.5,0.5"/>
+    </GUIFrame>
+  </SBAI_CloseButton>
+</style>

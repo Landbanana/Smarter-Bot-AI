@@ -1,16 +1,15 @@
 local Constants = require("SBAI.Shared.constants")
 local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
 
 local Registry = require("SBAI.Shared.Types.Registry") --[[@type Registry<table<string, any>>]]
 
 LuaUserData.MakeFieldAccessible(Descriptors["Barotrauma.AIObjectiveManager"], "character")
 
----@param self Types.CommonModule
+---@param self CommonModule
 local function activate(self)
     local idToConstructor = {} --[[@type table<string|Barotraumas.Identifier, fun(character:Barotrauma.Character, objectiveManager:Barotrauma.AIObjectiveManager, priorityModifier:number):Barotrauma.AIObjective>]]
 
-    self:AddPatch("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
+    self:PatchHook("Barotrauma.AIObjectiveManager", "CreateObjective", nil,
     function(instance, ptable)
         local order = ptable["order"] --[[@type Barotrauma.Order]]
         local id = order.Identifier
@@ -33,7 +32,7 @@ local function activate(self)
             newObjective.IgnoreAtOutpost = order.IgnoreAtOutpost
             return newObjective
         end
-    end, Hook.HookMethodType.Before)
+    end, true)
     
     ---@param id string
     ---@param constructor fun(character:Barotrauma.Character, objectiveManager:Barotrauma.AIObjectiveManager, priorityModifier:number):Barotrauma.AIObjective
@@ -44,4 +43,4 @@ local function activate(self)
     RegisterOrder()
 end
 
-return Types.CommonModule.new(activate)
+return GetType("CommonModule").new(activate)

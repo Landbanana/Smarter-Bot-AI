@@ -1,23 +1,26 @@
-local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
+---@class (constructor) Barotrauma.ItemPrefab
+---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Set<Barotrauma.InvSlotType>, table<integer, Set<Barotrauma.InvSlotType>>)
+---@field public SBAI_getSpecifiedContainables fun(instance:Barotrauma.ItemPrefab):Set<Barotrauma.Identifier>
+---@field public SBAI_hasCategory fun(instance:Barotrauma.ItemPrefab, categoryStr:MapEntityCategory):boolean
+---@field public SBAI_hasIdentifierOrTag fun(instance:Barotrauma.ItemPrefab, idOrTag:Barotrauma.Identifier|string):boolean
+---@field public SBAI_hasTag fun(instance:Barotrauma.ItemPrefab, tag:Barotrauma.Identifier|string):boolean
+---@field public SBAI_isHoldable fun(instance:Barotrauma.ItemPrefab):boolean
 
----@param self Types.CommonModule
+---@param self CommonModule
 local function activate(self)
-    local AddMethod = util.functools.Partial2(self.AddMethod, self, "Barotrauma.ItemPrefab")
+    local addMethod = Functools.partial2(self.addMethod, self, "Barotrauma.ItemPrefab")
 
     do
-        local Contains = util.itertools.Contains
+        local contains = Itertools.contains
 
         ---@param instance Barotrauma.ItemPrefab
         ---@param tag Barotrauma.Identifier|string
         ---@return boolean
         local function hasTag(instance, tag)
-            return Contains(instance.Tags, tag)
+            return contains(instance.Tags, tag)
         end
 
-        AddMethod("hasTag", hasTag)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_hasTag fun(instance:Barotrauma.ItemPrefab, tag:Barotrauma.Identifier|string):boolean
+        addMethod("hasTag", hasTag)
     end
 
     do
@@ -28,54 +31,52 @@ local function activate(self)
             return instance.Identifier == tag or instance:SBAI_hasTag(tag)
         end
 
-        AddMethod("hasIdentifierOrTag", hasIdentifierOrTag)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_hasIdentifierOrTag fun(instance:Barotrauma.ItemPrefab, idOrTag:Barotrauma.Identifier|string):boolean
+        addMethod("hasIdentifierOrTag", hasIdentifierOrTag)
     end
 
     do
-        local new = Types.Set.new
+        local Set = Types.Set
+        
         local xGetItemTags = util.xGetItemTags
         local xPath = util.xPath
 
         ---@param instance Barotrauma.ItemPrefab
         ---@return boolean
         local function getSpecifiedContainables(instance)
-            local tags = new()
+            local tags = Set()
 
             for contElement in xPath(instance.ConfigElement.Element, "//ItemContainer//Containable") do
-                tags:Update(xGetItemTags(contElement))
+                tags:update(xGetItemTags(contElement))
             end
             return tags
         end
 
-        AddMethod("getSpecifiedContainables", getSpecifiedContainables)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_getSpecifiedContainables fun(instance:Barotrauma.ItemPrefab):Set<Barotrauma.Identifier>
+        addMethod("getSpecifiedContainables", getSpecifiedContainables)
     end
 
     do
         local MapEntityCategory = util.registration.GetEnum("Barotrauma.MapEntityCategory")
 
         ---@alias MapEntityCategory
-        ---|`"None"`
-        ---|`"Structure"`
-        ---|`"Decorative"`
-        ---|`"Machine"`
-        ---|`"Medical"`
-        ---|`"Weapon"`
-        ---|`"Diving"`
-        ---|`"Equipment"`
-        ---|`"Fuel"`
-        ---|`"Electrical"`
-        ---|`"Material"`
-        ---|`"Alien"`
-        ---|`"Wrecked"`
-        ---|`"ItemAssembly"`
-        ---|`"Legacy"`
-        ---|`"Misc"`
+        ---|"None"
+        ---|"Structure"
+        ---|"Decorative"
+        ---|"Machine"
+        ---|"Medical"
+        ---|"Weapon"
+        ---|"Diving"
+        ---|"Equipment"
+        ---|"Fuel"
+        ---|"Electrical"
+        ---|"Material"
+        ---|"Alien"
+        ---|"Wrecked"
+        ---|"ItemAssembly"
+        ---|"Legacy"
+        ---|"Misc"
         
-        local HasFlag = util.mathtools.HasFlag
+        local HasFlag = Mathtools.hasFlag
+
 
         ---@param instance Barotrauma.ItemPrefab
         ---@param categoryStr MapEntityCategory
@@ -84,36 +85,34 @@ local function activate(self)
             return HasFlag(instance.Category, MapEntityCategory[categoryStr])
         end
 
-        AddMethod("hasCategory", hasCategory)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_hasCategory fun(instance:Barotrauma.ItemPrefab, categoryStr:MapEntityCategory):boolean
+        addMethod("hasCategory", hasCategory)
     end
 
     do
         local InvSlotType = InvSlotType
-        local new = Types.Set.new
+        local Set = Types.Set
         local xPath = util.xPath
 
         ---@param instance Barotrauma.ItemPrefab
         ---@return Set<Barotrauma.InvSlotType>
         ---@return table<integer, Set<Barotrauma.InvSlotType>>
         local function getInvSlots(instance)
-            local reg = new()
+            local reg = Set()
             local comp = {}
 
             for slotComp in xPath(instance.ConfigElement.Element, "//[@slots]") do
                 for slotGroup in slotComp.GetAttributeString("slots", ""):gmatch("([^,]+),?") do
-                    local set = new()
+                    local set = Set()
                     local slot = 0
 
                     for addedSlot in slotGroup:gmatch("([^%+]+)%+?") do
                         local newSlot = InvSlotType[addedSlot]
 
                         slot = slot + newSlot
-                        set:Add(newSlot)
+                        set:add(newSlot)
                     end
                     if set[slot] then
-                        reg:Add(slot)
+                        reg:add(slot)
                     else
                         comp[slot] = set
                     end
@@ -121,24 +120,20 @@ local function activate(self)
             end
             return reg, comp
         end
-        AddMethod("getInvSlots", getInvSlots)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_getInvSlots fun(instance:Barotrauma.ItemPrefab):(Set<Barotrauma.InvSlotType>, table<integer, Set<Barotrauma.InvSlotType>>)
+        addMethod("getInvSlots", getInvSlots)
     end
 
     do
-        local Any = util.itertools.Any
+        local any = Itertools.any
         local xPath = util.xPath
 
         ---@param instance Barotrauma.ItemPrefab
         ---@return boolean
         local function isHoldable(instance)
-            return Any(xPath(instance.ConfigElement.Element, "//[@slots]"))
+            return any(xPath(instance.ConfigElement.Element, "//[@slots]"))
         end
-        AddMethod("isHoldable", isHoldable)
-        ---@class Barotrauma.ItemPrefab
-        ---@field public SBAI_isHoldable fun(instance:Barotrauma.ItemPrefab):boolean
+        addMethod("isHoldable", isHoldable)
     end
 end
 
-return Types.CommonModule.new(activate)
+return Types.CommonModule("ItemPrefabExpansion", activate)

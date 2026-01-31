@@ -1,56 +1,47 @@
-local Constants = require("SBAI.Shared.constants")
-local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
+---@class (constructor) Barotrauma.Inventory
+---@field public SBAI_findAllItems fun(instance:Barotrauma.Inventory, checkForDuplicates:boolean?, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)):(fun():Barotrauma.Item?)
+---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)):(boolean)
 
----@param self Types.CommonModule
+
+---@param self CommonModule
 local function activate(self)
-
-    local AddMethod do
-        local _AddMethod = self.AddMethod
-        local Partial2 = util.functools.Partial2
-
-        local addInvMethod = Partial2(_AddMethod, self, "Barotrauma.Inventory")
-        local addItemInvMethod = Partial2(_AddMethod, self, "Barotrauma.ItemInventory")
-        local addCharInvMethod = Partial2(_AddMethod, self, "Barotrauma.CharacterInventory")
-
-        function AddMethod(methodName, method)
-            return addInvMethod(methodName, method) and
-                addItemInvMethod(methodName, method) and
-                addCharInvMethod(methodName, method)
-        end
-    end
+    local addInvMethod = Functools.partial2(self.addMethod, self, "Barotrauma.Inventory")
+    local addItemInvMethod = Functools.partial2(self.addMethod, self, "Barotrauma.ItemInventory")
+    local addCharInvMethod = Functools.partial2(self.addMethod, self, "Barotrauma.CharacterInventory")
 
     do
-        local recursiveFindAllItems do
-            local yield = coroutine.yield
+        local recursiveFindAllItems --[=[@[lsp_optimization("delayed_definition")]]=] do
+            local yield = yield
 
+            ---@async
             ---@param instance Barotrauma.Inventory
             ---@param checkForDuplicates boolean?
-            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
-            ---@param iEnumerable fun():Barotrauma.Item
-            function recursiveFindAllItems(instance, checkForDuplicates, p, iEnumerable)
+            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)
+            ---@param iEnumerable fun():(Barotrauma.Item)
+            recursiveFindAllItems = function(instance, checkForDuplicates, p, iEnumerable)
                 yield()
                 for item in iEnumerable do
                     if p(instance, item) then yield(item) end
 
                     local ownInventory = item.OwnInventory
                     
-                    if ownInventory then
+                    if ownInventory ~= nil then
                         for subItem in ownInventory:SBAI_findAllItems(checkForDuplicates, true, p) do
                             yield(subItem)
                         end
                     end
                 end
-            end
+            end  
         end
 
-        local nonrecursiveFindAllItems do
-            local yield = coroutine.yield
+        local nonrecursiveFindAllItems --[=[@[lsp_optimization("delayed_definition")]]=] do
+            local yield = yield
 
+            ---@async
             ---@param instance Barotrauma.Inventory
-            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
-            ---@param iEnumerable fun():Barotrauma.Item
-            function nonrecursiveFindAllItems(instance, p, iEnumerable)
+            ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)
+            ---@param iEnumerable fun():(Barotrauma.Item)
+            nonrecursiveFindAllItems = function(instance, p, iEnumerable)
                 yield()
                 for item in iEnumerable do
                     if p(instance, item) then yield(item) end
@@ -58,13 +49,13 @@ local function activate(self)
             end
         end
 
-        local wrap = coroutine.wrap
+        local wrap = wrap
 
         ---@param instance Barotrauma.Inventory
         ---@param checkForDuplicates boolean?
         ---@param recursive boolean?
-        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
-        ---@return fun():Barotrauma.Item?
+        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)
+        ---@return fun():(Barotrauma.Item?)
         local function findAllItems(instance, checkForDuplicates, recursive, p)
             local iEnumerable = checkForDuplicates ~= nil and instance.GetAllItems(checkForDuplicates) or instance.AllItems
             local coFindAllItems
@@ -79,16 +70,13 @@ local function activate(self)
             
             return coFindAllItems
         end
-
-        AddMethod("findAllItems", findAllItems)
-        ---@class Barotrauma.Inventory
-        ---@field public SBAI_findAllItems fun(instance:Barotrauma.Inventory, checkForDuplicates:boolean?, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean):fun():Barotrauma.Item?
+        addInvMethod("findAllItems", findAllItems)
     end
 
     do
         ---@param instance Barotrauma.Inventory
         ---@param recursive boolean?
-        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean
+        ---@param p fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):(boolean)
         ---@return boolean
         local function hasAnyItem(instance, recursive, p)
             local iEnumerable = instance.GetAllItems(false)
@@ -112,11 +100,8 @@ local function activate(self)
                 return false
             end
         end
-
-        AddMethod("hasAnyItem", hasAnyItem)
-        ---@class Barotrauma.Inventory
-        ---@field public SBAI_hasAnyItem fun(instance:Barotrauma.Inventory, recursive:boolean?, p:fun(inventory:Barotrauma.Inventory, item:Barotrauma.Item):boolean):boolean
+        addInvMethod("hasAnyItem", hasAnyItem)
     end
 end
 
-return Types.CommonModule.new(activate)
+return Types.CommonModule("InventoryExpansion", activate)
