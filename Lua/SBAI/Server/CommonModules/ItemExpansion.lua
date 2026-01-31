@@ -1,18 +1,17 @@
-local Constants = require("SBAI.Shared.constants")
-local util = require("SBAI.Shared.util")
-local Types = require("SBAI.Shared.types")
+---@class (constructor) Barotrauma.Item
+---@field public SBAI_cleanup fun(instance:Barotrauma.Item, character:Barotrauma.Character, t?:table<string, Barotrauma.AIObjective?>, k?:string, objId?:Barotrauma.Identifier):boolean
 
----@param self Types.CommonModule
+---@param self CommonModule
 local function activate(self)
-    self:AddCommonModule("SBAI.Server.CommonModules.AIObjectiveExpansion")
+    self:addCommonModule("AIObjectiveExpansion")
 
-    local AddMethod = util.functools.Partial2(self.AddMethod, self, "Barotrauma.Item")
+    local addMethod = Functools.partial2(self.addMethod, self, "Barotrauma.Item")
 
     do
         local AIObjectiveCleanupItem = AIObjectiveCleanupItem
         local CLEANUPITEM = Constants.ID_OBJECTIVE_BASE.CLEANUPITEM
 
-        local Partial5 = util.functools.Partial5
+        local partial5 = Functools.partial5
 
         ---@param instance Barotrauma.Item
         ---@param character Barotrauma.Character
@@ -26,7 +25,7 @@ local function activate(self)
             local function constructor()
                 local cleanObj = AIObjectiveCleanupItem(instance, character, objectiveManager)
 
-                local _cleanup = Partial5(parentObj.SBAI_cleanupSubObj, instance, cleanObj, AIObjectiveCleanupItem, t, k)
+                local _cleanup = partial5(parentObj.SBAI_cleanupSubObj, instance, cleanObj, AIObjectiveCleanupItem, t, k)
 
                 cleanObj.Completed.add(_cleanup)
                 cleanObj.Abandoned.add(_cleanup)
@@ -37,14 +36,8 @@ local function activate(self)
             return parentObj:SBAI_tryAddSubObjective(t, k, objId, objId ~= CLEANUPITEM, objId == CLEANUPITEM, constructor)
         end
 
-        AddMethod("cleanup", cleanup)
-        ---@class Barotrauma.Item
-        ---@field public SBAI_cleanup fun(instance:Barotrauma.Item, character:Barotrauma.Character, t?:table<string, Barotrauma.AIObjective?>, k?:string, objId?:Barotrauma.Identifier):boolean
+        addMethod("cleanup", cleanup)
     end
-
-    ---@class Barotrauma.Item
-    ---@field public ChairItems System.Collections.Generic.IReadOnlyCollection*1Barotrauma*Item|Iterable<Barotrauma.Item>
-    ---@field public UnequipAutomatically boolean
 end
 
-return Types.CommonModule.new(activate)
+return Types.CommonModule("ItemExpansion", activate)
