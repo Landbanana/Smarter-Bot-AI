@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.config.crewloadouttitle>Crew Loadout</GUI.config.crewloadouttitle>
+  <GUI.config.badmultiplayerpermissions>Insufficient permissions to edit settings! The server must grant you the "[setting]" permission.</GUI.config.badmultiplayerpermissions>
+  <GUI.config.sectiontitle>Section</GUI.config.sectiontitle>
+  <GUI.config.optionstitle>Options</GUI.config.optionstitle>
+  <GUI.fabricateordertitle>Fabrication Order Request</GUI.fabricateordertitle>
+</infotexts>

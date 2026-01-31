@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+  <GUI.tooltips.cleaningadditions>Some improvements to the "Deconstruct Items" and "Cleanup Items" orders</GUI.tooltips.cleaningadditions>
+  <GUI.tooltips.cleaningadditions.purchaseditemcrates>Set an automatic order to be added to any new crates received from merchants</GUI.tooltips.cleaningadditions.purchaseditemcrates>
+  <GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>Either deconstruct new crates or ignore them to prevent automatic cleanup</GUI.tooltips.cleaningadditions.purchaseditemcrates.autoorder>
+  <GUI.tooltips.cleaningadditions.deconstructinbulk>When gathering items to deconstruct, the AI will also look for other items marked for deconstruction in the same stack/container and add said items to their inventory</GUI.tooltips.cleaningadditions.deconstructinbulk>
+  <GUI.tooltips.cleaningadditions.deconstructinbulk.maxcheck>Sets the maximum amount of additional items to check for (lower values may help with lag spikes)</GUI.tooltips.cleaningadditions.deconstructinbulk.maxcheck>
+  <GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>If a ship has a deconstructor, the AI can ONLY use that in all circumstances. Prevents them going into a hostile outpost to deconstruct or other funny shenanigans</GUI.tooltips.cleaningadditions.onlyuseshipdeconstructor>
+  <GUI.tooltips.combattweaks>Various changes to the player crew combat AI</GUI.tooltips.combattweaks>
+  <GUI.tooltips.combattweaks.preventattackinghandcuffed>AI will no longer attack anyone who's handcuffed, in regards to ship weapons. Helps with getting ransoms</GUI.tooltips.combattweaks.preventattackinghandcuffed>
+  <GUI.tooltips.combattweaks.arresthumansinplayersub>AI set to "Fight Intruders" will prioritize Arresting hostile humans in the player sub, as long as they have a stun weapon and handcuffs</GUI.tooltips.combattweaks.arresthumansinplayersub>
+  <GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>Should the AI only handcuff humans that have already been cuffed before (such as prisoners)</GUI.tooltips.combattweaks.arresthumansinplayersub.onlypreviouslycuffed>
+  <GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>AI will switch back to generic offensive combat if their health goes below this percentage</GUI.tooltips.combattweaks.arresthumansinplayersub.minhealth>
+  <GUI.tooltips.combattweaks.prespinturrets>Allow the AI to spin-up turrents (such as a chaingun) before combat starts, allowing them to fire much faster</GUI.tooltips.combattweaks.prespinturrets>
+  <GUI.tooltips.combattweaks.prespinturrets.reducenoise>CLIENT-SIDE: Lowers the volume of the turret spin-up until it is almost muted (only when AI is pre-spinning)</GUI.tooltips.combattweaks.prespinturrets.reducenoise>
+  <GUI.tooltips.crewstaysinsub>Bots (and you) will spawn in the sub when docking at any outpost</GUI.tooltips.crewstaysinsub>
+  <GUI.tooltips.equipitems>Settings that deal with bot AI equipment</GUI.tooltips.equipitems>
+  <GUI.tooltips.equipitems.crewloadout>Set items that the AI should try to seek out; specifying by inventory slot and by job</GUI.tooltips.equipitems.crewloadout>
+  <GUI.tooltips.equipitems.crewloadouttitle>Click the inventory slots below to highlight them, then click an item to assign it to that slot (NOTE: Larger items, like HMGs, may require more than 1 slot selected!). Right click to specify quality minimum and choose tags in the item picking GUI. Use the arrows to cycle between jobs.</GUI.tooltips.equipitems.crewloadouttitle>
+  <GUI.tooltips.equipitems.timebetween>Increases the delay between AI attempting to equip armor. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.equipitems.timebetween>
+  <GUI.tooltips.equipitems.reequiparmor>AI will attempt to equip any armor inside their inventory every so often. This helps solve the issue of AI sometimes "forgetting" to put a helmet back on after using a diving mask, for example</GUI.tooltips.equipitems.reequiparmor>
+  <GUI.tooltips.ladderfix>Bots will periodically "unstick" themselves from ladders if they get stuck</GUI.tooltips.ladderfix>
+  <GUI.tooltips.ladderfix.timebetween>How long (I have no idea what units) between checking if a bot is stuck on a ladder. Really should be extremely high</GUI.tooltips.ladderfix.timebetween>
+  <GUI.tooltips.mutesingleplayerbotconversations>CLIENT-SIDE: The same setting as "Disable bot conversations" for servers (muting random bot conversations) but works for singleplayer</GUI.tooltips.mutesingleplayerbotconversations>
+  <GUI.tooltips.mutesingleplayerbotconversations.blockallbotchat>Completely disables all bot-created chat messages (again, in singleplayer only)</GUI.tooltips.mutesingleplayerbotconversations.blockallbotchat>
+  <GUI.tooltips.operatereactortweaks>Adjust some behavior with the "Operate Reactor" order</GUI.tooltips.operatereactortweaks>
+  <GUI.tooltips.operatereactortweaks.behavior>Change the behavior related to actually operating the reactor, optionally only allowing refuelling if a reactor control circuit is detected or just permanently</GUI.tooltips.operatereactortweaks.behavior>
+  <GUI.tooltips.operatereactortweaks.minimumcondition>How low fuel rods can get before they are considered empty</GUI.tooltips.operatereactortweaks.minimumcondition>
+  <GUI.tooltips.operatereactortweaks.numfuelrods>How many fuel rods the reactor should have</GUI.tooltips.operatereactortweaks.numfuelrods>
+  <GUI.tooltips.orders>CLIENT-SIDE: Add custom orders to the middle-mouse order menu</GUI.tooltips.orders>
+  <GUI.tooltips.replenishinventory>AI will refill some of their empty reloadables while idling/waiting</GUI.tooltips.replenishinventory>
+  <GUI.tooltips.replenishinventory.idle>Allow an AI that has no active order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.idle>
+  <GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while idling</GUI.tooltips.replenishinventory.idle.onlyatfriendlyoutposts>
+  <GUI.tooltips.replenishinventory.wait>Allow an AI that is set to the "wait" order to occasionally leave their post to refill their inventory</GUI.tooltips.replenishinventory.wait>
+  <GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>AI will only replenish when docked at an outpost while set to wait (THEY WILL BRIEFLY LEAVE THEIR POST)</GUI.tooltips.replenishinventory.wait.onlyatfriendlyoutposts>
+  <GUI.tooltips.replenishinventory.timebetween>Increases the delay between AI attempting to replenish their inventory. Lower=faster, but it really doesn't need to be low at all</GUI.tooltips.replenishinventory.timebetween>
+  <GUI.tooltips.replenishinventory.fillempty>Allow bots to determine "empty" containers (guns without ammo, welding tools without fuel, etc.) and determine what needs to fill it</GUI.tooltips.replenishinventory.fillempty>
+  <GUI.tooltips.replenishinventory.forcesameitemtype>Only replace items with the same exact item type (regular Battery Cells will NOT replace Fulgurium Batter Cells, for example)</GUI.tooltips.replenishinventory.forcesameitemtype>
+  <GUI.tooltips.replenishinventory.forcequalitygeq>The replacement item must be of equal or greater quality than the existing item</GUI.tooltips.replenishinventory.forcequalitygeq>
+  <GUI.tooltips.replenishinventory.ammunition>Let the AI replenish their magazine ammunition (SMG, HMG)</GUI.tooltips.replenishinventory.ammunition>
+  <GUI.tooltips.replenishinventory.ammunition.minimumcondition>Minimum percentage of bullets left in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumcondition>
+  <GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>Minimum percentage of bullets left in items equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.ammunition.minimumequippedcondition>
+  <GUI.tooltips.replenishinventory.batterycells>Let the AI replenish their battery cells</GUI.tooltips.replenishinventory.batterycells>
+  <GUI.tooltips.replenishinventory.batterycells.minimumcondition>Minimum condition of batteries in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.batterycells.minimumcondition>
+  <GUI.tooltips.replenishinventory.batterycells.minimumequippedcondition>Minimum condition of batteries equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.batterycells.minimumequippedcondition>
+  <GUI.tooltips.replenishinventory.oxygentanks>Let the AI replenish their oxygen tanks</GUI.tooltips.replenishinventory.oxygentanks>
+  <GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>Minimum condition of oxygen tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumcondition>
+  <GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>Minimum condition of oxygen tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.oxygentanks.minimumequippedcondition>
+  <GUI.tooltips.replenishinventory.weldingfuel>Let the AI replenish their welding fuel tanks</GUI.tooltips.replenishinventory.weldingfuel>
+  <GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>Minimum condition of welding fuel tanks in an idling/waiting AI's inventory (not equipped) before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumcondition>
+  <GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>Minimum condition of welding fuel tanks equipped by an idling/waiting AI before replacing them</GUI.tooltips.replenishinventory.weldingfuel.minimumequippedcondition>
+  <GUI.tooltips.smarterloaditems>AI set to load these items will bring full ones to the empty tool/container first, replacing them in the slot, rather than just emptying the partially depleted ones and leaving your artifact case without a battery</GUI.tooltips.smarterloaditems>
+  <GUI.tooltips.smarterloaditems.batterycells>Apply this setting to AI loading battery cells</GUI.tooltips.smarterloaditems.batterycells>
+  <GUI.tooltips.smarterloaditems.batterycells.minimumcondition>Minimum condition before AI ordered to load batteries will replace batteries</GUI.tooltips.smarterloaditems.batterycells.minimumcondition>
+  <GUI.tooltips.smarterloaditems.oxygentanks>Apply this setting to AI loading oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks>
+  <GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>Minimum condition before AI ordered to load oxygen tanks will replace oxygen tanks</GUI.tooltips.smarterloaditems.oxygentanks.minimumcondition>
+  <GUI.tooltips.smarterpets>Various changes to the pet AI and related human bot AI</GUI.tooltips.smarterpets>
+  <GUI.tooltips.smarterpets.eatfoodininventory>Pets will eat food items that are inside of their own inventory</GUI.tooltips.smarterpets.eatfoodininventory>
+  <GUI.tooltips.smarterpets.eatfoodininventory.timebetween>How long pets should wait between checking their inventory</GUI.tooltips.smarterpets.eatfoodininventory.timebetween>
+  <GUI.tooltips.smarterpets.eatfoodininventory.overrideprotectowner>Pets normally refuse to eat when their owner is nearby. This disables that for food in the pet's inventory</GUI.tooltips.smarterpets.eatfoodininventory.overrideprotectowner>
+  <GUI.tooltips.smarterpets.botsplaywhenidle>Lets the human AI play with nearby, visible, and sad pets</GUI.tooltips.smarterpets.botsplaywhenidle>
+  <GUI.tooltips.smarterpets.botsplaywhenidle.timebetween>How long human AI should wait before checking for sad pets</GUI.tooltips.smarterpets.botsplaywhenidle.timebetween>
+  <GUI.tooltips.smarterpets.cleanableproduce>Pet produce can now be cleaned up (specifically, poop, chitin chunks, and mucus balls). They will be placed in the same type of containers as pomegrenades</GUI.tooltips.smarterpets.cleanableproduce>
+  <GUI.tooltips.usefurniture>Various tweaks to let the AI use some furniture</GUI.tooltips.usefurniture>
+  <GUI.tooltips.usefurniture.autousewhenidle>Bots will use the specified furniture when they idle (NOTE: Disabling reverts to vanilla behavior, which is only chairs)</GUI.tooltips.usefurniture.autousewhenidle>
+  <GUI.tooltips.usefurniture.autousewhenidle.beds>Bots will use beds when they idle</GUI.tooltips.usefurniture.autousewhenidle.beds>
+  <GUI.tooltips.usefurniture.autousewhenidle.chairs>Bots will use chairs when they idle</GUI.tooltips.usefurniture.autousewhenidle.chairs>
+  <GUI.tooltips.usefurniture.stayinbedifhurt>If a bot is sleeping in a bed, the bot is injured, and the bed is in a safe location, then they will remain in the bed until healed</GUI.tooltips.usefurniture.stayinbedifhurt>
+  <GUI.tooltips.usetalents>Lets the AI utilize some talents that they previously couldn't</GUI.tooltips.usetalents>
+  <GUI.tooltips.usetalents.assistant>Assistant talents</GUI.tooltips.usetalents.assistant>
+  <GUI.tooltips.usetalents.assistant.jengamaster>AI Assistants with the "Jenga Master" talent will go around the ship and apply the Max Stack Size bonus to any applicable containers when idling</GUI.tooltips.usetalents.assistant.jengamaster>
+  <GUI.tooltips.usetalents.assistant.jengamaster.timebetween>Specific delay for AI checking if any containers still need the buff</GUI.tooltips.usetalents.assistant.jengamaster.timebetween>
+  <GUI.tooltips.usetalents.assistant.nonthreatening>AI Assistants with the "Non-Threatening" talent will ragdoll if they're attacked, their health goes below a certain percentage, and the room they're in isn't on fire or flooding and they don't have a diving suit/mask</GUI.tooltips.usetalents.assistant.nonthreatening>
+  <GUI.tooltips.usetalents.assistant.nonthreatening.minHealth>How low the bot's health should get before ragdolling</GUI.tooltips.usetalents.assistant.nonthreatening.minHealth>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes>AI assistants with the "Inspiring Tunes" talent will play instruments in their inventory periodically. NOTE: All instruments (NOT just the bikehorn) work with this talent (even in vanilla!)</GUI.tooltips.usetalents.assistant.inspiringtunes>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.assistant.inspiringtunes.idle>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.assistant.inspiringtunes.wait>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.assistant.inspiringtunes.timebetween>
+  <GUI.tooltips.usetalents.captain>Captain talents</GUI.tooltips.usetalents.captain>
+  <GUI.tooltips.usetalents.captain.steadytune>AI captains will now play the harmonica when idling, providing psychosis resistance</GUI.tooltips.usetalents.captain.steadytune>
+  <GUI.tooltips.usetalents.captain.steadytune.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.captain.steadytune.idle>
+  <GUI.tooltips.usetalents.captain.steadytune.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.captain.steadytune.wait>
+  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>
+  <GUI.tooltips.usetalents.captain.steadytune.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.captain.steadytune.timebetween>
+  <GUI.tooltips.usetalents.engineer>Engineer talents</GUI.tooltips.usetalents.engineer>
+  <GUI.tooltips.usetalents.engineer.melodicrespite>AI engineers will play guitar, providing a 25% increase in repair speed</GUI.tooltips.usetalents.engineer.melodicrespite>
+  <GUI.tooltips.usetalents.engineer.melodicrespite.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.engineer.melodicrespite.idle>
+  <GUI.tooltips.usetalents.engineer.melodicrespite.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.engineer.melodicrespite.wait>
+  <GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>
+  <GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>
+</infotexts>
