@@ -1,43 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Orders>
-  <Order name="Ignore Room" identifier="sbai_ignoreroom"
-        mustsettarget="true" targetallcharacters="true"
-		    color="255,105,180,255">
-    <Sprite name="Command_Ignore_Room" texture="%ModDir%/Images/IgnoreRoomOrder.png" sourcerect="0,0,128,128"/>
+  <Order name="Ignore Room" identifier="sbai_ignoreroom" mustsettarget="true" targetallcharacters="true" color="255,105,180,255">
+    <Sprite name="Command_Ignore_Room" texture="%ModDir%/Images/IgnoreRoomOrder.png" sourcerect="0,0,128,128" />
   </Order>
-  
-  <Order name="Unignore Room" identifier="sbai_unignoreroom"
-        mustsettarget="true" targetallcharacters="true"
-		    color="255,105,180,255">
-    <Sprite name="Command_Unignore_Room" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128"/>
+  <Order name="Unignore Room" identifier="sbai_unignoreroom" mustsettarget="true" targetallcharacters="true" color="255,105,180,255">
+    <Sprite name="Command_Unignore_Room" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,512,128,128" />
   </Order>
-  
-<!--   <Order name="Follow Other" identifier="sbai_follow"
+  <!--   <Order name="Follow Other" identifier="sbai_follow"
           assignmentpriority="90"
 		  mustmanuallyassign="true" displaygiverintooltip="true"
 		  color="255,105,180,255">
     <Sprite name="Command_Follow" texture="Content/UI/CommandUIAtlas.png" sourcerect="128,256,128,128"/>
   </Order> -->
-
   <!-- <Order name="Fabricate Items" identifier="sbai_fabricateitems"
          mustmanuallyassign="true" mustsettarget="true"
          targetitemtype="Fabricator"
 		 color="255,105,180,255">
     <Sprite name="Command_Category_Maintenance" texture="Content/UI/CommandUIAtlas.png" sourcerect="768,512,128,128"/>
   </Order> -->
-  
-  <Order name="Perform" identifier="sbai_perform"
-        targetitemtype="RangedWeapon" mustsettarget="true"
-        targetitems="accordion,guitar,harmonica;bikehorn" AutoDismiss="true"
-        options="playinstrument" hiddenoptions="honk"
-        optionnames="Play Instrument" cantypebesubclass="true"
-        AssignmentPriority="90" color="255,105,180,255">
-    <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
-	  <OptionSprites>
-      <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128"/>
+  <Order name="Perform" identifier="sbai_perform" targetitemtype="RangedWeapon" mustsettarget="true" targetitems="accordion,guitar,harmonica;bikehorn" AutoDismiss="true" options="playinstrument" hiddenoptions="honk" optionnames="Play Instrument" cantypebesubclass="true" AssignmentPriority="90" color="255,105,180,255">
+    <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128" />
+    <OptionSprites>
+      <Sprite name="Command_Perform" texture="%ModDir%/Images/PerformOrder.png" sourcerect="0,0,128,128" />
     </OptionSprites>
   </Order>
-  
+  <!-- Force Equip Order - Contextual order to force a character to pick up and permanently equip an item -->
+  <Order name="Force Equip" identifier="sbai_forceequip" mustsettarget="true" mustmanuallyassign="false" targetallcharacters="false" AutoDismiss="true" AssignmentPriority="95" hidden="true" color="255,105,180,255">
+    <Sprite name="Command_Force_Equip" texture="Content/UI/CommandUIAtlas.png" sourcerect="256,640,128,128" />
   <!-- <Order name="For all contained" identifier="sbai_forall"
         mustsettarget="true" targetallcharacters="true"
         targetitemtype="ItemContainer" cantypebesubclass="true"
@@ -52,8 +41,7 @@
       <Sprite name="Command_DontDeconstruct" texture="Content/UI/CommandUIAtlas.png" sourcerect="640,258,128,128"/>
     </OptionSprites>
   </Order> -->
-  
   <Order name="Smarter Bot AI" identifier="sbai">
-    <Sprite name="Command_Category_SBAI" texture="%ModDir%/Images/BigBrainOrderCategory.png" sourcerect="0,0,128,128"/>
+    <Sprite name="Command_Category_SBAI" texture="%ModDir%/Images/BigBrainOrderCategory.png" sourcerect="0,0,128,128" />
   </Order>
 </Orders>
