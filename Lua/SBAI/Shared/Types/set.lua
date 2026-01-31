@@ -26,7 +26,7 @@ Types.Set = Types.new--[[@<Set<T>, AbstractCollection<T>>]]("Set", "AbstractColl
 })
 
 
-
+local t = {} ---@type Set<integer>
 
 
 local Set = Types.Set
