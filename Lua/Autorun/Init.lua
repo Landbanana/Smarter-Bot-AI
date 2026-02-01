@@ -1,9 +1,7 @@
 local _ENV = require("SBAI.Base.env") --if CLIENT then return end
 
-LuaUserData.RegisterType("Barotrauma.LuaCsSetup")
 
 GameMain = LuaUserData.CreateStatic("Barotrauma.GameMain")
-
 
 ---@export global
 ---@class SBAI
@@ -14,12 +12,20 @@ SBAI.ConfigPath = ToolBox.CleanUpPath(table.concat({Game.SaveFolder,  "ModConfig
 SBAI.ModPath = ModPath --[=[@readonly]=] ---@public
 
 do
-    local contentPackage = GameMain.LuaCs.GetPackage(ContentPackageId.Parse("3343911734"))
+    local Acronym = Acronym
+    local contentPackage = nil ---@type Barotrauma.ContentPackage?
 
-    SBAI.ContentPackage = contentPackage
+    for v in Game.GetEnabledContentPackages() --[[@as fun():(Barotrauma.ContentPackage)]] do
+        if v.NameMatches(Acronym) then
+            contentPackage = v
+            break
+        end
+    end
+    if contentPackage == nil then return error("Unable to find SBAI ContentPackage") end
     SBAI.Name =  contentPackage.Name --[=[@readonly]=] --[=[@as string]=] ---@public
     SBAI.Version = contentPackage.ModVersion:lower() --[=[@readonly]=] --[=[@as string]=] ---@public
 end
+
 --[[ ROUND SUMMARY ADD SEPARATORS
 MEDICALCLINICUI.EnsureTextDoesntOverflow
 STEAM UI UTIL

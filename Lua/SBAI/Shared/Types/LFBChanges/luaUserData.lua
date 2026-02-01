@@ -2,8 +2,6 @@
 
 local _LuaUserData = _ENV.OLD.LuaUserData ---@diagnostic disable-line: access-invisible
 
-_ENV.LuaUserData = nil
-
 --[[
 ---@field package _AddField fun(IUUD:MoonSharp.Interpreter.Interop.IUserDataDescriptor, fieldName:string, value:any) ---@readonly
 ---@field package _AddMethod fun(IUUD:MoonSharp.Interpreter.Interop.IUserDataDescriptor, methodName:string, luaKey__function:function) ---@readonly
@@ -31,11 +29,9 @@ _ENV.LuaUserData = nil
 ---@field public RegisterExtensionType fun<T:System.Object>(typeName:`T`)
 ---@field public TypeOf fun<T:System.Object>(obj:std.ConstTpl<T>):(`T`)
 ---@field public UnregisterType fun<T:System.Object>(typeName:`T`)
----@field package Descriptors {[string]: MoonSharp.Interpreter.Interop.IUserDataDescriptor}
 ---@field package enumCache Cache<string, System.Object>
 ---@field package staticCache Cache<string, System.Object>
 Types.LFBChanges.LuaUserData = Types.new("LFBChanges.LuaUserData", nil, {
-    Descriptors = setmetatable({}, {__index=Descriptors});
 
     GetType = _LuaUserData.GetType;
     HasMember = _LuaUserData.HasMember;
@@ -72,7 +68,7 @@ do
 end
 
 do
-    local Descriptors = LuaUserData.Descriptors
+    local Descriptors = Descriptors
 
     local IsRegistered = _LuaUserData.IsRegistered ---@as fun(typeName:string):(boolean)
 
@@ -94,7 +90,7 @@ local addedMethods = setmetatable({}, {__index = function(t, k) local out = {}; 
 local raise = raise
 
 do
-    local Descriptors = LuaUserData.Descriptors
+    local Descriptors = Descriptors
 
 
     local AddMethod ---@[lsp_optimization("delayed_definition")]
@@ -123,8 +119,6 @@ do
                     end
                 end
             end
-
-            Descriptors[typeName] = descriptor
             return descriptor
         end
     end
@@ -165,7 +159,7 @@ do
 end
 
 do
-    local Descriptors = LuaUserData.Descriptors
+    local Descriptors = Descriptors
 
     local next = next
     local RemoveMethod  ---@[lsp_optimization("delayed_definition")]
@@ -186,7 +180,6 @@ do
         end
 
         raise(UnregisterType, typeName)
-        Descriptors[typeName] = nil
     end
 end
 
@@ -220,7 +213,6 @@ do
 
         for typeName in toUnregister do
             raise(UnregisterType, typeName)
-            Descriptors[typeName] = nil
         end
 
         if out[1] == false then
