@@ -53,8 +53,8 @@ do
 
     local halfFactor = Color(125, 125, 125, 255).ToVector4() ---@type Microsoft.Xna.Framework.Vector4
 
-    --Colors.Base = Color(235, 225, 193, 255) ---@type Microsoft.Xna.Framework.Color
-    Colors.Base = GUI.Style.GetComponentStyle(Stringtools.prefixAcronym("ColorBase", "_")).Color
+    Colors.Base = Color(235, 225, 193, 255) ---@type Microsoft.Xna.Framework.Color
+    --Colors.Base = GUI.Style.GetComponentStyle(Stringtools.prefixAcronym("ColorBase", "_")).Color
     Colors.Hover = Color.Lerp(Colors.Base, Color.White, 0.5)
     Colors.Selected = Color.Lerp(Colors.Base, Color.White, 0.75)
     Colors.Pressed = Color.Lerp(Colors.Base, Color.Black, 0.5)

@@ -8,21 +8,6 @@ local Debugtools = {}
 --- ============================================================================================================
 
 do
-    local getupvalue = debug.getupvalue
-
-    ---@param f function
-    ---@param ups string
-    function Debugtools.getUpValueName(f, ups)
-        for
-
-
-    end
-end
-
-
-
-
-do
     local autoMt1 ---@[lsp_optimization("delayed_definition")]
 
     onGlobalLoad("Tabletools",

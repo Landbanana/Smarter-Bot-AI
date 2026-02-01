@@ -133,7 +133,7 @@ end
 do
     local getmetatable = debug.getmetatable
     local match = string.match
-    local setmetatable = setmetatable
+    local setmetatable = debug.setmetatable
 
     local tostring = tostring
 

@@ -130,26 +130,31 @@ function Itertools.any(t, p)
     return false
 end
 
-do
-    ---@overload fun<K,V>(t:table<K,V>, k:K, v:V):(integer)
-    ---@overload fun<K,V>(t:table<K,V>, k:nil, v:V):(integer, K)
-    ---@overload fun<K,V>(t:table<K,V>, k:K):(integer, V)
-    function Itertools.indexR(t, k, v)
-        if k == nil then
-            if v == nil then
+-- do
+--     local ferror = ferror
 
-            else
+--     ---@overload fun<K,V>(t:table<K,V>, k:K, v:V):(integer)
+--     ---@overload fun<K,V>(t:table<K,V>, k:nil, v:V):(integer, K)
+--     ---@overload fun<K,V>(t:table<K,V>, k:K):(integer, V)
+--     function Itertools.indexKBNum(t, k, v)
+--         kocal i = 0
+--         if k == nil then
+--             if v == nil then
+--                 return ferror("No key and / or value to index")
+--             else
+--                 for k, v in next, t do
+--                     if
+--                 end
+--                 b in
+--             end
+--         elseif v == nil then
 
-            end
-
-        elseif v == nil then
-
-        else
+--         else
 
 
-        end
-    end
-end
+--         end
+--     end
+-- end
 
 do
     -- ---@overload fun(iterable:fun():(T?), default:std.ConstTpl<D>, pred:fun(v:T):(boolean)):(T|D)
