@@ -27,6 +27,7 @@
   <!-- Force Equip Order - Contextual order to force a character to pick up and permanently equip an item -->
   <Order name="Force Equip" identifier="sbai_forceequip" mustsettarget="true" mustmanuallyassign="false" targetallcharacters="false" AutoDismiss="true" AssignmentPriority="95" hidden="true" color="255,105,180,255">
     <Sprite name="Command_Force_Equip" texture="Content/UI/CommandUIAtlas.png" sourcerect="256,640,128,128" />
+  </Order>
   <!-- <Order name="For all contained" identifier="sbai_forall"
         mustsettarget="true" targetallcharacters="true"
         targetitemtype="ItemContainer" cantypebesubclass="true"
