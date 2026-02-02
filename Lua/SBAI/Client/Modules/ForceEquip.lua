@@ -5,8 +5,12 @@ local Types = require("SBAI.Shared.types")
 -- Force Equip Client Module
 -- Adds the "Force Equip" order to the contextual menu (Shift+Middle Mouse on items)
 -- that can be equipped by characters
+-- Also adds visual feedback for forced items (tooltip description)
 
 local FORCEEQUIP = Constants.ID_ORDER.FORCEEQUIP
+
+-- Tag identifier for forced items (must match server)
+local FORCED_TAG = Identifier("sbai-forced")
 
 do
     local MakeFieldAccessible = LuaUserData.MakeFieldAccessible
@@ -28,6 +32,7 @@ local function activate(self)
     local OrderPrefab = OrderPrefab
     local Order = Order
     local Pickable = Components.Pickable
+    local TextManager = TextManager
 
     print("[SBAI ForceEquip] Module activating...")
 
@@ -46,6 +51,13 @@ local function activate(self)
     end
     
     print("[SBAI ForceEquip] Found order prefab: " .. tostring(forceEquipPrefab.Identifier))
+
+    -- Helper function to check if item has the forced tag
+    ---@param item Barotrauma.Item
+    ---@return boolean
+    local function isForcedItem(item)
+        return item and item.HasTag(FORCED_TAG)
+    end
 
     -- Helper function to check if an item can be picked up
     ---@param item Barotrauma.Item
@@ -109,6 +121,29 @@ local function activate(self)
                     -- Add to the list of contextual orders
                     contextualOrders.Add(forceEquipOrder)
                 end
+            end
+        end
+    end, Hook.HookMethodType.Before)
+
+    -- Patch to add forced item description tooltip when hovering in inventory
+    -- This shows a warning that the item is forced and how to remove it
+    self:AddPatch("Barotrauma.Item", "get_Description", nil,
+    function(instance, ptable)
+        if isForcedItem(instance) then
+            -- Get original description
+            local originalDesc = instance.Prefab.Description.Value or ""
+            
+            -- Get the localized forced item message
+            local forcedMessage = TextManager.Get("sbai.forceditem.description")
+            local forcedText = forcedMessage and forcedMessage.Value or "[SBAI] This item has been forced. Remove it from the NPC's inventory to clear it."
+            
+            -- Append the forced message to the description
+            if originalDesc ~= "" then
+                ptable.PreventExecution = true
+                return originalDesc .. "\n\n" .. forcedText
+            else
+                ptable.PreventExecution = true
+                return forcedText
             end
         end
     end, Hook.HookMethodType.Before)

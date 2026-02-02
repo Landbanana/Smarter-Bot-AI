@@ -68,7 +68,7 @@ do
     section:CreateOption("numFuelRods", 1, configTypes.OPTION_TYPE.int, nil, 1, 4)
     section:CreateOption("minimumCondition", 10, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_CONDITION_PERCENTAGE, Config.defaults.MAX_CONDITION_PERCENTAGE)
 
-    section = defaults:CreateSection("Orders", false)
+    section = defaults:CreateSection("Orders", true)
 
     section = defaults:CreateSection("ReplenishInventory")
     subsection = section:CreateSection("Idle")

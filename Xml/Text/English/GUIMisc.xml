@@ -5,4 +5,5 @@
   <GUI.config.sectiontitle>Section</GUI.config.sectiontitle>
   <GUI.config.optionstitle>Options</GUI.config.optionstitle>
   <GUI.fabricateordertitle>Fabrication Order Request</GUI.fabricateordertitle>
+  <sbai.forceditem.description>‖color:gui.orange‖[SBAI FORCED]‖end‖ This item has been forced to stay equipped. Remove it from the NPC's inventory to clear the forced status.</sbai.forceditem.description>
 </infotexts>

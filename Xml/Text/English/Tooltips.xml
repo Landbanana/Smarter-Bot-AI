@@ -89,4 +89,5 @@
   <GUI.tooltips.usetalents.engineer.melodicrespite.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.engineer.melodicrespite.wait>
   <GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>
   <GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>
+  <GUI.tooltips.forceequip>Allows players to force NPCs to pick up and permanently equip items via the contextual order menu (Shift+Middle Mouse on an item)</GUI.tooltips.forceequip>
 </infotexts>
