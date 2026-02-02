@@ -54,6 +54,9 @@ do
     section:CreateOption("reEquipArmor", true, configTypes.OPTION_TYPE.boolean)
     section:CreateOption("timeBetween", 60, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 
+    section = defaults:CreateSection("ForceEquip")
+    -- Force Equip allows the player to order NPCs to pick up and permanently equip items
+
     section = defaults:CreateSection("LadderFix")
     section:CreateOption("timeBetween", 30, configTypes.OPTION_TYPE.int, nil, Config.defaults.MIN_TIME_BETWEEN, Config.defaults.MAX_TIME_BETWEEN)
 

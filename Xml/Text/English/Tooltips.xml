@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
   <GUI.tooltips.cleaningadditions>Some improvements to the "Deconstruct Items" and "Cleanup Items" orders</GUI.tooltips.cleaningadditions>
   <GUI.tooltips.cleaningadditions.purchaseditemcrates>Set an automatic order to be added to any new crates received from merchants</GUI.tooltips.cleaningadditions.purchaseditemcrates>
@@ -75,18 +75,18 @@
   <GUI.tooltips.usetalents.assistant.inspiringtunes>AI assistants with the "Inspiring Tunes" talent will play instruments in their inventory periodically. NOTE: All instruments (NOT just the bikehorn) work with this talent (even in vanilla!)</GUI.tooltips.usetalents.assistant.inspiringtunes>
   <GUI.tooltips.usetalents.assistant.inspiringtunes.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.assistant.inspiringtunes.idle>
   <GUI.tooltips.usetalents.assistant.inspiringtunes.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.assistant.inspiringtunes.wait>
-  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed> 
+  <GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.assistant.inspiringtunes.stopafterbuffed>
   <GUI.tooltips.usetalents.assistant.inspiringtunes.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.assistant.inspiringtunes.timebetween>
   <GUI.tooltips.usetalents.captain>Captain talents</GUI.tooltips.usetalents.captain>
   <GUI.tooltips.usetalents.captain.steadytune>AI captains will now play the harmonica when idling, providing psychosis resistance</GUI.tooltips.usetalents.captain.steadytune>
   <GUI.tooltips.usetalents.captain.steadytune.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.captain.steadytune.idle>
   <GUI.tooltips.usetalents.captain.steadytune.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.captain.steadytune.wait>
-  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed> 
+  <GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.captain.steadytune.stopafterbuffed>
   <GUI.tooltips.usetalents.captain.steadytune.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.captain.steadytune.timebetween>
   <GUI.tooltips.usetalents.engineer>Engineer talents</GUI.tooltips.usetalents.engineer>
   <GUI.tooltips.usetalents.engineer.melodicrespite>AI engineers will play guitar, providing a 25% increase in repair speed</GUI.tooltips.usetalents.engineer.melodicrespite>
   <GUI.tooltips.usetalents.engineer.melodicrespite.idle>Allow an AI that has no active order to occasionally utilize their talents</GUI.tooltips.usetalents.engineer.melodicrespite.idle>
   <GUI.tooltips.usetalents.engineer.melodicrespite.wait>Allow an AI that is set to the "wait" order to occasionally utilize their talents</GUI.tooltips.usetalents.engineer.melodicrespite.wait>
-  <GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed> 
+  <GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>Bots will only play music when an unbuffed crewmate is within range, instead of all the time when idling</GUI.tooltips.usetalents.engineer.melodicrespite.stopafterbuffed>
   <GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>How long the AI should wait before checking if crewmates have an instrument-related buff or not (also affects how long they keep playing music)</GUI.tooltips.usetalents.engineer.melodicrespite.timebetween>
 </infotexts>

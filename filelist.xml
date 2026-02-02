@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Smarter Bot AI" modversion="1.7.2a" corepackage="False" steamworkshopid="3343911734" gameversion="1.9.7.0">
+<contentpackage name="Smarter Bot AI - Force Equip add-on" modversion="1.7.2a" corepackage="False"  gameversion="1.9.7.0">
   <Other file="%ModDir%/Images/BigBrain.png" />
   <Other file="%ModDir%/Images/BigBrainOrderCategory.png" />
   <Other file="%ModDir%/Images/IgnoreRoomOrder.png" />
@@ -14,6 +14,7 @@
   <Other file="%ModDir%/Lua/SBAI/Client/itemSlotGui.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/CombatTweaks.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/EquipItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Client/Modules/ForceEquip.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/MuteSingleplayerBotConversations.lua" />
   <Other file="%ModDir%/Lua/SBAI/Client/Modules/Orders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/CommonModules/AIObjectiveExpansion.lua" />
@@ -27,6 +28,7 @@
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CleaningAdditions.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/CrewStaysInSub.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/EquipItems.lua" />
+  <Other file="%ModDir%/Lua/SBAI/Server/Modules/ForceEquip.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/LadderFix.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/Orders.lua" />
   <Other file="%ModDir%/Lua/SBAI/Server/Modules/OperateReactorTweaks.lua" />

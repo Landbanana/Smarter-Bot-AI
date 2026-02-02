@@ -22,6 +22,7 @@ local Constants = {
     ID_ORDER={
         FABRICATEITEMS=Identifier("sbai_fabricateitems"),
         FORALL=Identifier("sbai_forall"),
+        FORCEEQUIP=Identifier("sbai_forceequip"),
         IGNOREROOM=Identifier("sbai_ignoreroom"),
         PERFORM=Identifier("sbai_perform"),
         SBAICATEGORY=Identifier("sbai"),
@@ -30,6 +31,7 @@ local Constants = {
 
     ---@enum ID_OBJECTIVE
     ID_OBJECTIVE={
+        FORCEEQUIP=Identifier("sbai_forceequip"),
         PERFORM=Identifier("sbai_perform"),
         PETPLAY=Identifier("sbai_petplay"),
         REPLENISH=Identifier("sbai_replenish"),
@@ -140,6 +142,7 @@ do
     local ID_OBJECTIVE_BASE = Constants.ID_OBJECTIVE_BASE
 
     Constants.ID_OBJECTIVE_TO_BASE = setmetatable({
+        [Constants.ID_OBJECTIVE.FORCEEQUIP]=Constants.ID_OBJECTIVE_BASE.GOTO,
         [Constants.ID_OBJECTIVE.PERFORM]=Constants.ID_OBJECTIVE_BASE.OPERATEITEM,
         [Constants.ID_OBJECTIVE.PETPLAY]=Constants.ID_OBJECTIVE_BASE.GOTO,
         [Constants.ID_OBJECTIVE.REPLENISH]=Constants.ID_OBJECTIVE_BASE.CONTAINITEM,
