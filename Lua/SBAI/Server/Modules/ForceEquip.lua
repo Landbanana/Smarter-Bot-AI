@@ -136,6 +136,74 @@ local function activate(self)
         end
     end
 
+    -- Helper function to check if an inventory slot contains a forced item
+    ---@param inventory Barotrauma.Inventory
+    ---@param slotIndex integer
+    ---@return boolean, Barotrauma.Item|nil
+    local function slotHasForcedItem(inventory, slotIndex)
+        if not inventory then return false, nil end
+        local success, item = pcall(function() return inventory.GetItemAt(slotIndex) end)
+        if success and item and isForcedItem(item) then
+            return true, item
+        end
+        return false, nil
+    end
+
+    -- Helper function to check if any of the target slots contain a forced item
+    ---@param inventory Barotrauma.Inventory
+    ---@param slotTypes table|nil
+    ---@return boolean, Barotrauma.Item|nil
+    local function anySlotsHaveForcedItem(inventory, slotTypes)
+        if not inventory then return false, nil end
+        if not slotTypes then return false, nil end
+        
+        -- Get all slots and check each one
+        local success, slotCount = pcall(function() return inventory.Capacity end)
+        if not success or not slotCount then return false, nil end
+        
+        for i = 0, slotCount - 1 do
+            local hasForced, forcedItem = slotHasForcedItem(inventory, i)
+            if hasForced then
+                -- Check if this slot matches any of the target slot types
+                local slotSuccess, slotType = pcall(function() return inventory.SlotTypes[i] end)
+                if slotSuccess and slotType then
+                    for _, targetSlot in ipairs(slotTypes) do
+                        if slotType == targetSlot then
+                            return true, forcedItem
+                        end
+                    end
+                end
+            end
+        end
+        return false, nil
+    end
+
+    -- Helper function to check if character has forced item in head slot (for diving gear checks)
+    ---@param character Barotrauma.Character
+    ---@return boolean
+    local function hasForcedHeadItem(character)
+        if not character then return false end
+        local success, inventory = pcall(function() return character.Inventory end)
+        if not success or not inventory then return false end
+        
+        -- Check Head slot type
+        local headSlot = InvSlotType.Head
+        return anySlotsHaveForcedItem(inventory, {headSlot})
+    end
+
+    -- Helper function to check if character has forced item in outwear slot (for diving suits)
+    ---@param character Barotrauma.Character
+    ---@return boolean
+    local function hasForcedOuterwearItem(character)
+        if not character then return false end
+        local success, inventory = pcall(function() return character.Inventory end)
+        if not success or not inventory then return false end
+        
+        -- Check OuterClothes slot type
+        local outerSlot = InvSlotType.OuterClothes
+        return anySlotsHaveForcedItem(inventory, {outerSlot})
+    end
+
     -- Helper function to find the best slot for an item
     ---@param item Barotrauma.Item
     ---@param character Barotrauma.Character
@@ -221,6 +289,54 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
+    -- Patch to prevent replacing forced items when AI tries to equip something else
+    -- This prevents the AI from equipping oxygen masks over forced headgear, etc.
+    -- Using CharacterInventory.TryPutItem with the correct signature (IEnumerable<InvSlotType> version)
+    self:AddPatch("Barotrauma.CharacterInventory", "TryPutItem", {"Barotrauma.Item", "Barotrauma.Character", "System.Collections.Generic.IEnumerable`1[Barotrauma.InvSlotType]", "System.Boolean", "System.Boolean"},
+    function(instance, ptable)
+        local newItem = ptable["item"] --[[@type Barotrauma.Item]]
+        local user = ptable["user"] --[[@type Barotrauma.Character]]
+        local allowedSlots = ptable["allowedSlots"]
+        
+        -- Only block for bots trying to equip items
+        if not isBot(user) then return end
+        if not newItem then return end
+        -- Don't block if the new item itself is forced (we're trying to equip it)
+        if isForcedItem(newItem) then return end
+        
+        -- Check if the inventory owner is a bot with forced items
+        local owner = instance.Owner
+        if not isBot(owner) then return end
+        
+        -- Check if any of the target slots already have a forced item
+        if allowedSlots then
+            local hasForced, forcedItem = anySlotsHaveForcedItem(instance, allowedSlots)
+            if hasForced then
+                -- Prevent equipping over forced items
+                ptable.PreventExecution = true
+                return false
+            end
+        end
+    end, Hook.HookMethodType.Before)
+
+    -- Patch to make AIObjectiveFindDivingGear immediately abandon when character has forced diving gear
+    -- We patch the Act method instead of the constructor to avoid null reference issues
+    self:AddPatch("Barotrauma.AIObjectiveFindDivingGear", "Act", nil,
+    function(instance, ptable)
+        local character = instance.character --[[@type Barotrauma.Character]]
+        
+        if character and isBot(character) then
+            -- Check if character has forced item in head slot (where diving masks go)
+            -- or in outer clothes slot (where diving suits go)
+            if hasForcedHeadItem(character) or hasForcedOuterwearItem(character) then
+                -- Abandon the objective - the bot already has forced gear they can't remove
+                instance.Abandon = true
+                ptable.PreventExecution = true
+                return
+            end
+        end
+    end, Hook.HookMethodType.Before)
+
     -- Patch to prevent dropping force-equipped items by bots
     -- This blocks ALL drop attempts for forced items that are in a bot inventory
     self:AddPatch("Barotrauma.Item", "Drop", nil,
@@ -243,19 +359,57 @@ local function activate(self)
         end
     end, Hook.HookMethodType.Before)
 
+    -- Track the current player transfer context
+    -- This is set when a player is putting a forced item into their inventory
+    local playerTransferInProgress = nil --[[@type table<Barotrauma.Item, boolean>]]
+    playerTransferInProgress = self:RegisterTable(nil, "ROUND_END")
+
+    -- Hook BEFORE item is put into inventory to detect when a PLAYER receives a forced item
+    -- Return true to block the operation, or allow and handle cleanup
+    self:AddHook("inventoryPutItem", function(inventory, item, user, slotIndex, removeItem)
+        if not item then return end
+        if not isForcedItem(item) then return end
+        
+        -- Get the NEW owner of the item (after the transfer)
+        local newOwner = inventory and inventory.Owner
+        
+        -- Check if the new owner is a player (not a bot)
+        if isPlayer(newOwner) then
+            -- Mark this item as being transferred to a player
+            -- This allows RemoveItem to proceed for this specific transfer
+            playerTransferInProgress[item] = true
+            -- Item is going to a player's inventory - remove the forced tag after transfer
+            Timer.Wait(function()
+                if item and not item.Removed then
+                    removeForcedTag(item)
+                end
+                playerTransferInProgress[item] = nil
+            end, 100)
+        elseif isBot(newOwner) then
+            -- Item transferred to another bot, update the tracking
+            trackBotOwner(item, newOwner)
+        end
+    end)
+
     -- Patch to prevent removing forced items from bot inventory
-    -- Allow removal only if a player is actively taking the item
+    -- Block removal unless a player is actively taking the item to their own inventory
     self:AddPatch("Barotrauma.Inventory", "RemoveItem", nil,
     function(instance, ptable)
         local item = ptable["item"] --[[@type Barotrauma.Item]]
         
         if item and isForcedItem(item) then
             local owner = instance.Owner
-            -- If the inventory belongs to a bot, check if we should allow removal
+            -- If the inventory belongs to a bot, check if player transfer is in progress
             if isBot(owner) then
-                -- Track the bot owner so we can detect player transfer
+                -- If a player is actively taking this item, allow it
+                if playerTransferInProgress[item] then
+                    return -- Allow the removal
+                end
+                -- Track the bot owner
                 trackBotOwner(item, owner)
-                -- Don't prevent - let the player take items, the tag removal happens after
+                -- Block the removal - forced items stay with the bot
+                ptable.PreventExecution = true
+                return
             end
         end
     end, Hook.HookMethodType.Before)
@@ -267,31 +421,47 @@ local function activate(self)
         
         if item and isForcedItem(item) then
             local owner = instance.Owner
-            -- If the inventory belongs to a bot, track the owner
+            -- If the inventory belongs to a bot, check if player transfer is in progress
             if isBot(owner) then
+                if playerTransferInProgress[item] then
+                    return -- Allow the removal
+                end
                 trackBotOwner(item, owner)
+                -- Block the removal
+                ptable.PreventExecution = true
+                return
             end
         end
     end, Hook.HookMethodType.Before)
 
-    -- Hook AFTER item is put into inventory to detect when a PLAYER receives a forced item
-    -- This is the ONLY way to remove forced status - player must have item in THEIR inventory
-    self:AddHook("inventoryPutItem", function(inventory, item, user, slotIndex, removeItem)
-        if not item then return end
-        if not isForcedItem(item) then return end
+    -- Patch to prevent putting forced items into containers (lockers, crates, etc.)
+    -- This stops the AI from storing forced items when orders are cancelled
+    self:AddPatch("Barotrauma.ItemInventory", "TryPutItem",
+    {"Barotrauma.Item", "Barotrauma.Character", "System.Collections.Generic.IEnumerable`1[Barotrauma.InvSlotType]", "System.Boolean", "System.Boolean"},
+    function(instance, ptable)
+        local item = ptable["item"] --[[@type Barotrauma.Item]]
+        local user = ptable["user"] --[[@type Barotrauma.Character]]
         
-        -- Get the NEW owner of the item (after the transfer)
-        local newOwner = inventory and inventory.Owner
-        
-        -- Check if the new owner is a player (not a bot)
-        if isPlayer(newOwner) then
-            -- Item is now in a player's inventory - remove the forced tag
-            removeForcedTag(item)
-        elseif isBot(newOwner) then
-            -- Item transferred to another bot, update the tracking
-            trackBotOwner(item, newOwner)
+        -- If a bot is trying to put a forced item into a container, block it
+        if item and isForcedItem(item) and isBot(user) then
+            ptable.PreventExecution = true
+            return false
         end
-    end)
+    end, Hook.HookMethodType.Before)
+
+    -- Also patch the index-based TryPutItem overload for ItemInventory
+    self:AddPatch("Barotrauma.ItemInventory", "TryPutItem",
+    {"Barotrauma.Item", "System.Int32", "System.Boolean", "System.Boolean", "Barotrauma.Character", "System.Boolean", "System.Boolean"},
+    function(instance, ptable)
+        local item = ptable["item"] --[[@type Barotrauma.Item]]
+        local user = ptable["user"] --[[@type Barotrauma.Character]]
+        
+        -- If a bot is trying to put a forced item into a container, block it
+        if item and isForcedItem(item) and isBot(user) then
+            ptable.PreventExecution = true
+            return false
+        end
+    end, Hook.HookMethodType.Before)
 
     -- Periodic check to re-equip forced items that somehow got dropped
     -- This is a safety net in case some game mechanic bypasses our patches
